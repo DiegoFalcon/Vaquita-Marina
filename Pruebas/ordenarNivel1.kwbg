@@ -1,0 +1,26 @@
+\Orden Ascendente
+#int[10] numerosEnteros;
+#int i;
+for(i=0;i<10;i=i+1)
+{
+	read numerosEnteros[i];
+}
+
+#int j;
+#int aux;
+for(i=0;i<10;i=i+1)
+{
+	for(j=0;j<10;j=j+1)
+	{
+		if(numerosEnteros[i] > numerosEnteros[j])
+		{
+			aux = numerosEnteros[i];
+			numerosEnteros[i] = numerosEnteros[j];
+			numerosEnteros[j] = aux;
+		}
+	}
+}
+for(i=0;i<10;i=i+1)
+{
+	writeln numerosEnteros[i];
+}

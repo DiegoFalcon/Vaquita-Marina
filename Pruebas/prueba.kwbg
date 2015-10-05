@@ -1,0 +1,18 @@
+#int a
+#int b
+#double c
+#string palabra
+
+a = 4
+b=2
+c=0
+palabra = "hola +\nnn >>"
+
+if(a>4){
+	c=100
+}
+else {
+	c=200
+}
+write c
+write a
