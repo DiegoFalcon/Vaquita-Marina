@@ -16,11 +16,16 @@ public class Compiler {
 		openFile();
 		
 		while (!isFileFinished) {
-			String sToken = ReadTokenFromFile();
-			int nTokenCode = GetTokenCode(sToken);
+			Token tCurrentToken = Tokenizer();
 		}
 		
-		System.out.println("Tokenizer Finished");
+	}
+	
+	public static Token Tokenizer() throws IOException{
+		Token tMyToken = new Token();
+		tMyToken.description = ReadTokenFromFile();
+		tMyToken.code = GetTokenCode(tMyToken.description);
+		return tMyToken;
 	}
 	
 	public static void openFile() throws IOException{
