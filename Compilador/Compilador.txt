@@ -17,9 +17,22 @@ public class Compilador {
     static byte[] _sc;
     public static void main(String[] args) throws IOException {    
         GetFileName();
-        Tokenizer();
+        
+        //Ciclo
+        Token tokenTemp;
+        tokenTemp = Tokenizer();
         
     }
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     
     public static Token Tokenizer() throws IOException  {
         String token;
@@ -68,8 +81,7 @@ public class Compilador {
         }
         else
         {
-            //System.out.println("You chose " + _fileName);
-            
+            //System.out.println("You chose " + _fileName); 
         }
         }catch(Exception e){System.out.println(e.getMessage());error=true;}
         if(error)
