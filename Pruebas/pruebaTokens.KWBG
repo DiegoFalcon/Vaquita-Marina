@@ -1,0 +1,34 @@
+#int entero
+#double doble
+#string cadena
+#float flotante
+#char caract
+
+entero=10;
+doble =5.3
+cadena = "bri"
+flotante= 5.3
+char = v
+
+if(entero<145 AND entero>5)
+{
+	writeln "HOLA";
+}
+if(entero<145 OR entero>5)
+{
+	writeln "BYE"
+}
+else
+{
+	entero= entero + 80 - 9 * 1 / 3;
+}
+write "Escribe un numero doble";
+read doble;
+
+caract = charAt(cadena,0);
+entero=3;
+while(entero>=0)
+{
+	entero--;
+	write ".";
+}

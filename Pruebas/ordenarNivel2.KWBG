@@ -1,0 +1,66 @@
+\Declarar variables
+#string nombreTemp;
+#string calificacionTemp;
+#string[10] vectorNombres;
+#double[10] vectorCalificaciones;
+#int i,j;
+\Lectura de informacion
+for(i=0;i<10;i++)
+{
+	read nombreTemp;
+	read calificacionTemp;
+	
+	vectorNombres[i] = nombreTemp;
+	vectorCalificaciones[i] = calificacionTemp;
+}
+
+\Tipo de Ordenamiento y Ordenamiento
+#int opc;
+writln "Elija tipo de ordenamiento";
+writln "1.- Ascendente"
+writln "2.- Descendente"
+read opc;
+if(opc == 1)
+{
+	\Ordenamiento Ascendente
+	for(i=0;i<10;i=i+1)
+	{
+		for(j=0;j<10;j++)
+		{
+			if(vectorNombres[i] > vectorNombres[j])
+			{
+				nombreAux = vectorNombres[i];
+				vectorNombres[i] = vectorNombres[j];
+				vectorNombres[j] = nombreAux;
+			
+				califAux = vectorCalificaciones[i];
+				vectorCalificaciones[i] = vectorCalificaciones[j];
+				vectorCalificaciones[j] = califAux;
+			}
+		}
+	}
+}
+else
+{
+	\Ordenamiento Descendente
+	for(i=0;i<10;i=i+1)
+	{
+		for(j=0;j<10;j++)
+		{
+			if(vectorNombres[i] < vectorNombres[j])
+			{
+				nombreAux = vectorNombres[i];
+				vectorNombres[i] = vectorNombres[j];
+				vectorNombres[j] = nombreAux;
+			
+				califAux = vectorCalificaciones[i];
+				vectorCalificaciones[i] = vectorCalificaciones[j];
+				vectorCalificaciones[j] = califAux;
+			}
+		}
+	}
+}
+for(i=0;i<10;i++)
+{
+	writeln vectorNombre[i] + vectorCalificacion[i];
+}
