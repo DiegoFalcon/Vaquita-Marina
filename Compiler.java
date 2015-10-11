@@ -9,25 +9,23 @@ public class Compiler {
 	static int lastByteRead = 0;
 	static boolean isFileFinished = false;
 	static byte[] _bytesInFile;
-	
+	static Token _currentToken;
+	static Variable _variablesTable[]=new Variable[0];
 	public static void main(String[] args) throws IOException {
 		// TODO Auto-generated method stub
-
 		openFile();
-		
 		while (!isFileFinished) {
-			Token tCurrentToken = Tokenizer();
+			_currentToken = Tokenizer();
 		}
-		
 	}
 	
 	public static Token Tokenizer() throws IOException{
-		Token tMyToken = new Token();
-		tMyToken.description = ReadTokenFromFile();
-		tMyToken.code = GetTokenCode(tMyToken.description);
-		return tMyToken;
+		Token tokenToReturn = new Token();
+		tokenToReturn.description = ReadTokenFromFile();
+		tokenToReturn.code = GetTokenCode(tokenToReturn.description);
+		return tokenToReturn;
 	}
-	
+		
 	public static void openFile() throws IOException{
 		Frame f = new Frame();
 		boolean error = false;
@@ -269,8 +267,31 @@ public class Compiler {
             case "charAt":
                 return 42;
             default:
-            	return 43; 
+            	if(isNumber(token) || token.charAt(0)=='"')
+            		return 43;
+            	if(isVariableInTable(token))
+            		return 44;
+            	return 45;
         }
     }
+
+	public static boolean isNumber(String tokenWord){
+		for(int i=0;i<tokenWord.length();i++){
+			if((tokenWord.charAt(i)-50<0 || tokenWord.charAt(i)-50>9) && tokenWord.charAt(i)==41){
+				return false;
+			}
+		}
+		return false;
+	}
+	
+	public static boolean isVariableInTable(String variableName){
+		for(int i=0; i<_variablesTable.length;i++){
+			if((_variablesTable[i].name).equals(variableName)){
+				return true;
+			}
+		}
+		return false;
+	}
+
 
 }
