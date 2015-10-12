@@ -5,7 +5,7 @@ import java.awt.Frame;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-
+import java.util.*;
 public class Compiler {
 
 	static int lastByteRead = 0;
@@ -15,7 +15,7 @@ public class Compiler {
 	static Variable _variablesTable[]=new Variable[0];
 	static Token _arrayToken[];
 	static boolean _isCondition = false;
-	
+	static Stack<Boolean> _stackIsCondition = new Stack<Boolean>();
 	public static void main(String[] args) throws IOException {
 		// TODO Auto-generated method stub
 		openFile();
@@ -154,12 +154,12 @@ public class Compiler {
 	public static boolean Expect(int tokenCode) throws IOException{
 		_currentToken = Tokenizer();
         if(_currentToken.code==tokenCode){
-        	if(!_isCondition)
+        	if(_stackIsCondition.isEmpty())
         	System.out.println(_currentToken.description);
         	
         	return true;
         }
-        if(!_isCondition){
+        if(_stackIsCondition.isEmpty()){
         	MessageError("Error de Sintaxis","El token: "+tokenCode+" no existe.");
         	System.exit(0);
         }
@@ -168,12 +168,12 @@ public class Compiler {
 	public static boolean Expect(String instruction) throws IOException{
 		_currentToken = Tokenizer();
         if(_currentToken.description.equals(instruction)){
-        	if(!_isCondition)
+        	if(_stackIsCondition.isEmpty())
         	System.out.println(instruction);
         	
         	return true;
         }
-        if(!_isCondition){
+        if(_stackIsCondition.isEmpty()){
         	MessageError("Error de Sintaxis","El token: "+instruction+" no existe.");  	
         	System.exit(0);
         }
@@ -182,31 +182,38 @@ public class Compiler {
 	public static boolean CurrentToken(String instruction) throws IOException{
 		int tempLastByteRead = lastByteRead;
 		_isCondition = true;
+		_stackIsCondition.push(true);
 		if(!Expect(instruction)){
 			lastByteRead=tempLastByteRead;
 			_isCondition=false;
+			_stackIsCondition.pop();
 			return false;
 		}
 		_isCondition=false;
+		_stackIsCondition.pop();
 		lastByteRead=tempLastByteRead;
 		return true;
 	}
 	public static boolean CurrentToken(int instruction) throws IOException{
 		int tempLastByteRead = lastByteRead;
 		_isCondition = true;
+		_stackIsCondition.push(true);
 		if(!Expect(instruction)){
-			lastByteRead=tempLastByteRead;
 			_isCondition=false;
+			_stackIsCondition.pop();
+			lastByteRead=tempLastByteRead;	
 			return false;
 		}
 		_isCondition=false;
-		lastByteRead=tempLastByteRead;
+		_stackIsCondition.pop();
+		lastByteRead=tempLastByteRead;	
 		return true;
 	}
 	public static boolean CurrentTokenInFirst(String instruction) throws IOException{
 		int tempLastByteRead = lastByteRead;
 		boolean result = false;
 		_isCondition = true;
+		_stackIsCondition.push(true);
 		//System.out.println("El temporal al principio en CurrentToken "+instruction+" = "+tempLastByteRead);
 		//System.out.println("La condicion al principio en CurrentToken "+instruction+" = "+_isCondition);
 		switch (instruction){
@@ -239,6 +246,7 @@ public class Compiler {
 		}
 		_isCondition=false;
 		lastByteRead = tempLastByteRead;
+		_stackIsCondition.pop();
 		//System.out.println("El temporal al final en CurrentToken "+instruction+" = "+tempLastByteRead);
 		//System.out.println("La condicion al final en CurrentToken "+instruction+" = "+_isCondition);
 		return result;
