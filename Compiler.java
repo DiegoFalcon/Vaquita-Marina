@@ -53,7 +53,7 @@ public class Compiler {
 	}
 	public static boolean Instrucciones() throws IOException{
 		//<Instrucción> {<Instrucciones>}
-		_currentToken = Tokenizer();
+		//_currentToken = Tokenizer();
 		while(CurrentTokenInFirst("instruccion")){
 			if(!Instruccion())
 				return false;
@@ -66,13 +66,11 @@ public class Compiler {
 		//#<TipoDato> <ListaVariables> ;
 		if(!TipoDato())
 			return false;
-		_currentToken=Tokenizer();
-		if(!ListaVariables())
-			return false;
-		_currentToken=Tokenizer();
+		if(CurrentTokenInFirst("ListaVariables"))
+			if(!ListaVariables())
+				return false;
 		if(!Expect(";"))
 			return false;
-		_currentToken=Tokenizer();
 		return true;
 	}
 	public static boolean ListaVariables() throws IOException{
@@ -92,11 +90,10 @@ public class Compiler {
 	public static boolean Variables() throws IOException{
 		if(!Expect(45))
 			return false;
-		_currentToken=Tokenizer();
 		
 		return true;
 	}
-	public static boolean TipoDato(){
+	public static boolean TipoDato() throws IOException{
 		switch(GetTokenCode(_currentToken.description)){
 			case 34:
 				if(!Expect(GetTokenCode("#int")))
@@ -122,29 +119,32 @@ public class Compiler {
 				return false;
 		}
 	}
-	public static boolean Expect(int tokenCode){
+	public static boolean Expect(int tokenCode) throws IOException{
+		_currentToken = Tokenizer();
         if(_currentToken.code==tokenCode){
         	if(!_isCondition)
         	System.out.println(_currentToken.description);
+        	
         	return true;
         }
         if(!_isCondition){
-       MessageError("Error de Sintaxis","El token: "+tokenCode+" no existe.");
-        System.exit(0);
+        	MessageError("Error de Sintaxis","El token: "+tokenCode+" no existe.");
+        	System.exit(0);
         }
         return false;
     }
-	public static boolean Expect(String instruction){
+	public static boolean Expect(String instruction) throws IOException{
+		_currentToken = Tokenizer();
         if(_currentToken.description.equals(instruction)){
         	if(!_isCondition)
         	System.out.println(instruction);
+        	
         	return true;
         }
         if(!_isCondition){
         	MessageError("Error de Sintaxis","El token: "+instruction+" no existe.");  	
         	System.exit(0);
         }
-        
         return false;
     }
 	public static boolean CurrentTokenInFirst(String instruction) throws IOException{
@@ -181,19 +181,20 @@ public class Compiler {
 		}
 		_isCondition=false;
 		lastByteRead = tempLastByteRead;
+		
 		return result;
 	}
 	 public static boolean Condicion() throws IOException{
-         Expresion();
-         _currentToken = Tokenizer();
-         OperadoresLogicos();
-         _currentToken = Tokenizer();
-         Expresion();
-         _currentToken = Tokenizer();
+         if(!Expresion())
+        	 return false;
+         if(!OperadoresLogicos())
+        	 return false;
+         if(!Expresion())
+        	 return false;
          
          return true;
      }
-	 public static boolean OperadoresLogicos(){
+	 public static boolean OperadoresLogicos() throws IOException{
          String currentOperador = _currentToken.description;
          switch(currentOperador){
              case ">":
@@ -252,7 +253,7 @@ public class Compiler {
         Expect(";");
         _currentToken = Tokenizer();
     }
-	public static void Lectura(){
+	public static void Lectura() throws IOException{
         // Read <ListaVariables> ;
         Expect("read");
         _currentToken = Tokenizer();
@@ -260,39 +261,44 @@ public class Compiler {
         _currentToken = Tokenizer();
         Expect (";");
         _currentToken = Tokenizer();
-    }*/
+    }
+	public static void ListaEscritura(){
+        //Si es mensaje
+        if(_currentToken == Mensaje)
+            Mensaje();
+        else
+            Variables();
+        _currentToken = Tokenizer();
+        if(_currentToken.info.equals("+")){
+            Expect("+");
+            _currentToken = Tokenizer();
+            ListaEscritura();
+            _currentToken = Tokenizer();
+        }
+    }
+    */
 	public static boolean If() throws IOException{
 	//	If ( <Condiciones> ) “{“ <Instrucciones> “}” [ Else “{“ <Instrucciones> “}” ]
         if(!Expect("if"))
         	return false;
-        _currentToken = Tokenizer();
         if(!Expect("("))
         	return false;
-        _currentToken = Tokenizer();
         if(!Condiciones())
         	return false;
-        _currentToken = Tokenizer();
         if(!Expect(")"))
         	return false;
-        _currentToken = Tokenizer();
         if(!Expect("{"))
         	return false;
-        _currentToken = Tokenizer();
         Instrucciones();
-        _currentToken = Tokenizer();
         if(!Expect("}"))
         	return false;
-        _currentToken = Tokenizer();
         
         if(_currentToken.description.equals("else")){
         	if(!Expect("else"))
         		return false;
-            _currentToken = Tokenizer();
-            if(! Expect("{"))
+            if(!Expect("{"))
             	return false;
-            _currentToken = Tokenizer();
             Instrucciones();
-            _currentToken = Tokenizer();
             if(!Expect("}"))
             	return false;
         }
@@ -348,61 +354,65 @@ public class Compiler {
 		_bytesInFile = Files.readAllBytes(Paths.get(fileDir, fileName));
 	}
 	public static boolean Condiciones() throws IOException{
+		//<Condición> { <ANDOR> <Condiciones> }
+		if(!Condicion())
+			return false;
+		
 		while(CurrentTokenInFirst("condicion")){
-			Condicion();
+			if(!AndOr())
+				return false;
+			if(Condicion())
+				return false;
 		}
 		
 		return true;
 	}
 	
-
+	public static boolean AndOr() throws IOException{
+		switch(_currentToken.description){
+		case "AND":
+			return Expect(GetTokenCode("AND"));
+		case "OR":
+			return Expect(GetTokenCode("OR"));
+			default:
+				return false;
+		}
+	}
 
 public static boolean For() throws IOException{
     // For ( [ <Asignación> ] ; <Condiciones> ; [ <Asignación> ] ) “{“ <Instrucciones> “}”
         if(!Expect("for"))
             return false;
-        _currentToken = Tokenizer();
         if(!Expect("("))
             return false;
-        _currentToken = Tokenizer();
         if(!_currentToken.equals(";")){
             if(!Asignacion())
             	return false;
-            _currentToken = Tokenizer();
         }
         if(!Expect(";"))
             return false;
-        _currentToken = Tokenizer();
         if(!Condiciones())
         	return false;
-        _currentToken = Tokenizer();
         if(!Expect(";"))
             return false;
-        _currentToken = Tokenizer();
         if(!_currentToken.equals(")")){
             if(!Asignacion())
             	return false;
-            _currentToken = Tokenizer();
         }
         if(!Expect(";"))
             return false;
-        _currentToken = Tokenizer();
         if(!Expect("{"))
             return false;
-        _currentToken = Tokenizer();
         if(!Instrucciones())
         	return false;
-        _currentToken = Tokenizer();
         if(!Expect("}"))
             return false;
-        _currentToken = Tokenizer();
 
     return true;
 }
 	public static boolean Asignacion() throws IOException{
 		if(!Expect(44))
 			return false;
-		_currentToken=Tokenizer();
 		if(!OperadorAsignacion())
 			return false;
 		if(!Expresion())
@@ -410,7 +420,7 @@ public static boolean For() throws IOException{
 		
 		return true;
 	}
-	public static boolean OperadorAsignacion(){
+	public static boolean OperadorAsignacion() throws IOException{
 		switch(_currentToken.description){
 			case "=":
 				if(!Expect(GetTokenCode("=")))
@@ -430,11 +440,9 @@ public static boolean For() throws IOException{
 	}
 	
 	public static boolean Expresion() throws IOException{
-		_currentToken=Tokenizer();
 		if(GetTokenCode(_currentToken.description)==23){
 			if(!Expect(GetTokenCode("(")))
 				return false;
-			_currentToken=Tokenizer();
 		}
 		
 		if(!Valor())
@@ -464,32 +472,28 @@ public static boolean For() throws IOException{
 		if(!Operador())
 			return false;
 		
-		_currentToken=Tokenizer();
 		if(GetTokenCode(_currentToken.description)==23){
 			Expect(GetTokenCode("("));
-			_currentToken=Tokenizer();
 		}
 		
 		if(!Valor())
 			return false;
 		
-		_currentToken=Tokenizer();
 		if(GetTokenCode(_currentToken.description)==24){
 			Expect(GetTokenCode(")"));
-			_currentToken=Tokenizer();
 		}
 		return true;
 	}
 	
-	public static boolean Valor(){
+	public static boolean Valor() throws IOException{
 		switch(GetTokenCode(_currentToken.description)){
 			case 43:
 				if(!Expect(43))
-                                    return false;
+                   return false;
 				return true;
 			case 44:
 				if(!Expect(44))
-                                    return false;
+                   return false;
 				return true;
 			default:
 				return false;
@@ -498,7 +502,7 @@ public static boolean For() throws IOException{
 	
 	
 	
-	public static boolean Operador(){
+	public static boolean Operador() throws IOException{
 		switch(_currentToken.description){
 			case "+":
 				Expect(GetTokenCode("+"));
@@ -522,25 +526,18 @@ public static boolean For() throws IOException{
 	public static boolean While()  throws IOException{
         if(!Expect("while"))
             return false;
-        _currentToken = Tokenizer();
         if(!Expect("("))
             return false;
-        _currentToken = Tokenizer();
         if(!Condiciones())
         	return false;
-        _currentToken = Tokenizer();
         if(!Expect(")"))
             return false;
-        _currentToken = Tokenizer();
         if(!Expect("{"))
-            return false;
-        _currentToken = Tokenizer();
+            return false;;
         if(!Instrucciones())
         	return false;
-        _currentToken = Tokenizer();
         if(!Expect("}"))
             return false;
-        _currentToken = Tokenizer();
         return true;
 }
 	public static String ReadTokenFromFile() throws IOException {
@@ -616,8 +613,8 @@ public static boolean For() throws IOException{
 				case 60:
 				case 61:
 				case 62:
-				case 91:
-				case 93:
+				//case 91:
+				//case 93:
 				case 123:
 				case 125:
 					if(!quotationFound){
@@ -753,7 +750,7 @@ public static boolean For() throws IOException{
             case "charAt":
                 return 42;
             default:
-            	if(isNumber(token) || token.charAt(0)=='"')
+            	if(isNumber(token) || token.charAt(0)=='"' || (""+token.charAt(0)).equals("'"))
             		return 43;
             	if(isVariableInTable(token))
             		return 44;
