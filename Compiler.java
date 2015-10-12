@@ -15,7 +15,7 @@ public class Compiler {
 	static Variable _variablesTable[]=new Variable[0];
 	static Token _arrayToken[];
 	static boolean _isCondition = false;
-	static int tempLastByteRead = 0;
+	
 	public static void main(String[] args) throws IOException {
 		// TODO Auto-generated method stub
 		openFile();
@@ -66,8 +66,7 @@ public class Compiler {
 		//#<TipoDato> <ListaVariables> ;
 		if(!TipoDato())
 			return false;
-		if(CurrentTokenInFirst("ListaVariables"))
-			if(!ListaVariables())
+		if(!ListaVariables())
 				return false;
 		if(!Expect(";"))
 			return false;
@@ -94,30 +93,22 @@ public class Compiler {
 		return true;
 	}
 	public static boolean TipoDato() throws IOException{
-		switch(GetTokenCode(_currentToken.description)){
-			case 34:
-				if(!Expect(GetTokenCode("#int")))
-					return false;
+			if(Expect("#int"))
 				return true;
-			case 35:
-				if(!Expect(GetTokenCode("#float")))
-					return false;
-				return true;
-			case 36:
-				if(!Expect(GetTokenCode("#double")))
-					return false;
-				return true;
-			case 37:
-				if(!Expect(GetTokenCode("#char")))
-					return false;
-				return true;
-			case 38:
-				if(!Expect(GetTokenCode("#string")))
-					return false;
-				return true;
-			default: 
-				return false;
-		}
+			else
+				if(Expect("#float"))
+					return true;
+				else
+					if(Expect("#double"))
+							return true;
+					else
+						if(Expect("#char"))
+								return true;
+						else
+							if(Expect("#string"))
+									return true;
+			return false;
+		
 	}
 	public static boolean Expect(int tokenCode) throws IOException{
 		_currentToken = Tokenizer();
@@ -148,9 +139,11 @@ public class Compiler {
         return false;
     }
 	public static boolean CurrentTokenInFirst(String instruction) throws IOException{
-		tempLastByteRead = lastByteRead;
+		int tempLastByteRead = lastByteRead;
 		boolean result = false;
 		_isCondition = true;
+		//System.out.println("El temporal al principio en CurrentToken "+instruction+" = "+tempLastByteRead);
+		//System.out.println("La condicion al principio en CurrentToken "+instruction+" = "+_isCondition);
 		switch (instruction){
 			case "instruccion":
 				result = Instruccion();
@@ -181,7 +174,8 @@ public class Compiler {
 		}
 		_isCondition=false;
 		lastByteRead = tempLastByteRead;
-		
+		//System.out.println("El temporal al final en CurrentToken "+instruction+" = "+tempLastByteRead);
+		//System.out.println("La condicion al final en CurrentToken "+instruction+" = "+_isCondition);
 		return result;
 	}
 	 public static boolean Condicion() throws IOException{
@@ -440,17 +434,32 @@ public static boolean For() throws IOException{
 	}
 	
 	public static boolean Expresion() throws IOException{
-		if(GetTokenCode(_currentToken.description)==23){
-			if(!Expect(GetTokenCode("(")))
+		
+		//<Valor> | [ ( ]<Valor><Operaciones>
+		
+
+		if(CurrentTokenInFirst("Valor")){
+			if(!Valor())
 				return false;
+			if(_currentToken.code==GetTokenCode(";"))
+				return Expect(";");
 		}
+		
+		if(GetTokenCode(_currentToken.description)==23)
+			Expect(GetTokenCode("("));
 		
 		if(!Valor())
 			return false;
 		if(!Operaciones())
 			return false;
 		
-		return true;
+		if(_currentToken.code==GetTokenCode(";"))
+			return Expect(";");
+		else
+			if(_currentToken.code==GetTokenCode(")"))
+				return true;
+		
+		return false;
 	}
 	public static boolean Operaciones() throws IOException{
 		if(Operacion()){
