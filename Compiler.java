@@ -86,28 +86,69 @@ public class Compiler {
 		
 		return true;
 	}
+	public static boolean Letra() throws IOException{
+        if(Expect("[a-zA-Z]+"))
+            return true;
+        return false;
+    }
+	public static boolean Digito()throws IOException{
+        if(_currentToken.description.equals("0"))
+            if(!Expect("0"))
+                return false;
+        else if(_currentToken.description.equals("1"))
+            if(!Expect("1"))
+                return false;
+        else if(_currentToken.description.equals("2"))
+            if(!Expect("2"))
+                return false;
+        else if(_currentToken.description.equals("3"))
+            if(!Expect("3"))
+                return false;
+        else if(_currentToken.description.equals("4"))
+            if(!Expect("4"))
+                return false;
+        else if(_currentToken.description.equals("5"))
+            if(!Expect("5"))
+                return false;
+        else if(_currentToken.description.equals("6"))
+            if(!Expect("6"))
+                return false;
+        else if(_currentToken.description.equals("7"))
+            if(!Expect("7"))
+                return false;
+        else if(_currentToken.description.equals("8"))
+            if(!Expect("8"))
+                return false;
+        else if(_currentToken.description.equals("9"))
+            if(!Expect("9"))
+                return false;
+        return true;
+    }
+    public static boolean Comentarios() throws IOException{
+        if(Expect("\\"))
+            return true;
+        return false;
+    }
 	public static boolean Variables() throws IOException{
-		if(!Expect(45))
-			return false;
+		if(CurrentToken(45))
+			return Expect(45);
+		if(CurrentToken(44))
+			return Expect(44);
 		
-		return true;
+		return false;
 	}
 	public static boolean TipoDato() throws IOException{
-			if(Expect("#int"))
-				return true;
-			else
-				if(Expect("#float"))
-					return true;
-				else
-					if(Expect("#double"))
-							return true;
-					else
-						if(Expect("#char"))
-								return true;
-						else
-							if(Expect("#string"))
-									return true;
-			return false;
+		if(CurrentToken("#int"))
+			return Expect("#int");
+		if(CurrentToken("#float"))
+			return Expect("#float");
+		if(CurrentToken("#double"))
+			return Expect("#double");
+		if(CurrentToken("#char"))
+			return Expect("#char");
+		if(CurrentToken("#string"))
+			return Expect("#string");
+		return false;
 		
 	}
 	public static boolean Expect(int tokenCode) throws IOException{
@@ -138,6 +179,30 @@ public class Compiler {
         }
         return false;
     }
+	public static boolean CurrentToken(String instruction) throws IOException{
+		int tempLastByteRead = lastByteRead;
+		_isCondition = true;
+		if(!Expect(instruction)){
+			lastByteRead=tempLastByteRead;
+			_isCondition=false;
+			return false;
+		}
+		_isCondition=false;
+		lastByteRead=tempLastByteRead;
+		return true;
+	}
+	public static boolean CurrentToken(int instruction) throws IOException{
+		int tempLastByteRead = lastByteRead;
+		_isCondition = true;
+		if(!Expect(instruction)){
+			lastByteRead=tempLastByteRead;
+			_isCondition=false;
+			return false;
+		}
+		_isCondition=false;
+		lastByteRead=tempLastByteRead;
+		return true;
+	}
 	public static boolean CurrentTokenInFirst(String instruction) throws IOException{
 		int tempLastByteRead = lastByteRead;
 		boolean result = false;
@@ -363,14 +428,11 @@ public class Compiler {
 	}
 	
 	public static boolean AndOr() throws IOException{
-		switch(_currentToken.description){
-		case "AND":
-			return Expect(GetTokenCode("AND"));
-		case "OR":
-			return Expect(GetTokenCode("OR"));
-			default:
-				return false;
-		}
+		if(CurrentToken("AND"))
+			return Expect("AND");
+		if(CurrentToken("OR"))
+			return Expect("OR");
+		return false;
 	}
 
 public static boolean For() throws IOException{
@@ -415,22 +477,13 @@ public static boolean For() throws IOException{
 		return true;
 	}
 	public static boolean OperadorAsignacion() throws IOException{
-		switch(_currentToken.description){
-			case "=":
-				if(!Expect(GetTokenCode("=")))
-					return false;
-				return true;
-			case "+=":
-				if(!Expect(GetTokenCode("+=")))
-					return false;
-				return true;
-			case "-=":
-				if(!Expect(GetTokenCode("-=")))
-					return false;
-				return true;
-			default:
-				return false;
-		}
+		if(CurrentToken("="))
+			return Expect("=");
+		if(CurrentToken("+="))
+			return Expect("+=");
+		if(CurrentToken("-="))
+			return Expect("-=");
+		return false;
 	}
 	
 	public static boolean Expresion() throws IOException{
@@ -495,42 +548,27 @@ public static boolean For() throws IOException{
 	}
 	
 	public static boolean Valor() throws IOException{
-		switch(GetTokenCode(_currentToken.description)){
-			case 43:
-				if(!Expect(43))
-                   return false;
-				return true;
-			case 44:
-				if(!Expect(44))
-                   return false;
-				return true;
-			default:
-				return false;
-		}
+		if(CurrentToken(43))
+			return Expect(43);
+		if(CurrentToken(44))
+			return Expect(44);
+		return false;
 	}
 	
 	
 	
 	public static boolean Operador() throws IOException{
-		switch(_currentToken.description){
-			case "+":
-				Expect(GetTokenCode("+"));
-				return true;
-			case "-":
-				Expect(GetTokenCode("-"));
-				return true;
-			case "*":
-				Expect(GetTokenCode("*"));
-				return true;
-			case "/":
-				Expect(GetTokenCode("/"));
-				return true;
-			case "%":
-				Expect(GetTokenCode("%"));
-				return true;
-			default:
-				return false;
-		}
+		if(CurrentToken("+"))
+			return Expect("+");
+		if(CurrentToken("-"))
+			return Expect("-");
+		if(CurrentToken("*"))
+			return Expect("*");
+		if(CurrentToken("/"))
+			return Expect("/");
+		if(CurrentToken("%"))
+			return Expect("%");
+		return false;
 	}
 	public static boolean While()  throws IOException{
         if(!Expect("while"))
