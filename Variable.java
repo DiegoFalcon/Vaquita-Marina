@@ -1,4 +1,3 @@
-package compilador;
 
 public class Variable {
 	public String name;

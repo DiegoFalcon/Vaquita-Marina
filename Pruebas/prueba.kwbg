@@ -6,6 +6,7 @@
 a = 4
 b=2
 c=0
+d[5]=10
 palabra = "hola +\nnn >>"
 
 if(a>4){
