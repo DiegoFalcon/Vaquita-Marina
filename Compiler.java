@@ -1,4 +1,3 @@
-package compiler;
 
 import java.awt.FileDialog;
 import java.awt.Frame;
@@ -10,6 +9,7 @@ import java.util.*;
 public class Compiler {
 
 	static int lastByteRead = 0;
+	static boolean lastTokenReadOperator = false;
 	static boolean isFileFinished = false;
 	static byte[] _bytesInFile;
 	static Token _currentToken;
@@ -22,10 +22,12 @@ public class Compiler {
 	public static void main(String[] args) throws IOException {
 		// TODO Auto-generated method stub
 		openFile();
+		
 		if(Instrucciones())
-			System.out.println("Se corrió la semantica correctamente");
+			System.out.println("Se corriï¿½ la semantica correctamente");
 		else
-			System.out.println("Ocurrió un error en la semantica que no se identificó");
+			System.out.println("Ocurriï¿½ un error en la semantica que no se identificï¿½");
+			
 	}
 
 
@@ -428,7 +430,7 @@ public class Compiler {
 	           return true;
 	 }
 	public static boolean If() throws IOException{
-	    //	If ( <Condiciones> ) “{“ <Instrucciones> “}” [ Else “{“ <Instrucciones> “}” ]
+	    //	If ( <Condiciones> ) ï¿½{ï¿½ <Instrucciones> ï¿½}ï¿½ [ Else ï¿½{ï¿½ <Instrucciones> ï¿½}ï¿½ ]
 	        if(!Expect("if"))
 	            return false;
 	        if (!Expect("("))
@@ -450,7 +452,7 @@ public class Compiler {
 	    }
 
     public static boolean Else() throws IOException{
-        //else “{“ <Instrucciones> “}”
+        //else ï¿½{ï¿½ <Instrucciones> ï¿½}ï¿½
         if(!Expect("else"))
             return false;
 
@@ -481,6 +483,9 @@ public class Compiler {
 	public static Token Tokenizer() throws IOException {
 		Token tokenToReturn = new Token();
 		tokenToReturn.description = ReadTokenFromFile();
+		
+		System.out.println("Token: "+tokenToReturn.description);
+		
 		tokenToReturn.code = GetTokenCode(tokenToReturn.description);
 		if(tokenToReturn.code == 43){
 			tokenToReturn.info = GetTokenConstantType(tokenToReturn.description);
@@ -667,7 +672,7 @@ public class Compiler {
 		return false;
 	}
 	/*public static boolean Expresion() throws IOException{
-		//<Expresión> <OperadorAritmetico> <Expresión> | <OperadorUnitario> <Expresión> | (<Expresión>) | <Valor>
+		//<Expresiï¿½n> <OperadorAritmetico> <Expresiï¿½n> | <OperadorUnitario> <Expresiï¿½n> | (<Expresiï¿½n>) | <Valor>
 		if(CurrentTokenInFirst("Expresion")){
 			if(!Expresion())
 				return false;
@@ -804,12 +809,13 @@ public class Compiler {
         return true;
     }
 
-	public static String ReadTokenFromFile() throws IOException {
+    public static String ReadTokenFromFile() throws IOException {
 
 		// 9 - Tab
 		// 10 - Salto de linea
 		// 32 - Espacio
 		// 33 - !
+		// 37 - %
 		// 40 - Abrir parentesis
 		// 41 - Cerrar parentesis
 		// 42 - *
@@ -832,6 +838,7 @@ public class Compiler {
 
 		boolean commentFound = false;
 		boolean quotationFound = false;
+		
 
 		while (!isComplete) {
 
@@ -843,7 +850,7 @@ public class Compiler {
 				case 9:
 				case 10:
 				case 13:
-				case 32:
+				case 32: //Vacio
 					increaseByte = true;
 					if (!quotationFound) {
 						if (!tokenWord.equals("")) {
@@ -853,6 +860,7 @@ public class Compiler {
 						tokenWord += (char) _bytesInFile[lastByteRead];
 					}
 
+					lastTokenReadOperator = false;
 					break;
 
 				// Comentarios
@@ -865,22 +873,34 @@ public class Compiler {
 						tokenWord += (char) _bytesInFile[lastByteRead];
 					}
 					break;
-
+					
+				//Operadores logicos aritmeticos que pueden estar juntos
+				case 33: //!
+				case 37: //%
+				case 42: //*
+				case 43: //+
+				case 45: // -
+				case 47: // /
+				case 60: // <
+				case 61: // =
+				case 62: // >
+					if(!lastTokenReadOperator){
+						if (tokenWord.length() != 0) {
+							isComplete = true;
+						}
+					} else {
+						tokenWord += (char) _bytesInFile[lastByteRead];
+						increaseByte = true;
+					}
+					
+					lastTokenReadOperator = true;
+					break;
+					
 				// Separadores de palabra que se convierten a token
-				case 33:
 				case 40:
 				case 41:
-				case 42:
-				case 43:
 				case 44:
-				case 45:
-				case 47:
 				case 59:
-				case 60:
-				case 61:
-				case 62:
-					// case 91:
-					// case 93:
 				case 123:
 				case 125:
 					if (!quotationFound) {
@@ -890,17 +910,26 @@ public class Compiler {
 						}
 						isComplete = true;
 						break;
+						
 					} else {
 						increaseByte = true;
 					}
-
+					break;
 					// No separadores de palabra
 				default:
 					if (_bytesInFile[lastByteRead] == 34) {
 						quotationFound = !quotationFound;
 					}
-					increaseByte = true;
-					tokenWord += (char) _bytesInFile[lastByteRead];
+					
+					if(lastTokenReadOperator){
+						isComplete = true;
+					} else {
+						increaseByte = true;
+						tokenWord += (char) _bytesInFile[lastByteRead];
+					}
+					
+					lastTokenReadOperator = false;
+					
 					break;
 				}
 
@@ -921,9 +950,17 @@ public class Compiler {
 			}
 
 		}
-
+		
 		return tokenWord;
 	}
+    
+    public static boolean isOperator(char character){
+    	if(character == 33 || character == 37 || character == 42 || character == 43 || character == 45 || character == 47
+    			|| character == 60 || character == 61 || character == 62){
+    		return true;
+    	}
+    	return false;
+    }
 
 	public static int GetTokenCode(String token) {
 		switch (token) {
