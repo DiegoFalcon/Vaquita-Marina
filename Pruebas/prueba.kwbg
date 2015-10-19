@@ -1,19 +1,17 @@
-#int a
-#int b
-#double c
-#string palabra
+#int a;
+#int b;
+#double c;
+#string palabra;
 
-a = 4
-b=2
-c=0
-d[5]=10
-palabra = "hola +\nnn >>"
+a = 4;
+b=2;
+c=0;
 
 if(a>4){
-	c=100
+	c=100;
 }
 else {
-	c=200
+	c=200;
 }
-write c
-write a
+write c;
+write a;
