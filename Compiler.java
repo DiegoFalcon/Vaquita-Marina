@@ -1,3 +1,5 @@
+package compiler;
+
 import java.awt.FileDialog;
 import java.awt.Frame;
 import java.io.IOException;
@@ -14,66 +16,42 @@ public class Compiler {
 	static Variable _variablesTable[] = new Variable[0];
 	static Token _arrayToken[];
 	static boolean _isCondition = false;
-	static Stack<Boolean> _stackIsCondition = new Stack<Boolean>();
+	static Stack<Integer> _stackIsCondition = new Stack<Integer>();
 
 	public static void main(String[] args) throws IOException {
 		// TODO Auto-generated method stub
 		openFile();
-		// while (!isFileFinished) {
-		// _currentToken = Tokenizer();
-		//
-		// }
-
-		/*
-		 * while(!isFileFinished){ Token array_TempToken[]; Token tokenToAdd =
-		 * Tokenizer(); int array_dataLength = _arrayToken.length;
-		 * array_TempToken = new Token[array_dataLength];
-		 * 
-		 * for (int index=0; index<array_TempToken.length; index++){
-		 * array_TempToken[index]=_arrayToken[index]; }
-		 * 
-		 * //array_tempData = array_data; _arrayToken = new
-		 * Token[_arrayToken.length+1];
-		 * 
-		 * for (int index=0; index<array_dataLength; index++){
-		 * _arrayToken[index]=array_TempToken[index];
-		 * 
-		 * }
-		 * 
-		 * _arrayToken[_arrayToken.length]=tokenToAdd; }
-		 */
 		Instrucciones();
 	}
 
-	public static void AddToTokenArray() {
-
-	}
 
 	public static boolean Instrucciones() throws IOException {
 		// <InstrucciÔøΩn> {<Instrucciones>}
 		// _currentToken = Tokenizer();
-		while (CurrentTokenInFirst("instruccion")) {
-			if (!Instruccion())
+		if(isFileFinished)
+			return false;
+		if(!Instruccion())
+			return false;
+		while (CurrentTokenInFirst("Instrucciones")) {
+			if (!Instrucciones())
 				return false;
 		}
 
 		return true;
 	}
 
-	public static boolean Declaracion() throws IOException {
-		// #<TipoDato> <ListaVariables> ;
-		if (!TipoDato())
+	public static boolean Declaracion() throws IOException{
+		//#<TipoDato> <ListaVariables> ;
+		if(!TipoDato())
 			return false;
-		if (!ListaVariables())
+		if(!ListaVariables())
 			return false;
-		if (!Expect(";"))
-			return false;
-		return true;
+		return Expect(";");
 	}
 
 	public static boolean ListaVariables() throws IOException {
 		// <Variables> {,<ListaVariables>}
-		if (!Variables())
+		if (!Variable())
 			return false;
 
 		while (CurrentTokenInFirst("ListaVariables")) {
@@ -86,7 +64,7 @@ public class Compiler {
 		return true;
 	}
 
-	public static boolean Letra() throws IOException {
+/*	public static boolean Letra() throws IOException {
 		if (Expect("[a-zA-Z]+"))
 			return true;
 		return false;
@@ -131,30 +109,49 @@ public class Compiler {
 			return true;
 		return false;
 	}
-
-	public static boolean Variables() throws IOException {
-		if (CurrentToken(45))
-			return Expect(45);
-		if (CurrentToken(44))
-			return Expect(44);
-
-		return false;
-	}
-
-	public static boolean TipoDato() throws IOException {
-		if (CurrentToken("#int"))
-			return Expect("#int");
-		if (CurrentToken("#float"))
-			return Expect("#float");
-		if (CurrentToken("#double"))
-			return Expect("#double");
-		if (CurrentToken("#char"))
-			return Expect("#char");
-		if (CurrentToken("#string"))
-			return Expect("#string");
-		return false;
-
-	}
+*/
+	  public static boolean Variable() throws IOException{
+		  	if(!CurrentToken(44) && !CurrentToken(45))
+		  		return false;
+		  	
+		  	if(CurrentToken(44))
+		  		if(!Expect(44))
+		  			return false;
+		  	if(CurrentToken(45))
+		  		if(!Expect(45))
+		  			return false;
+	        if(CurrentToken("[")){
+	          if(!Expect("["))
+	             return false;
+	          if(!IndiceVector())
+	             return false;
+	           if(!Expect("]"))
+	             return false;
+	        }
+	        return true;
+	 }
+	  public static boolean IndiceVector() throws IOException{
+	        if(CurrentTokenInFirst("Expresion"))
+	            if(!Expresion())
+	                return false;
+	        if(CurrentTokenInFirst("IncrementoDecremento"))
+	            if(!IncrementoDecremento())
+	                return false;
+	        return true;
+	    }
+		public static boolean TipoDato() throws IOException{
+			if(CurrentToken("#int"))
+				return Expect("#int");
+			if(CurrentToken("#float"))
+				return Expect("#float");
+			if(CurrentToken("#double"))
+				return Expect("#double");
+			if(CurrentToken("#char"))
+				return Expect("#char");
+			if(CurrentToken("#string"))
+				return Expect("#string");
+			return false;	
+		}
 
 	public static boolean Expect(int tokenCode) throws IOException {
 		_currentToken = Tokenizer();
@@ -165,8 +162,7 @@ public class Compiler {
 			return true;
 		}
 		if (_stackIsCondition.isEmpty()) {
-			MessageError("Error de Sintaxis", "El token: " + tokenCode + " no existe.");
-			System.exit(0);
+			MessageError("Expect", "Token no identificado: " + tokenCode + ", se esperaba un: "+_currentToken.description);
 		}
 		return false;
 	}
@@ -180,94 +176,96 @@ public class Compiler {
 			return true;
 		}
 		if (_stackIsCondition.isEmpty()) {
-			MessageError("Error de Sintaxis", "El token: " + instruction + " no existe.");
+			MessageError("Expect", "Codigo de Token no identificado: " + instruction + ", se esperaba un: "+_currentToken.code);
 			System.exit(0);
 		}
 		return false;
 	}
 
 	public static boolean CurrentToken(String instruction) throws IOException {
-		int tempLastByteRead = lastByteRead;
-		_isCondition = true;
-		_stackIsCondition.push(true);
+		_stackIsCondition.push(lastByteRead);
 		if (!Expect(instruction)) {
-			lastByteRead = tempLastByteRead;
-			_isCondition = false;
-			_stackIsCondition.pop();
+			lastByteRead = _stackIsCondition.pop();
 			return false;
 		}
-		_isCondition = false;
-		_stackIsCondition.pop();
-		lastByteRead = tempLastByteRead;
+		lastByteRead = _stackIsCondition.pop();
 		return true;
 	}
 
 	public static boolean CurrentToken(int instruction) throws IOException {
-		int tempLastByteRead = lastByteRead;
-		_isCondition = true;
-		_stackIsCondition.push(true);
+		_stackIsCondition.push(lastByteRead);
 		if (!Expect(instruction)) {
-			_isCondition = false;
-			_stackIsCondition.pop();
-			lastByteRead = tempLastByteRead;
+			lastByteRead = _stackIsCondition.pop();
 			return false;
 		}
-		_isCondition = false;
-		_stackIsCondition.pop();
-		lastByteRead = tempLastByteRead;
+		lastByteRead = _stackIsCondition.pop();
 		return true;
 	}
-
+	public static boolean CurrentTokenInfo(String info) throws IOException{
+		_stackIsCondition.push(lastByteRead);
+		_currentToken = Tokenizer();
+		if (_currentToken.info.equals(info)) {
+			lastByteRead = _stackIsCondition.pop();
+			return true;
+		}		
+		lastByteRead = _stackIsCondition.pop();
+		return false;
+	}
 	public static boolean CurrentTokenInFirst(String instruction) throws IOException {
-		int tempLastByteRead = lastByteRead;
 		boolean result = false;
-		_isCondition = true;
-		_stackIsCondition.push(true);
-		// System.out.println("El temporal al principio en CurrentToken
-		// "+instruction+" = "+tempLastByteRead);
-		// System.out.println("La condicion al principio en CurrentToken
-		// "+instruction+" = "+_isCondition);
+		_stackIsCondition.push(lastByteRead);
+
 		switch (instruction) {
-		case "instruccion":
+		case "Instruccion":
 			result = Instruccion();
 			break;
-		case "instrucciones":
+		case "Instrucciones":
 			result = Instrucciones();
 			break;
-		case "condicion":
+		case "Condicion":
 			result = Condicion();
 			break;
-		case "condiciones":
+		case "Condiciones":
 			result = Condiciones();
 			break;
-		case "if":
+		case "If":
 			result = If();
 			break;
-		case "else":
+		case "Else":
 			result = Else();
 			break;
-		case "declaracion":
+		case "Declaracion":
 			result = Declaracion();
 			break;
-		case "asignacion":
-			result = Asignacion();
+		case "Asignacion":
+			result = Asignacion(true);
 			break;
-		case "for":
+		case "For":
 			result = For();
 			break;
-		case "while":
+		case "While":
 			result = While();
 			break;
 		case "ListaVariables":
 			result = ListaVariables();
+			break;
+		case "Expresion":
+			result = Expresion();
+			break;
+		case "IncrementoDecremento":
+			result = IncrementoDecremento();
+			break;
+		case "Variable":
+			result = Variable();
+			break;
+		case "OperadorUnitario":
+			result = OperadorUnitario();
+			break;
+		case "Valor":
+			result = Valor();
+			break;
 		}
-		_isCondition = false;
-		lastByteRead = tempLastByteRead;
-		_stackIsCondition.pop();
-		// System.out.println("El temporal al final en CurrentToken
-		// "+instruction+" = "+tempLastByteRead);
-		// System.out.println("La condicion al final en CurrentToken
-		// "+instruction+" = "+_isCondition);
+		lastByteRead = _stackIsCondition.pop();
 		return result;
 	}
 
@@ -282,124 +280,179 @@ public class Compiler {
 		return true;
 	}
 
-	public static boolean OperadoresLogicos() throws IOException {
-
-		String currentOperador = _currentToken.description;
-		switch (currentOperador) {
-		case ">":
-			if (CurrentToken(">"))
-				return Expect(">");
-		case "<":
-			if (CurrentToken("<="))
-				return Expect("<=");
-		case "<=":
-			if (CurrentToken("<="))
-				return Expect("<=");
-		case ">=":
-			if (CurrentToken(">="))
-				return Expect(">=");
-		case "==":
-			if (CurrentToken("=="))
-				return Expect("==");
-		case "!=":
-			if (CurrentToken("!="))
-				return Expect("!=");
-		}
-
-		return true;
-	}
-
+	public static boolean OperadoresLogicos() throws IOException{
+		if(CurrentToken("<"))
+			return Expect("<");
+		if(CurrentToken(">"))
+			return Expect(">");
+		if(CurrentToken("<="))
+			return Expect("<=");
+		if(CurrentToken(">="))
+			return Expect(">=");
+		if(CurrentToken("!="))
+			return Expect("!=");
+		if(CurrentToken("=="))
+			return Expect("==");
+		return false;
+    }
+    public static boolean ListaEscritura() throws IOException{
+        if(CurrentTokenInfo("String"))
+        {
+            if(!Expect(43))
+                return false;
+            if(!Expect("+"))
+                return false;
+            if(!ListaEscritura())
+                return false;
+            return true;             
+        }
+        else{
+            if(CurrentToken("Variable"))
+            {
+                if(!Variable())
+                    return false;
+                if(!Expect("+"))
+                    return false;
+                if(!ListaEscritura())
+                     return false;
+                return true;    
+            }
+        }
+        return false;
+    }
+    public static boolean Escritura() throws IOException{
+        if(CurrentToken("Write")){  
+            if(!Expect("Write"))
+                return false;
+            if(!ListaEscritura())
+                return false; 
+            if(!Expect(";"))
+                return false;
+            return true;      
+        }  
+        
+        if(CurrentToken("Writeln"))
+           {
+                if(!Expect("Writeln"))
+                    return false;
+                if(!ListaEscritura())
+                    return false;                   
+                if(!Expect(";"))
+                    return false;
+                return true;
+           }
+       return false;
+    }
 	public static boolean Instruccion() throws IOException {
 		// <For> | <While> | <If> | <AsignaciÔøΩn> | <Lectura> | <Escritura> |
 		// <DeclaraciÔøΩn>
-		if (CurrentTokenInFirst("if")) {
+		if (CurrentTokenInFirst("If")) {
 			return If();
 		}
-		if (CurrentTokenInFirst("for")) {
+		if (CurrentTokenInFirst("For")) {
 			return For();
 		}
-		if (CurrentTokenInFirst("while")) {
+		if (CurrentTokenInFirst("While")) {
 			return While();
 		}
-		if (CurrentTokenInFirst("asignacion")) {
-			return Asignacion();
+		if (CurrentTokenInFirst("Asignacion")) {
+			return Asignacion(true);
 		}
-		if (CurrentTokenInFirst("declaracion")) {
+		if (CurrentTokenInFirst("Declaracion")) {
 			return Declaracion();
 		}
-
+		
+		_currentToken = Tokenizer();
+		MessageError("InstruccionInvalida","La instruccion "+_currentToken.description+" no es valida.");
 		return false;
 	}
 
-	/*
-	 * public static void Escritura(){ Expect("write"); _currentToken =
-	 * Tokenizer(); ListaEscritura(); _currentToken = Tokenizer(); Expect(";");
-	 * _currentToken = Tokenizer(); }
-	 * 
-	 * public static void Lectura() throws IOException{ // Read <ListaVariables>
-	 * ; Expect("read"); _currentToken = Tokenizer(); ListaVariables();
-	 * _currentToken = Tokenizer(); Expect (";"); _currentToken = Tokenizer(); }
-	 * 
-	 * public static void ListaEscritura(){ //Si es mensaje if(_currentToken ==
-	 * Mensaje) Mensaje(); else Variables(); _currentToken = Tokenizer();
-	 * if(_currentToken.info.equals("+")){ Expect("+"); _currentToken =
-	 * Tokenizer(); ListaEscritura(); _currentToken = Tokenizer(); } }
-	 */
-	public static boolean If() throws IOException {
-		// If ( <Condiciones> ) ‚Äú{‚Äú <Instrucciones> ‚Äú}‚Äù [ Else ‚Äú{‚Äú
-		// <Instrucciones> ‚Äú}‚Äù ]
-		if (CurrentToken("if"))
-			return Expect("if");
-		if (CurrentToken("("))
-			return Expect("(");
-		if (!Condiciones())
-			return false;
-		if (CurrentToken(")"))
-			return Expect(")");
-		if (CurrentToken("{"))
-			return Expect("{");
-		if (!Instrucciones())
-			return false;
-		if (CurrentToken("}"))
-			return Expect("}");
+	public static boolean Lectura() throws IOException{
+	       // Read <ListaVariables> ;
+	           if(!Expect("read"))
+	               return false;
+	           if(!ListaVariables())
+	               return false;
+	           if(!Expect(";"))
+	               return false;
+	           return true;
+	 }
+	public static boolean If() throws IOException{
+	    //	If ( <Condiciones> ) ì{ì <Instrucciones> ì}î [ Else ì{ì <Instrucciones> ì}î ]
+	        if(!Expect("if"))
+	            return false;
+	        if (!Expect("("))
+	            return false;
+	        if(!Condiciones())
+	            return false;
+	        if(!Expect(")"))
+	            return false;
+	        if(!Expect("{"))
+	            return false;
+	        if(!Instrucciones())
+	            return false;
+	        if(!Expect("}"))
+	            return false;
+	        if(CurrentTokenInFirst("Else"))
+	            if(!Else())
+	                return false;
+	        return true;
+	    }
 
-		if (CurrentTokenInFirst("else"))
-			if (!Else())
-				return false;
-		return true;
-	}
-
-	public static boolean Else() throws IOException {
-		// else ‚Äú{‚Äú <Instrucciones> ‚Äú}‚Äù
-		if (CurrentToken("else"))
-			return Expect("else");
-		if (CurrentToken("{"))
-			return Expect("{");
-		if (!Instrucciones())
-			return false;
-		if (CurrentToken("}"))
-			return Expect("}");
-		return true;
-	}
+    public static boolean Else() throws IOException{
+        //else ì{ì <Instrucciones> ì}î
+        if(!Expect("else"))
+            return false;
+        if(!Expect("{"))
+            return false;
+        if(!Instrucciones())
+            return false;
+        if(!Expect("}"))
+            return false;
+        return true;
+    }
 
 	public static void MessageError(String error, String messageError) {
 		switch (error) {
-		case "Error de Sintaxis":
-			System.out.println("Error de sintaxis, " + messageError);
+		case "Expect":
+			System.out.println("Error en Expect, " + messageError);
 			break;
-
+		case "InstruccionInvalida":
+			System.out.println("Instruccion no identificada, " + messageError);
+			break;
 		default:
 			System.out.println("Error no identificado, " + messageError);
 		}
+		
+		System.exit(0);
 	}
 
 	public static Token Tokenizer() throws IOException {
 		Token tokenToReturn = new Token();
 		tokenToReturn.description = ReadTokenFromFile();
 		tokenToReturn.code = GetTokenCode(tokenToReturn.description);
+		if(tokenToReturn.code == 43){
+			tokenToReturn.info = GetTokenConstantType(tokenToReturn.description);
+		}
+		
 		return tokenToReturn;
 	}
-
+	public static String GetTokenConstantType(String tokenDescription){
+		if(tokenDescription.charAt(0) == '"'){
+			return "String";
+		}
+		
+		if(tokenDescription.charAt(0) == 39){
+			return "Char";
+		}
+		
+		for(int i = 0; i < tokenDescription.length(); i++){
+			if(tokenDescription.charAt(i)== '.'){
+				return "DoubleFloat";
+			}
+		}
+		return "Int";
+	}
 	public static void openFile() throws IOException {
 		Frame f = new Frame();
 		boolean error = false;
@@ -434,12 +487,12 @@ public class Compiler {
 	public static boolean Condiciones() throws IOException {
 		// <Condici√≥n> { <ANDOR> <Condiciones>} | (<Condiciones>)
 		
-		if(CurrentTokenInFirst("condicion")){
+		if(CurrentTokenInFirst("Condicion")){
 			if(!Condicion()){
 				return false;
 			}
 			
-			while (CurrentTokenInFirst("condiciones")) {
+			while (CurrentTokenInFirst("Condiciones")) {
 				if (!AndOr())
 					return false;
 				if (Condiciones())
@@ -447,7 +500,7 @@ public class Compiler {
 			}
 		}
 		
-		if(CurrentTokenInFirst("condiciones")){
+		if(CurrentTokenInFirst("Condiciones")){
 			if(!Condiciones()){
 				return false;
 			}
@@ -464,75 +517,66 @@ public class Compiler {
 		return false;
 	}
 
-	public static boolean For() throws IOException {
-		// For ( [ <Asignacion> ] ; <Condiciones> ; [ <Asignacion> ] ) "{"
-		// <Instrucciones> "}"
+	public static boolean For() throws IOException{
+	       // For ( [ <Asignacion> ] ; <Condiciones> ; [ <Asignacion> ] ) "{" <Instrucciones> "}" 
+	           if(!Expect("for"))
+	               return false;
+	           if(!Expect("("))
+	               return false;
+	           if(CurrentTokenInFirst("Asignacion"))
+	        	   if(!Asignacion(false))
+	        		   return false;
+	           if(!Expect(";"))
+	               return false;
+	           if(!Condiciones())
+	               return false;
+	           if(!Expect(";"))
+	               return false;
+	           if(CurrentTokenInFirst("Asignacion"))
+	        	   if(!Asignacion(false))
+	        		   return false;
+	           if(!Expect(")"))
+	               return false;
+	           if(!Expect("{"))
+	               return false;
+	           if(!Instrucciones())
+	        	   return false;
+	           if(!Expect("}"))
+	               return false;
+	           
+	           return true;
+	 }
 
-		if (CurrentToken("for"))
-			return Expect("for");
-		if (CurrentToken("("))
-			return Expect("(");
-		if (CurrentTokenInFirst("Asignacion"))
-			if (!Asignacion())
-				return false;
-		if (CurrentToken(";"))
-			return Expect(";");
-		if (!Condiciones())
-			return false;
-		if (CurrentToken(";"))
-			return Expect(";");
-		if (CurrentTokenInFirst("Asignacion"))
-			if (!Asignacion())
-				return false;
-		if (CurrentToken(";"))
-			return Expect(";");
-		if (CurrentToken("{"))
-			return Expect("{");
-		if (!Instrucciones())
-			return false;
-		if (CurrentToken("}"))
-			return Expect("}");
-
-		return true;
-	}
-
-	public static boolean Asignacion() throws IOException{
+	public static boolean Asignacion(boolean usesSemiColon) throws IOException{
 		if(CurrentTokenInFirst("IncrementoDecremento")){
 			if(!IncrementoDecremento())
 				return false;
-			if(!CurrentToken(";")){
-				return false;
-			}
-			return Expect(";");
-		}
-		else{
-			if(CurrentTokenInFirst("Variable")){
-				if(!Variable())
-					return false;
-				if(!OperadorAsignacion())
-					return false;
-				if(!Expresion())
-					return false;
-				if(!CurrentToken(";")){
-					return false;
-				}
+			if(usesSemiColon)
 				return Expect(";");
-			}
+			return true;
+		}
+		if(CurrentTokenInFirst("Variable")){
+			if(!Variable())
+				return false;
+			if(!OperadorAsignacion())
+				return false;
+			if(!Expresion())
+				return false;
+			if(usesSemiColon)
+				return Expect(";");
+			return true;		
 		}
 		return false;
 	}
-	public static boolean IncrementoDecremento(){
+	public static boolean IncrementoDecremento() throws IOException{
 		if(!Variable())
 			return false;
-		if(CurrentToken("++")){
+		if(CurrentToken("++"))
 			return Expect("++");
-		}
-		else{
-			if(CurrentToken("--")){
-				return Expect("--");
-			}
-		}				
-		return false;;
+		if(CurrentToken("--"))
+			return Expect("--");	
+		
+		return false;
 	}
 	public static boolean OperadorAsignacion() throws IOException{
 		if(CurrentToken("="))
@@ -568,7 +612,7 @@ public class Compiler {
 		return false;
 	}
 	public static boolean Expresion() throws IOException{
-		//<Expresi√≥n> <OperadorAritmetico> <Expresi√≥n> | <OperadorUnitario> <Expresi√≥n> | (<Expresi√≥n>) | <Valor>
+		//<ExpresiÛn> <OperadorAritmetico> <ExpresiÛn> | <OperadorUnitario> <ExpresiÛn> | (<ExpresiÛn>) | <Valor>
 		if(CurrentTokenInFirst("Expresion")){
 			if(!Expresion())
 				return false;
@@ -587,9 +631,7 @@ public class Compiler {
 		}
 		if(CurrentToken("(")){
 			Expect("(");
-			if(!CurrentTokenInFirst("Expresion"))
-				return false;
-			if(!CurrentToken(")"))
+			if(!Expresion())
 				return false;
 			return Expect(")");
 		}
@@ -602,7 +644,7 @@ public class Compiler {
 	}
 
 
-	public static boolean Operaciones() throws IOException {
+/*	public static boolean Operaciones() throws IOException {
 		if (Operacion()) {
 			if (GetTokenCode(_currentToken.description) != 19) {
 				if (!Operaciones())
@@ -615,7 +657,7 @@ public class Compiler {
 			return false;
 		return true;
 	}
-
+*/
 	public static boolean Operacion() throws IOException {
 		if (!Operador())
 			return false;
@@ -633,33 +675,36 @@ public class Compiler {
 		return true;
 	}
 
-	public static boolean Valor() throws IOException {
-		if (CurrentToken(43))
-			return Expect(43);
-		if (CurrentToken(44))
-			return Expect(44);
-		return false;
-	}
+    public static boolean Valor() throws IOException{
+        // 43 - Constante, 44 - Variable Declarada
+        if(CurrentToken("Variable"))
+           return Variable();
+        
+        if(!Expect(43))
+           return false;
+        
+        return true;
+    }
 
 	
 
-	public static boolean While() throws IOException {
-		if (CurrentToken("while"))
-			return Expect("while");
-		if (CurrentToken("("))
-			return Expect("(");
-		if (!Condiciones())
-			return false;
-		if (CurrentToken(")"))
-			return Expect(")");
-		if (CurrentToken("{"))
-			return Expect("{");
-		if (!Instrucciones())
-			return false;
-		if (CurrentToken("}"))
-			return Expect("}");
-		return false;
-	}
+    public static boolean While()  throws IOException{
+        if(!Expect("while"))
+            return false;
+        if(!Expect("("))
+            return false;  
+        if(!Condiciones())
+            return false;     
+        if(!Expect(")"))
+            return false;
+        if(!Expect("{"))
+            return false;
+        if(!Instrucciones())
+            return false;
+        if(!Expect("}"))
+            return false;
+        return true;
+    }
 
 	public static String ReadTokenFromFile() throws IOException {
 
@@ -717,6 +762,9 @@ public class Compiler {
 					increaseByte = true;
 					if (!quotationFound) {
 						commentFound = true;
+					}
+					else{
+						tokenWord += (char) _bytesInFile[lastByteRead];
 					}
 					break;
 
