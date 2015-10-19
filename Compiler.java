@@ -41,7 +41,6 @@ public class Compiler {
 				if(!Instruccion())
 					return false;
 			}
-			_stackInsideInstruction.pop();
 			return true;
 		}
 		
@@ -186,7 +185,7 @@ public class Compiler {
 			if(tokenCode==26)
 			{
 				_stackInsideInstruction.pop();
-				_stackInsideInstruction.push(false);
+			//	_stackInsideInstruction.push(false);
 			}
 			if (_stackIsCondition.isEmpty())
 				System.out.println(_currentToken.description);
@@ -209,7 +208,7 @@ public class Compiler {
 			if(instruction.equals("}"))
 			{
 				_stackInsideInstruction.pop();
-				_stackInsideInstruction.push(false);
+				//_stackInsideInstruction.push(false);
 			}
 			if (_stackIsCondition.isEmpty()){
 				System.out.println(instruction);
