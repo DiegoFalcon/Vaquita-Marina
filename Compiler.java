@@ -22,7 +22,10 @@ public class Compiler {
 	public static void main(String[] args) throws IOException {
 		// TODO Auto-generated method stub
 		openFile();
-		Instrucciones();
+		if(Instrucciones())
+			System.out.println("Se corrió la semantica correctamente");
+		else
+			System.out.println("Ocurrió un error en la semantica que no se identificó");
 	}
 
 
@@ -341,28 +344,24 @@ public class Compiler {
 			return Expect("==");
 		return false;
     }
-    public static boolean ListaEscritura() throws IOException{
-        if(CurrentTokenInfo("String"))
+	public static boolean ListaEscritura() throws IOException{
+    	if(CurrentTokenInFirst("Variable"))
         {
-            if(!Expect(43))
-                return false;
-            if(!Expect("+"))
-                return false;
-            if(!ListaEscritura())
-                return false;
-            return true;             
-        }
-        else{
-            if(CurrentTokenInFirst("Variable"))
-            {
-                if(!Variable())
-                    return false;
-                if(!Expect("+"))
-                    return false;
-                if(!ListaEscritura())
-                     return false;
-                return true;    
+            Variable();
+            if(CurrentToken("+")){
+            	Expect("+");
+            	return ListaEscritura();
             }
+            return true;    
+        }
+    	if(CurrentTokenInfo("String"))
+        {
+    		Expect(43);
+            if(CurrentToken("+")){
+            	Expect("+");
+            	return ListaEscritura();
+            }
+            return true;             
         }
         return false;
     }
