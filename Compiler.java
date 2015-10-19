@@ -16,6 +16,7 @@ public class Compiler {
 	static Variable _variablesTable[] = new Variable[0];
 	static Token _arrayToken[];
 	static boolean _isCondition = false;
+	static Stack<Boolean> _stackInsideInstruction = new Stack<Boolean>();
 	static Stack<Integer> _stackIsCondition = new Stack<Integer>();
 
 	public static void main(String[] args) throws IOException {
@@ -28,16 +29,32 @@ public class Compiler {
 	public static boolean Instrucciones() throws IOException {
 		// <Instrucciï¿½n> {<Instrucciones>}
 		// _currentToken = Tokenizer();
-		if(isFileFinished)
-			return false;
+		
+			
+		if(!_stackInsideInstruction.isEmpty()){
+			while(_stackInsideInstruction.peek())
+			{
+				if(!Instruccion())
+					return false;
+			}
+			_stackInsideInstruction.pop();
+			return true;
+		}
+		
 		if(!Instruccion())
 			return false;
-		while (CurrentTokenInFirst("Instrucciones")) {
+		
+		if(!isFileFinished)
+			if(Instrucciones())
+				return false;
+		
+		return true;
+		
+		
+		/*while (CurrentTokenInFirst("Instrucciones")) {
 			if (!Instrucciones())
 				return false;
-		}
-
-		return true;
+		}*/
 	}
 
 	public static boolean Declaracion() throws IOException{
@@ -54,9 +71,9 @@ public class Compiler {
 		if (!Variable())
 			return false;
 
-		while (CurrentTokenInFirst("ListaVariables")) {
-			if (CurrentToken(","))
-				return Expect(",");
+		if (CurrentToken(","))
+			return Expect(",");
+		while (CurrentTokenInFirst("ListaVariables")) {	
 			if (!ListaVariables())
 				return false;
 		}
@@ -156,6 +173,15 @@ public class Compiler {
 	public static boolean Expect(int tokenCode) throws IOException {
 		_currentToken = Tokenizer();
 		if (_currentToken.code == tokenCode) {
+			//abre llave
+			if(tokenCode==25)
+				_stackInsideInstruction.push(true);
+			//cierra llave
+			if(tokenCode==26)
+			{
+				_stackInsideInstruction.pop();
+				_stackInsideInstruction.push(false);
+			}
 			if (_stackIsCondition.isEmpty())
 				System.out.println(_currentToken.description);
 
@@ -169,10 +195,20 @@ public class Compiler {
 
 	public static boolean Expect(String instruction) throws IOException {
 		_currentToken = Tokenizer();
+		
+		
 		if (_currentToken.description.equals(instruction)) {
-			if (_stackIsCondition.isEmpty())
+			if(instruction.equals("{"))
+				_stackInsideInstruction.push(true);
+			if(instruction.equals("}"))
+			{
+				_stackInsideInstruction.pop();
+				_stackInsideInstruction.push(false);
+			}
+			if (_stackIsCondition.isEmpty()){
 				System.out.println(instruction);
-
+				
+			}
 			return true;
 		}
 		if (_stackIsCondition.isEmpty()) {
@@ -403,6 +439,7 @@ public class Compiler {
         //else “{“ <Instrucciones> “}”
         if(!Expect("else"))
             return false;
+
         if(!Expect("{"))
             return false;
         if(!Instrucciones())
@@ -611,7 +648,7 @@ public class Compiler {
 			return Expect("-");
 		return false;
 	}
-	public static boolean Expresion() throws IOException{
+	/*public static boolean Expresion() throws IOException{
 		//<Expresión> <OperadorAritmetico> <Expresión> | <OperadorUnitario> <Expresión> | (<Expresión>) | <Valor>
 		if(CurrentTokenInFirst("Expresion")){
 			if(!Expresion())
@@ -642,8 +679,51 @@ public class Compiler {
 		}
 		return false;
 	}
-
-
+*/
+	public static boolean Expresion() throws IOException{
+		//<Termino>|<Termino><OperadorSUma><Expresion>  //
+			if(Termino()){
+				if(CurrentToken("+") || CurrentToken("-")){
+					if(CurrentToken("+"))
+						Expect("+");
+					else
+						Expect("-");
+					return Expresion();
+				}
+				return true;
+			}
+			return false;
+		}
+		public static boolean Termino() throws IOException{
+			if(Factor()){
+				if(CurrentToken("*") || CurrentToken("/") || CurrentToken("%")){
+					if(CurrentToken("*"))
+						Expect("*");
+					else{
+						if(CurrentToken("/"))
+							Expect("/");
+						else
+							Expect("%");
+					}
+					return Termino();
+				}
+				return true;
+			}
+			return false;
+		}
+		public static boolean Factor() throws IOException{
+			if(CurrentTokenInFirst("Valor")){
+				return Valor();
+			}
+			if(CurrentToken("(")){
+				Expect("(");
+				if(!Expresion())
+					return false;
+				return Expect(")");
+			}
+			return false;
+		}
+		
 /*	public static boolean Operaciones() throws IOException {
 		if (Operacion()) {
 			if (GetTokenCode(_currentToken.description) != 19) {
