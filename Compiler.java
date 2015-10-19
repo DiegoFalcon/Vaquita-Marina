@@ -66,18 +66,20 @@ public class Compiler {
 		return Expect(";");
 	}
 
+
 	public static boolean ListaVariables() throws IOException {
 		// <Variables> {,<ListaVariables>}
 		if (!Variable())
 			return false;
 
 		if (CurrentToken(","))
-			return Expect(",");
+			if(!Expect(","))
+				return false;
 		while (CurrentTokenInFirst("ListaVariables")) {	
 			if (!ListaVariables())
 				return false;
 		}
-		
+
 		return true;
 	}
 
@@ -213,7 +215,6 @@ public class Compiler {
 		}
 		if (_stackIsCondition.isEmpty()) {
 			MessageError("Expect", "Codigo de Token no identificado: " + instruction + ", se esperaba un: "+_currentToken.code);
-			System.exit(0);
 		}
 		return false;
 	}
@@ -343,7 +344,7 @@ public class Compiler {
             return true;             
         }
         else{
-            if(CurrentToken("Variable"))
+            if(CurrentTokenInFirst("Variable"))
             {
                 if(!Variable())
                     return false;
@@ -528,22 +529,26 @@ public class Compiler {
 			if(!Condicion()){
 				return false;
 			}
-			
-			while (CurrentTokenInFirst("Condiciones")) {
-				if (!AndOr())
+			if(CurrentTokenInFirst("AndOr")){
+				if(!AndOr())
 					return false;
-				if (Condiciones())
-					return false;
+				while (CurrentTokenInFirst("Condiciones")) {
+					if (!Condiciones())
+						return false;
+				}
 			}
 		}
 		
-		if(CurrentTokenInFirst("Condiciones")){
-			if(!Condiciones()){
+		if(CurrentToken("(")){
+			if(!Expect("("))
 				return false;
-			}
-		}
-
+			if(!Condicion())
+				return false;
+			if(!Expect(")"))
+				return false;
+		}	
 		return true;
+		
 	}
 
 	public static boolean AndOr() throws IOException {
@@ -757,7 +762,7 @@ public class Compiler {
 
     public static boolean Valor() throws IOException{
         // 43 - Constante, 44 - Variable Declarada
-        if(CurrentToken("Variable"))
+        if(CurrentTokenInFirst("Variable"))
            return Variable();
         
         if(!Expect(43))
