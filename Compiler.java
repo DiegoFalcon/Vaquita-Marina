@@ -35,8 +35,8 @@ public class Compiler {
 			while(_stackInsideInstruction.peek())
 			{
 				if(CurrentToken("}")){
-					return true;
-					
+					_stackInsideInstruction.push(true);
+					return true;				
 				}
 				if(!Instruccion())
 					return false;
@@ -367,8 +367,8 @@ public class Compiler {
         return false;
     }
     public static boolean Escritura() throws IOException{
-        if(CurrentToken("Write")){  
-            if(!Expect("Write"))
+        if(CurrentToken("write")){  
+            if(!Expect("write"))
                 return false;
             if(!ListaEscritura())
                 return false; 
@@ -377,9 +377,9 @@ public class Compiler {
             return true;      
         }  
         
-        if(CurrentToken("Writeln"))
+        if(CurrentToken("writeln"))
            {
-                if(!Expect("Writeln"))
+                if(!Expect("writeln"))
                     return false;
                 if(!ListaEscritura())
                     return false;                   
@@ -411,7 +411,7 @@ public class Compiler {
 			return Escritura();
 		}
 		if(CurrentTokenInFirst("Lectura")){
-			return Escritura();
+			return Lectura();
 		}
 		_currentToken = Tokenizer();
 		MessageError("InstruccionInvalida","La instruccion "+_currentToken.description+" no es valida.");
