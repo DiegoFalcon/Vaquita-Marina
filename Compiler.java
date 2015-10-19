@@ -34,6 +34,10 @@ public class Compiler {
 		if(!_stackInsideInstruction.isEmpty()){
 			while(_stackInsideInstruction.peek())
 			{
+				if(CurrentToken("}")){
+					return true;
+					
+				}
 				if(!Instruccion())
 					return false;
 			}
@@ -45,7 +49,7 @@ public class Compiler {
 			return false;
 		
 		if(!isFileFinished)
-			if(Instrucciones())
+			if(!Instrucciones())
 				return false;
 		
 		return true;
@@ -301,6 +305,12 @@ public class Compiler {
 		case "Valor":
 			result = Valor();
 			break;
+		case "Escritura":
+			result = Escritura();
+			break;
+		case "Lectura":
+			result = Lectura();
+			break;
 		}
 		lastByteRead = _stackIsCondition.pop();
 		return result;
@@ -398,7 +408,12 @@ public class Compiler {
 		if (CurrentTokenInFirst("Declaracion")) {
 			return Declaracion();
 		}
-		
+		if(CurrentTokenInFirst("Escritura")){
+			return Escritura();
+		}
+		if(CurrentTokenInFirst("Lectura")){
+			return Escritura();
+		}
 		_currentToken = Tokenizer();
 		MessageError("InstruccionInvalida","La instruccion "+_currentToken.description+" no es valida.");
 		return false;
