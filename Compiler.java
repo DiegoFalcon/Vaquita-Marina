@@ -1,3 +1,4 @@
+package compiler;
 
 import java.awt.FileDialog;
 import java.awt.Frame;
@@ -24,21 +25,10 @@ public class Compiler {
 		// TODO Auto-generated method stub
 		openFile();
 		
-		/*
-		while (!isFileFinished) {
-			String sToken = ReadTokenFromFile();
-			int nTokenCode = GetTokenCode(sToken);
-			System.out.println("Token: "+sToken);
-		}
-		
-		System.out.println("Tokenizer Finished");
-		*/
-		
-		
 		if(Instrucciones())
-			System.out.println("Se corri� la semantica correctamente");
+			System.out.println("Se corrio la semantica correctamente");
 		else
-			System.out.println("Ocurri� un error en la semantica que no se identific�");
+			System.out.println("Ocurrio un error en la semantica que no se identifico");
 			
 	}
 
@@ -69,6 +59,7 @@ public class Compiler {
 				return false;
 		
 		return true;
+		
 		
 		/*while (CurrentTokenInFirst("Instrucciones")) {
 			if (!Instrucciones())
@@ -215,9 +206,7 @@ public class Compiler {
 	}
 
 	public static boolean Expect(String instruction) throws IOException {
-		_currentToken = Tokenizer();
-		
-		
+		_currentToken = Tokenizer();	
 		if (_currentToken.description.equals(instruction)) {
 			if(instruction.equals("{"))
 				_stackInsideInstruction.push(true);
@@ -239,25 +228,35 @@ public class Compiler {
 	}
 
 	public static boolean CurrentToken(String instruction) throws IOException {
+		if (isFileFinished)
+			return false;
 		_stackIsCondition.push(lastByteRead);
 		if (!Expect(instruction)) {
 			lastByteRead = _stackIsCondition.pop();
 			return false;
 		}
 		lastByteRead = _stackIsCondition.pop();
+		if(lastByteRead < _bytesInFile.length)
+			isFileFinished = false;
 		return true;
 	}
 
 	public static boolean CurrentToken(int instruction) throws IOException {
+		if (isFileFinished)
+			return false;
 		_stackIsCondition.push(lastByteRead);
 		if (!Expect(instruction)) {
 			lastByteRead = _stackIsCondition.pop();
 			return false;
 		}
 		lastByteRead = _stackIsCondition.pop();
+		if(lastByteRead < _bytesInFile.length)
+			isFileFinished = false;
 		return true;
 	}
 	public static boolean CurrentTokenInfo(String info) throws IOException{
+		if (isFileFinished)
+			return false;
 		_stackIsCondition.push(lastByteRead);
 		_currentToken = Tokenizer();
 		if (_currentToken.info.equals(info)) {
@@ -265,12 +264,17 @@ public class Compiler {
 			return true;
 		}		
 		lastByteRead = _stackIsCondition.pop();
+		if(lastByteRead < _bytesInFile.length)
+			isFileFinished = false;
 		return false;
 	}
 	public static boolean CurrentTokenInFirst(String instruction) throws IOException {
+		
+		if (isFileFinished)
+			return false;
 		boolean result = false;
 		_stackIsCondition.push(lastByteRead);
-
+		
 		switch (instruction) {
 		case "Instruccion":
 			result = Instruccion();
@@ -326,8 +330,13 @@ public class Compiler {
 		case "Lectura":
 			result = Lectura();
 			break;
+		case "AndOr":
+			result = AndOr();
+			break;
 		}
 		lastByteRead = _stackIsCondition.pop();
+		if(lastByteRead < _bytesInFile.length)
+			isFileFinished = false;
 		return result;
 	}
 
@@ -360,18 +369,22 @@ public class Compiler {
 	public static boolean ListaEscritura() throws IOException{
     	if(CurrentTokenInFirst("Variable"))
         {
-            Variable();
+            if(!Variable())
+            	return false;
             if(CurrentToken("+")){
-            	Expect("+");
+            	if(!Expect("+"))
+            		return false;
             	return ListaEscritura();
             }
             return true;    
         }
     	if(CurrentTokenInfo("String"))
         {
-    		Expect(43);
+    		if(!Expect(43))
+    			return false;
             if(CurrentToken("+")){
-            	Expect("+");
+            	if(!Expect("+"))
+            		return false;
             	return ListaEscritura();
             }
             return true;             
@@ -495,7 +508,7 @@ public class Compiler {
 		Token tokenToReturn = new Token();
 		tokenToReturn.description = ReadTokenFromFile();
 		
-		System.out.println("Token: "+tokenToReturn.description);
+		//System.out.println("Token: "+tokenToReturn.description);
 		
 		tokenToReturn.code = GetTokenCode(tokenToReturn.description);
 		if(tokenToReturn.code == 43){
@@ -555,23 +568,20 @@ public class Compiler {
 		// <Condición> { <ANDOR> <Condiciones>} | (<Condiciones>)
 		
 		if(CurrentTokenInFirst("Condicion")){
-			if(!Condicion()){
+			if(!Condicion())
 				return false;
-			}
 			if(CurrentTokenInFirst("AndOr")){
 				if(!AndOr())
 					return false;
-				while (CurrentTokenInFirst("Condiciones")) {
-					if (!Condiciones())
-						return false;
-				}
+				if (!Condiciones())
+					return false;			
 			}
 		}
 		
 		if(CurrentToken("(")){
 			if(!Expect("("))
 				return false;
-			if(!Condicion())
+			if(!Condiciones())
 				return false;
 			if(!Expect(")"))
 				return false;
