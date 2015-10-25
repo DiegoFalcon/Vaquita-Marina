@@ -10,6 +10,7 @@ public class Compiler {
 
 	static int lastByteRead = 0;
 	static boolean lastTokenReadOperator = false;
+	static boolean lastTokenReadSubstractOperator = false;
 	static boolean isFileFinished = false;
 	static byte[] _bytesInFile;
 	static Token _currentToken;
@@ -22,6 +23,17 @@ public class Compiler {
 	public static void main(String[] args) throws IOException {
 		// TODO Auto-generated method stub
 		openFile();
+		
+		/*
+		while (!isFileFinished) {
+			String sToken = ReadTokenFromFile();
+			int nTokenCode = GetTokenCode(sToken);
+			System.out.println("Token: "+sToken);
+		}
+		
+		System.out.println("Tokenizer Finished");
+		*/
+		
 		
 		if(Instrucciones())
 			System.out.println("Se corri� la semantica correctamente");
@@ -57,7 +69,6 @@ public class Compiler {
 				return false;
 		
 		return true;
-		
 		
 		/*while (CurrentTokenInFirst("Instrucciones")) {
 			if (!Instrucciones())
@@ -861,6 +872,7 @@ public class Compiler {
 					}
 
 					lastTokenReadOperator = false;
+					lastTokenReadSubstractOperator = false;
 					break;
 
 				// Comentarios
@@ -872,6 +884,10 @@ public class Compiler {
 					else{
 						tokenWord += (char) _bytesInFile[lastByteRead];
 					}
+					
+					lastTokenReadOperator = false;
+					lastTokenReadSubstractOperator = false;
+					
 					break;
 					
 				//Operadores logicos aritmeticos que pueden estar juntos
@@ -884,16 +900,26 @@ public class Compiler {
 				case 60: // <
 				case 61: // =
 				case 62: // >
-					if(!lastTokenReadOperator){
-						if (tokenWord.length() != 0) {
-							isComplete = true;
+					if(!quotationFound){
+						if(!lastTokenReadOperator){
+							if (tokenWord.length() != 0) {
+								isComplete = true;
+							}
+						} else {
+							tokenWord += (char) _bytesInFile[lastByteRead];
+							increaseByte = true;
 						}
+						
+						lastTokenReadOperator = true;
 					} else {
 						tokenWord += (char) _bytesInFile[lastByteRead];
 						increaseByte = true;
 					}
 					
-					lastTokenReadOperator = true;
+					if (_bytesInFile[lastByteRead] == 45) {
+						lastTokenReadSubstractOperator = true;
+					}
+					
 					break;
 					
 				// Separadores de palabra que se convierten a token
@@ -914,21 +940,47 @@ public class Compiler {
 					} else {
 						increaseByte = true;
 					}
+					
+					lastTokenReadOperator = false;
+					lastTokenReadSubstractOperator = false;
+					
 					break;
+					
 					// No separadores de palabra
 				default:
+					
+					boolean thisNumber = false;
 					if (_bytesInFile[lastByteRead] == 34) {
 						quotationFound = !quotationFound;
 					}
+					if (_bytesInFile[lastByteRead] >= 48 && _bytesInFile[lastByteRead] <=57) {
+						//Es numero
+						thisNumber = true;
+					} 
 					
 					if(lastTokenReadOperator){
 						isComplete = true;
+						
+						//Si este es numero y el pasado fue menos
+						if(thisNumber){
+							if(lastTokenReadSubstractOperator){
+								if(tokenWord.length()==1){
+									increaseByte = true;
+									tokenWord += (char) _bytesInFile[lastByteRead];
+								} else {
+									tokenWord = tokenWord.substring(0, tokenWord.length()-1);
+									lastByteRead--;
+								}
+							} 
+						}
+						
 					} else {
 						increaseByte = true;
 						tokenWord += (char) _bytesInFile[lastByteRead];
 					}
 					
 					lastTokenReadOperator = false;
+					lastTokenReadSubstractOperator = false;
 					
 					break;
 				}
