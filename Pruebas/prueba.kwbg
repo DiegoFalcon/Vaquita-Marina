@@ -2,6 +2,7 @@
 #int b;
 #double c;
 #string palabra;
+#string palabra2;
 
 a = 4;
 b=2;
@@ -19,6 +20,7 @@ a--4;
 
 c=1.23;
 palabra = "hola +\nnn >>";
+palabra = palabra + palabra2 + "!";
 
 if(a>=-4){
 	c=-100;

@@ -830,7 +830,7 @@ public class Compiler {
         return true;
     }
 
-    public static String ReadTokenFromFile() throws IOException {
+     public static String ReadTokenFromFile() throws IOException {
 
 		// 9 - Tab
 		// 10 - Salto de linea
@@ -945,7 +945,6 @@ public class Compiler {
 							increaseByte = true;
 						}
 						isComplete = true;
-						break;
 						
 					} else {
 						increaseByte = true;
@@ -958,7 +957,6 @@ public class Compiler {
 					
 					// No separadores de palabra
 				default:
-					
 					boolean thisNumber = false;
 					if (_bytesInFile[lastByteRead] == 34) {
 						quotationFound = !quotationFound;
@@ -981,7 +979,10 @@ public class Compiler {
 									tokenWord = tokenWord.substring(0, tokenWord.length()-1);
 									lastByteRead--;
 								}
-							} 
+							} else {
+								increaseByte = true;
+								tokenWord += (char) _bytesInFile[lastByteRead];
+							}
 						}
 						
 					} else {
