@@ -1,3 +1,4 @@
+package compiler;
 
 import java.awt.FileDialog;
 import java.awt.Frame;
@@ -239,48 +240,62 @@ public class Compiler {
 	public static boolean CurrentToken(String instruction) throws IOException {
 		if (isFileFinished)
 			return false;
+		boolean templastTokenReadOperator = lastTokenReadOperator;
 		_stackIsCondition.push(lastByteRead);
 		if (!Expect(instruction)) {
 			lastByteRead = _stackIsCondition.pop();
+			if(lastByteRead < _bytesInFile.length)
+				isFileFinished = false;
+			lastTokenReadOperator = templastTokenReadOperator;
 			return false;
 		}
 		lastByteRead = _stackIsCondition.pop();
 		if(lastByteRead < _bytesInFile.length)
 			isFileFinished = false;
+		lastTokenReadOperator = templastTokenReadOperator;
 		return true;
 	}
 
 	public static boolean CurrentToken(int instruction) throws IOException {
 		if (isFileFinished)
 			return false;
+		boolean templastTokenReadOperator = lastTokenReadOperator;
 		_stackIsCondition.push(lastByteRead);
 		if (!Expect(instruction)) {
 			lastByteRead = _stackIsCondition.pop();
+			if(lastByteRead < _bytesInFile.length)
+				isFileFinished = false;
+			lastTokenReadOperator = templastTokenReadOperator;
 			return false;
 		}
 		lastByteRead = _stackIsCondition.pop();
 		if(lastByteRead < _bytesInFile.length)
 			isFileFinished = false;
+		lastTokenReadOperator = templastTokenReadOperator;
 		return true;
 	}
 	public static boolean CurrentTokenInfo(String info) throws IOException{
 		if (isFileFinished)
 			return false;
+		boolean templastTokenReadOperator = lastTokenReadOperator;
 		_stackIsCondition.push(lastByteRead);
 		_currentToken = Tokenizer();
 		if (_currentToken.info.equals(info)) {
 			lastByteRead = _stackIsCondition.pop();
+			lastTokenReadOperator = templastTokenReadOperator;
 			return true;
 		}		
 		lastByteRead = _stackIsCondition.pop();
 		if(lastByteRead < _bytesInFile.length)
 			isFileFinished = false;
+		lastTokenReadOperator = templastTokenReadOperator;
 		return false;
 	}
 	public static boolean CurrentTokenInFirst(String instruction) throws IOException {
 		
 		if (isFileFinished)
 			return false;
+		boolean templastTokenReadOperator = lastTokenReadOperator;
 		boolean result = false;
 		_stackIsCondition.push(lastByteRead);
 		
@@ -349,6 +364,7 @@ public class Compiler {
 		lastByteRead = _stackIsCondition.pop();
 		if(lastByteRead < _bytesInFile.length)
 			isFileFinished = false;
+		lastTokenReadOperator = templastTokenReadOperator;
 		return result;
 	}
 
@@ -616,7 +632,7 @@ public class Compiler {
 	               return false;
 	           if(!Expect("("))
 	               return false;
-	           if(CurrentTokenInFirst("Asignacion"))
+	           if(CurrentTokenInFirst("AsignacionFor"))
 	        	   if(!Asignacion(false))
 	        		   return false;
 	           if(!Expect(";"))
@@ -879,6 +895,8 @@ public class Compiler {
 
 			boolean increaseByte = false;
 			if (!commentFound) {
+				if(lastByteRead==24)
+					System.out.println("aqui esta el pedo");
 				switch (_bytesInFile[lastByteRead]) {
 
 				// Separadores de palabra que no se convierten a token
@@ -1178,6 +1196,10 @@ public class Compiler {
 		case "charAt":
 			return 42;
 		default:
+			if(token == "")
+				System.out.println("error");
+			if(token.equals("a"))
+				System.out.println("es la [a]");
 			if (isNumber(token) || token.charAt(0) == '"' || ("" + token.charAt(0)).equals("'"))
 				return 43;
 			if (isVariableInTable(token))
