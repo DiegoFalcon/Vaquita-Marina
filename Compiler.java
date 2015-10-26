@@ -1,4 +1,3 @@
-package compiler;
 
 import java.awt.FileDialog;
 import java.awt.Frame;
@@ -24,6 +23,16 @@ public class Compiler {
 	public static void main(String[] args) throws IOException {
 		// TODO Auto-generated method stub
 		openFile();
+		
+		/*
+		while (!isFileFinished) {
+			String sToken = ReadTokenFromFile();
+			int nTokenCode = GetTokenCode(sToken);
+			System.out.println("Token: "+sToken);
+		}
+		*/
+		
+		System.out.println("Tokenizer Finished");
 		
 		if(Instrucciones())
 			System.out.println("Se corrio la semantica correctamente");
@@ -333,6 +342,9 @@ public class Compiler {
 		case "AndOr":
 			result = AndOr();
 			break;
+		case "AsignacionFor":
+			result = Asignacion(false);
+			break;
 		}
 		lastByteRead = _stackIsCondition.pop();
 		if(lastByteRead < _bytesInFile.length)
@@ -613,7 +625,7 @@ public class Compiler {
 	               return false;
 	           if(!Expect(";"))
 	               return false;
-	           if(CurrentTokenInFirst("Asignacion"))
+	           if(CurrentTokenInFirst("AsignacionFor"))
 	        	   if(!Asignacion(false))
 	        		   return false;
 	           if(!Expect(")"))
@@ -859,6 +871,8 @@ public class Compiler {
 
 		boolean commentFound = false;
 		boolean quotationFound = false;
+		boolean vectorIndexFound = false;
+		boolean justClosedVector = false;
 		
 
 		while (!isComplete) {
@@ -874,9 +888,14 @@ public class Compiler {
 				case 32: //Vacio
 					increaseByte = true;
 					if (!quotationFound) {
-						if (!tokenWord.equals("")) {
-							isComplete = true;
+						if(vectorIndexFound){
+							tokenWord += (char) _bytesInFile[lastByteRead];
+						} else {
+							if (!tokenWord.equals("")) {
+								isComplete = true;
+							}
 						}
+						
 					} else {
 						tokenWord += (char) _bytesInFile[lastByteRead];
 					}
@@ -889,7 +908,12 @@ public class Compiler {
 				case 92:
 					increaseByte = true;
 					if (!quotationFound) {
-						commentFound = true;
+						if(vectorIndexFound){
+							tokenWord += (char) _bytesInFile[lastByteRead];
+						} else {
+							commentFound = true;
+						}
+						
 					}
 					else{
 						tokenWord += (char) _bytesInFile[lastByteRead];
@@ -911,24 +935,35 @@ public class Compiler {
 				case 61: // =
 				case 62: // >
 					if(!quotationFound){
-						if(!lastTokenReadOperator){
-							if (tokenWord.length() != 0) {
-								isComplete = true;
-							}
-						} else {
+						if(vectorIndexFound){
 							tokenWord += (char) _bytesInFile[lastByteRead];
-							increaseByte = true;
+							increaseByte=true;
+						} else {
+							if(!lastTokenReadOperator){
+								if (tokenWord.length() != 0) {
+									isComplete = true;
+								}
+							} else {
+								tokenWord += (char) _bytesInFile[lastByteRead];
+								increaseByte = true;
+							}
+							
+							lastTokenReadOperator = true;
 						}
 						
-						lastTokenReadOperator = true;
+						
 					} else {
 						tokenWord += (char) _bytesInFile[lastByteRead];
 						increaseByte = true;
 					}
 					
+					lastTokenReadSubstractOperator = false;
+					
 					if (_bytesInFile[lastByteRead] == 45) {
 						lastTokenReadSubstractOperator = true;
 					}
+					
+					
 					
 					break;
 					
@@ -940,11 +975,16 @@ public class Compiler {
 				case 123:
 				case 125:
 					if (!quotationFound) {
-						if (tokenWord.length() == 0) {
+						if(vectorIndexFound){
 							tokenWord += (char) _bytesInFile[lastByteRead];
-							increaseByte = true;
+						} else {
+							if (tokenWord.length() == 0) {
+								tokenWord += (char) _bytesInFile[lastByteRead];
+								increaseByte = true;
+							}
+							isComplete = true;
 						}
-						isComplete = true;
+						
 						
 					} else {
 						increaseByte = true;
@@ -958,43 +998,68 @@ public class Compiler {
 					// No separadores de palabra
 				default:
 					boolean thisNumber = false;
+					
 					if (_bytesInFile[lastByteRead] == 34) {
 						quotationFound = !quotationFound;
 					}
+					
+					if (_bytesInFile[lastByteRead] == 91) {
+						vectorIndexFound = true;
+					}
+					
+					if (_bytesInFile[lastByteRead] == 93) {
+						vectorIndexFound = false;
+						justClosedVector = true;
+					}
+					
 					if (_bytesInFile[lastByteRead] >= 48 && _bytesInFile[lastByteRead] <=57) {
 						//Es numero
 						thisNumber = true;
 					} 
 					
-					if(lastTokenReadOperator){
-						isComplete = true;
+					if(!justClosedVector){
 						
-						//Si este es numero y el pasado fue menos
-						if(thisNumber){
-							if(lastTokenReadSubstractOperator){
-								if(tokenWord.length()==1){
-									increaseByte = true;
-									tokenWord += (char) _bytesInFile[lastByteRead];
-								} else {
-									tokenWord = tokenWord.substring(0, tokenWord.length()-1);
-									lastByteRead--;
+						if(lastTokenReadOperator){
+							
+							//Si este es numero y el pasado fue menos
+							if(thisNumber){
+								if(lastTokenReadSubstractOperator){
+									
+									if(tokenWord.length()==1){
+										increaseByte = true;
+										tokenWord += (char) _bytesInFile[lastByteRead];
+									} else {
+										tokenWord = tokenWord.substring(0, tokenWord.length()-1);
+										lastByteRead--;
+									}
+								} else{
+									isComplete = true;
 								}
 							} else {
-								increaseByte = true;
-								tokenWord += (char) _bytesInFile[lastByteRead];
+								isComplete = true;
 							}
+							
+						} else {
+							increaseByte = true;
+							tokenWord += (char) _bytesInFile[lastByteRead];
 						}
 						
 					} else {
+						//Se acaba indice de vector corchetes
+						isComplete = true;
 						increaseByte = true;
 						tokenWord += (char) _bytesInFile[lastByteRead];
 					}
+					
+					justClosedVector = false;
+					
 					
 					lastTokenReadOperator = false;
 					lastTokenReadSubstractOperator = false;
 					
 					break;
 				}
+				
 
 				if (increaseByte) {
 					lastByteRead++;
