@@ -3,6 +3,7 @@ package compiler;
 import java.awt.FileDialog;
 import java.awt.Frame;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.io.BufferedOutputStream;
@@ -594,6 +595,8 @@ public class Compiler {
 			System.exit(0);
 		f.dispose();
 
+		String[] parts = fileName.split(".kwbg");
+		_filename = parts[0];
 		_bytesInFile = Files.readAllBytes(Paths.get(fileDir, fileName));
 	}
 
@@ -1221,7 +1224,6 @@ public class Compiler {
 		}
 		return false;
 	}
-
 	public static boolean isVariableInTable(String variableName) {
 		for (int i = 0; i < _variablesTable.length; i++) {
 			if ((_variablesTable[i].name).equals(variableName)) {
@@ -1230,19 +1232,167 @@ public class Compiler {
 		}
 		return false;
 	}
-
+	
 	public void AddLength(int length) throws IOException{
 		BufferedOutputStream bufferedOut = new BufferedOutputStream(new FileOutputStream(_fileName+".KWA",true)); 
 		bufferedOut.write((byte)length);
 		bufferedOut.close();
 	}
-
 	public void AddInstruction(int instruction) throws IOException{
 		BufferedOutputStream bufferedOut = new BufferedOutputStream(new FileOutputStream(_fileName+".KWA",true)); 
 		bufferedOut.write((byte)instruction);
 		bufferedOut.close();
 	}
-	
+	public void AddInstruction(String instruction) throws IOException{
+		BufferedOutputStream bufferedOut = new BufferedOutputStream(new FileOutputStream(_filename+".KWA",true)); 
+		bufferedOut.write((byte)GetInstructionCode(instruction));
+		bufferedOut.close();
+	}
+	public int GetInstructionCode(String instruction){
+		switch(instruction){
+		case "READI":
+            return 1;
+        case "READD":
+            return 2;
+        case "READF":
+            return 3;
+        case "READC":
+            return 4;
+        case "READS":
+            return 5;
+        case "READVI":
+            return 6;
+        case "READVD":
+            return 7;
+        case "READVF":
+            return 8;
+        case "READVC":
+            return 9;
+        case "READVS":
+            return 10;
+        case "WRTI":
+            return 11;
+        case "WRTD":
+            return 12;
+        case "WRTF":
+            return 13;
+        case "WRTC":
+            return 14;
+        case "WRTS":
+            return 15;
+        case "WRTM":
+            return 16;
+        case "WRTLN":
+            return 17;
+        case "WRTVI":
+            return 18;
+        case "WRTVD":
+            return 19;
+        case "WRTVC":
+            return 20;
+        case "WRTVF":
+            return 21;
+        case "WRTVS":
+            return 22;
+        case "SETINDEX":
+            return 23;
+        case "SETINDEXK":
+            return 24;
+        case "POPINDEX":
+            return 25;
+        case "PUSHI":
+            return 26;
+        case "PUSHD":
+            return 27;
+        case "PUSHC":
+            return 28;
+        case "PUSHF":
+            return 29;
+        case "PUSHS":
+            return 30;
+        case "PUSHKI":
+            return 31;
+        case "PUSHKF":
+            return 32;
+        case "PUSHKD":
+            return 33;
+        case "PUSHKC":
+            return 34;
+        case "PUSHKS":
+            return 35;
+        case "PUSHVI":
+            return 36;
+        case "PUSHVF":
+            return 37;
+        case "PUSHVD":
+            return 38;
+        case "PUSHVC":
+            return 39;
+        case "PUSHVS":
+            return 40;
+        case "POPI":
+            return 41;
+        case "POPD":
+            return 42;
+        case "POPC":
+            return 43;
+        case "POPF":
+            return 44;
+        case "POPS":
+            return 45;
+        case "POPVI":
+            return 46;
+        case "POPVD":
+            return 47;
+        case "POPVC":
+            return 48;
+        case "POPVF":
+            return 49;
+        case "POPVS":
+            return 50;
+        case "CMPEQ":
+            return 51;
+        case "CMPNE":
+            return 52;
+        case "CMPLT":
+            return 53;
+        case "CMPLE":
+            return 54;
+        case "CMPGT":
+            return 55;
+        case "CMPGE":
+            return 56;
+        case "JMP":
+            return 57;
+        case "JMPT":
+            return 58;
+        case "JMPF":
+            return 59;
+        case "ADD":
+            return 60;
+        case "SUB":
+            return 61;
+        case "MUL":
+            return 62;
+        case "DIV":
+            return 63;
+        case "MOD":
+            return 64;
+        default:
+            return -1;
+		}
+	}
+	public void AddTag(Tag tag) throws IOException{
+		BufferedOutputStream bufferedOut = new BufferedOutputStream(new FileOutputStream(_filename+".KWA",true)); 
+		
+		byte[] variableBytes=new byte[2];
+		variableBytes[1]=(byte)(tag.dir & 0xFF);
+		variableBytes[0]=(byte)((tag.dir>>8) & 0xFF);
+    	
+		bufferedOut.write(variableBytes);
+		
+		bufferedOut.close();
+	}
 	public void AddVariable(String variable) throws IOException{
 		BufferedOutputStream bufferedOut = new BufferedOutputStream(new FileOutputStream(_fileName+".KWA",true)); 
 		
@@ -1256,7 +1406,6 @@ public class Compiler {
 		
 		bufferedOut.close();
 	}
-	
 	public int GetVariableDir(String variable){
 		int dir=0;
 		for(int i=0; i<_variablesTable.length ; i++){
@@ -1287,28 +1436,28 @@ public class Compiler {
 		}
 		return -1;
 	}
-	
 	public static void AddInteger(int variable) throws IOException{
-        BufferedOutputStream bufferedOut = new BufferedOutputStream(new FileOutputStream(_fileName + ".KWA",true));
+        BufferedOutputStream bufferedOut = new BufferedOutputStream(new FileOutputStream(_filename + ".KWA",true));
         bufferedOut.write(ByteBuffer.allocate(4).putInt(variable).array());
         bufferedOut.close();
     }
     public static void AddDouble (double variable) throws IOException{
-        BufferedOutputStream bufferedOut = new BufferedOutputStream(new FileOutputStream(_fileName + ".KWA",true));
+        BufferedOutputStream bufferedOut = new BufferedOutputStream(new FileOutputStream(_filename + ".KWA",true));
         bufferedOut.write(ByteBuffer.allocate(8).putDouble(variable).array());
         bufferedOut.close();
     }
     public static void AddFloat (float variable) throws IOException{
-        BufferedOutputStream bufferedOut = new BufferedOutputStream(new FileOutputStream(_fileName + ".KWA",true));
+        BufferedOutputStream bufferedOut = new BufferedOutputStream(new FileOutputStream(_filename + ".KWA",true));
         bufferedOut.write(ByteBuffer.allocate(4).putFloat(variable).array());
         bufferedOut.close();
     }
-    public static void AddChar (char variable) throws FileNotFoundException, IOException{
-        BufferedOutputStream bufferedOut = new BufferedOutputStream(new FileOutputStream(_fileName + ".KWA",true));
+    public static void AddChar (char variable) throws IOException{
+        BufferedOutputStream bufferedOut = new BufferedOutputStream(new FileOutputStream(_filename + ".KWA",true));
         bufferedOut.write((byte)variable);
+        bufferedOut.close();
     }
-    public static void AddString (String variable) throws FileNotFoundException, IOException{
-        BufferedOutputStream bufferedOut = new BufferedOutputStream(new FileOutputStream(_fileName + ".KWA",true)); 
+    public static void AddString (String variable) throws IOException{
+        BufferedOutputStream bufferedOut = new BufferedOutputStream(new FileOutputStream(_filename + ".KWA",true)); 
         for(int i=0;i<variable.length();i++){
         	bufferedOut.write((byte)variable.charAt(i));
         }
