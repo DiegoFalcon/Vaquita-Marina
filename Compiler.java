@@ -6,7 +6,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.io.BufferedOutputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.nio.ByteBuffer;
 import java.util.*;
 
 public class Compiler {
@@ -17,7 +19,7 @@ public class Compiler {
 	static boolean isFileFinished = false;
 	static byte[] _bytesInFile;
 	static Token _currentToken;
-	static String _filename;
+	static String _fileName;
 	static Variable _variablesTable[] = new Variable[0];
 	static Token _arrayToken[];
 	static boolean _isCondition = false;
@@ -1230,19 +1232,19 @@ public class Compiler {
 	}
 
 	public void AddLength(int length) throws IOException{
-		BufferedOutputStream bufferedOut = new BufferedOutputStream(new FileOutputStream(_filename+".KWA",true)); 
+		BufferedOutputStream bufferedOut = new BufferedOutputStream(new FileOutputStream(_fileName+".KWA",true)); 
 		bufferedOut.write((byte)length);
 		bufferedOut.close();
 	}
 
 	public void AddInstruction(int instruction) throws IOException{
-		BufferedOutputStream bufferedOut = new BufferedOutputStream(new FileOutputStream(_filename+".KWA",true)); 
+		BufferedOutputStream bufferedOut = new BufferedOutputStream(new FileOutputStream(_fileName+".KWA",true)); 
 		bufferedOut.write((byte)instruction);
 		bufferedOut.close();
 	}
 	
 	public void AddVariable(String variable) throws IOException{
-		BufferedOutputStream bufferedOut = new BufferedOutputStream(new FileOutputStream(_filename+".KWA",true)); 
+		BufferedOutputStream bufferedOut = new BufferedOutputStream(new FileOutputStream(_fileName+".KWA",true)); 
 		
 		int variableDir = GetVariableDir(variable);
 		
@@ -1312,5 +1314,4 @@ public class Compiler {
         }
         bufferedOut.close();
     }
-	
 }
