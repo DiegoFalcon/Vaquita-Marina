@@ -5,6 +5,8 @@ import java.awt.Frame;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.io.BufferedOutputStream;
+import java.io.FileOutputStream;
 import java.util.*;
 
 public class Compiler {
@@ -15,6 +17,7 @@ public class Compiler {
 	static boolean isFileFinished = false;
 	static byte[] _bytesInFile;
 	static Token _currentToken;
+	static String _filename;
 	static Variable _variablesTable[] = new Variable[0];
 	static Token _arrayToken[];
 	static boolean _isCondition = false;
@@ -1226,4 +1229,119 @@ public class Compiler {
 		return false;
 	}
 
+	public void AddLength(int length) throws IOException{
+		BufferedOutputStream bufferedOut = new BufferedOutputStream(new FileOutputStream(_filename+".KWA",true)); 
+		bufferedOut.write((byte)length);
+		bufferedOut.close();
+	}
+
+	public void AddInstruction(int instruction) throws IOException{
+		BufferedOutputStream bufferedOut = new BufferedOutputStream(new FileOutputStream(_filename+".KWA",true)); 
+		bufferedOut.write((byte)instruction);
+		bufferedOut.close();
+	}
+	
+	public void AddVariable(String variable) throws IOException{
+		BufferedOutputStream bufferedOut = new BufferedOutputStream(new FileOutputStream(_filename+".KWA",true)); 
+		
+		int variableDir = GetVariableDir(variable);
+		
+		byte[] variableBytes=new byte[2];
+		variableBytes[1]=(byte)(variableDir & 0xFF);
+		variableBytes[0]=(byte)((variableDir>>8) & 0xFF);
+    	
+		bufferedOut.write(variableBytes);
+		
+		bufferedOut.close();
+	}
+	
+	public int GetVariableDir(String variable){
+		int dir=0;
+		for(int i=0; i<_variablesTable.length ; i++){
+			if(_variablesTable[i].name.equals(variable)){
+				return dir;
+			}
+			switch(_variablesTable[i].type){
+				case "Int":
+					dir+=4;
+				break;
+				
+				case "Float":
+					dir+=4;
+				break;
+				
+				case "Double":
+					dir+=8;
+				break;
+				
+				case "String":
+					dir+=255;
+				break;
+				
+				case "Char":
+					dir+=1;
+				break;
+			}
+		}
+		return -1;
+	}
+	
+	public void AddLength(int length) throws IOException{
+		BufferedOutputStream bufferedOut = new BufferedOutputStream(new FileOutputStream("output.KWA",true)); 
+		bufferedOut.write((byte)length);
+		bufferedOut.close();
+	}
+
+	public void AddInstruction(int instruction) throws IOException{
+		BufferedOutputStream bufferedOut = new BufferedOutputStream(new FileOutputStream("output.KWA",true)); 
+		bufferedOut.write((byte)instruction);
+		bufferedOut.close();
+	}
+	
+	public void AddVariable(String variable) throws IOException{
+		BufferedOutputStream bufferedOut = new BufferedOutputStream(new FileOutputStream("output.KWA",true)); 
+		
+		int variableDir = GetVariableDir(variable);
+		
+		byte[] variableBytes=new byte[2];
+		variableBytes[1]=(byte)(variableDir & 0xFF);
+		variableBytes[0]=(byte)((variableDir>>8) & 0xFF);
+    	
+		bufferedOut.write(variableBytes);
+		
+		bufferedOut.close();
+	}
+	
+	public int GetVariableDir(String variable){
+		int dir=0;
+		for(int i=0; i<_variablesTable.length ; i++){
+			if(_variablesTable[i].name.equals(variable)){
+				return dir;
+			}
+			switch(_variablesTable[i].type){
+				case "Int":
+					dir+=4;
+				break;
+				
+				case "Float":
+					dir+=4;
+				break;
+				
+				case "Double":
+					dir+=8;
+				break;
+				
+				case "String":
+					dir+=255;
+				break;
+				
+				case "Char":
+					dir+=1;
+				break;
+			}
+		}
+		return -1;
+	}
+	
+	
 }
