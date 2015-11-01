@@ -1286,4 +1286,31 @@ public class Compiler {
 		return -1;
 	}
 	
+	public static void AddInteger(int variable) throws IOException{
+        BufferedOutputStream bufferedOut = new BufferedOutputStream(new FileOutputStream(_fileName + ".KWA",true));
+        bufferedOut.write(ByteBuffer.allocate(4).putInt(variable).array());
+        bufferedOut.close();
+    }
+    public static void AddDouble (double variable) throws IOException{
+        BufferedOutputStream bufferedOut = new BufferedOutputStream(new FileOutputStream(_fileName + ".KWA",true));
+        bufferedOut.write(ByteBuffer.allocate(8).putDouble(variable).array());
+        bufferedOut.close();
+    }
+    public static void AddFloat (float variable) throws IOException{
+        BufferedOutputStream bufferedOut = new BufferedOutputStream(new FileOutputStream(_fileName + ".KWA",true));
+        bufferedOut.write(ByteBuffer.allocate(4).putFloat(variable).array());
+        bufferedOut.close();
+    }
+    public static void AddChar (char variable) throws FileNotFoundException, IOException{
+        BufferedOutputStream bufferedOut = new BufferedOutputStream(new FileOutputStream(_fileName + ".KWA",true));
+        bufferedOut.write((byte)variable);
+    }
+    public static void AddString (String variable) throws FileNotFoundException, IOException{
+        BufferedOutputStream bufferedOut = new BufferedOutputStream(new FileOutputStream(_fileName + ".KWA",true)); 
+        for(int i=0;i<variable.length();i++){
+        	bufferedOut.write((byte)variable.charAt(i));
+        }
+        bufferedOut.close();
+    }
+	
 }
