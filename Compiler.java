@@ -7,9 +7,7 @@ import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.io.BufferedOutputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.nio.ByteBuffer;
 import java.util.*;
 
 public class Compiler {
@@ -20,7 +18,8 @@ public class Compiler {
 	static boolean isFileFinished = false;
 	static byte[] _bytesInFile;
 	static Token _currentToken;
-	static String _fileName;
+	static int _tagNumber = 0;
+	static String _filename;
 	static Variable _variablesTable[] = new Variable[0];
 	static Token _arrayToken[];
 	static boolean _isCondition = false;
@@ -109,52 +108,6 @@ public class Compiler {
 		return true;
 	}
 
-/*	public static boolean Letra() throws IOException {
-		if (Expect("[a-zA-Z]+"))
-			return true;
-		return false;
-	}
-
-	public static boolean Digito() throws IOException {
-		if (_currentToken.description.equals("0"))
-			if (!Expect("0"))
-				return false;
-			else if (_currentToken.description.equals("1"))
-				if (!Expect("1"))
-					return false;
-				else if (_currentToken.description.equals("2"))
-					if (!Expect("2"))
-						return false;
-					else if (_currentToken.description.equals("3"))
-						if (!Expect("3"))
-							return false;
-						else if (_currentToken.description.equals("4"))
-							if (!Expect("4"))
-								return false;
-							else if (_currentToken.description.equals("5"))
-								if (!Expect("5"))
-									return false;
-								else if (_currentToken.description.equals("6"))
-									if (!Expect("6"))
-										return false;
-									else if (_currentToken.description.equals("7"))
-										if (!Expect("7"))
-											return false;
-										else if (_currentToken.description.equals("8"))
-											if (!Expect("8"))
-												return false;
-											else if (_currentToken.description.equals("9"))
-												if (!Expect("9"))
-													return false;
-		return true;
-	}
-
-	public static boolean Comentarios() throws IOException {
-		if (Expect("\\"))
-			return true;
-		return false;
-	}
-*/
 	  public static boolean Variable() throws IOException{
 		  	if(!CurrentToken(44) && !CurrentToken(45))
 		  		return false;
@@ -243,6 +196,22 @@ public class Compiler {
 		return false;
 	}
 
+	public static Token GetCurrentToken() throws IOException{
+		
+		if (isFileFinished)
+			return new Token();
+		boolean templastTokenReadOperator = lastTokenReadOperator;
+		_stackIsCondition.push(lastByteRead);
+			
+		Token tokenToReturn = Tokenizer();
+		lastByteRead = _stackIsCondition.pop();
+		if(lastByteRead < _bytesInFile.length)
+			isFileFinished = false;
+		lastTokenReadOperator = templastTokenReadOperator;
+		return tokenToReturn;
+	}
+
+	
 	public static boolean CurrentToken(String instruction) throws IOException {
 		if (isFileFinished)
 			return false;
@@ -1216,13 +1185,40 @@ public class Compiler {
 		}
 	}
 
+	public static String TranslateToAssembly(String operator){
+        switch(operator){
+            case "+":
+                return "ADD";
+            case "-":
+                return "SUB";
+            case "*":
+                return "MUL";
+            case "/":
+                return "DIV";
+            case "%":
+                return "MOD";
+            case "=":
+                return "CMPEQ";
+            case "!=":
+                return "CMPNE";
+            case "<":
+                return "CMPLT";
+            case "<=":
+                return "CMPLE";
+            case ">":
+                return "CMPGT";
+            case ">=":
+                return "CMPGE";
+        }
+        return "";
+    }
 	public static boolean isNumber(String tokenWord) {
 		for (int i = 0; i < tokenWord.length(); i++) {
-			if ((tokenWord.charAt(i) - 50 < 0 || tokenWord.charAt(i) - 50 > 9) && tokenWord.charAt(i) == 41) {
+			if ((tokenWord.charAt(i) - 48 < 0 || tokenWord.charAt(i) - 48 > 9) && tokenWord.charAt(i) != 41) {
 				return false;
 			}
 		}
-		return false;
+		return true;
 	}
 	public static boolean isVariableInTable(String variableName) {
 		for (int i = 0; i < _variablesTable.length; i++) {
@@ -1232,14 +1228,18 @@ public class Compiler {
 		}
 		return false;
 	}
-	
 	public void AddLength(int length) throws IOException{
-		BufferedOutputStream bufferedOut = new BufferedOutputStream(new FileOutputStream(_fileName+".KWA",true)); 
+		BufferedOutputStream bufferedOut = new BufferedOutputStream(new FileOutputStream(_filename+".KWA",true)); 
 		bufferedOut.write((byte)length);
 		bufferedOut.close();
 	}
+	public static Tag newTag(){
+		Tag returnTag = new Tag("ETQ"+_tagNumber);
+        _tagNumber++;
+        return returnTag;
+	}	
 	public void AddInstruction(int instruction) throws IOException{
-		BufferedOutputStream bufferedOut = new BufferedOutputStream(new FileOutputStream(_fileName+".KWA",true)); 
+		BufferedOutputStream bufferedOut = new BufferedOutputStream(new FileOutputStream(_filename+".KWA",true)); 
 		bufferedOut.write((byte)instruction);
 		bufferedOut.close();
 	}
@@ -1394,7 +1394,7 @@ public class Compiler {
 		bufferedOut.close();
 	}
 	public void AddVariable(String variable) throws IOException{
-		BufferedOutputStream bufferedOut = new BufferedOutputStream(new FileOutputStream(_fileName+".KWA",true)); 
+		BufferedOutputStream bufferedOut = new BufferedOutputStream(new FileOutputStream(_filename+".KWA",true)); 
 		
 		int variableDir = GetVariableDir(variable);
 		
@@ -1463,4 +1463,5 @@ public class Compiler {
         }
         bufferedOut.close();
     }
+	
 }
