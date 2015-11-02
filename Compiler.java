@@ -1,4 +1,4 @@
-﻿package compiler;
+﻿package compilador;
 
 import java.awt.FileDialog;
 import java.awt.Frame;
@@ -8,7 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
 
-public class Compiler {
+public class Compilador {
 
 	static int lastByteRead = 0;
 	static boolean lastTokenReadOperator = false;
@@ -471,26 +471,28 @@ public class Compiler {
 	           return true;
 	 }
 	public static boolean If() throws IOException{
-	    //	If ( <Condiciones> ) �{� <Instrucciones> �}� [ Else �{� <Instrucciones> �}� ]
-	        if(!Expect("if"))
-	            return false;
-	        if (!Expect("("))
-	            return false;
-	        if(!Condiciones())
-	            return false;
-	        if(!Expect(")"))
-	            return false;
-	        if(!Expect("{"))
-	            return false;
-	        if(!Instrucciones())
-	            return false;
-	        if(!Expect("}"))
-	            return false;
-	        if(CurrentTokenInFirst("Else"))
-	            if(!Else())
-	                return false;
-	        return true;
-	    }
+		if(!Expect("if"))
+            return false;
+        if (!Expect("("))
+            return false;
+        if(!Condiciones())
+            return false;
+        if(!Expect(")"))
+            return false;
+        AddInstruction("JMPF");
+        AddTag(newTag());
+        if(!Expect("{"))
+            return false;
+        if(!Instrucciones())
+            return false;
+        if(!Expect("}"))
+            return false;
+        UpdateTagInKWA(_tagStack.pop());
+        if(CurrentTokenInFirst("Else"))
+            if(!Else())
+                return false;
+        return true;
+	}
 
     public static boolean Else() throws IOException{
         //else �{� <Instrucciones> �}�
@@ -688,27 +690,116 @@ public class Compiler {
 			return true;
 		}
 		if(CurrentTokenInFirst("Variable")){
+			Token tokenVariable = GetCurrentToken();
 			if(!Variable())
 				return false;
+			Token tokenOperator = GetCurrentToken();
 			if(!OperadorAsignacion())
 				return false;
+			if(!tokenOperator.description.equals("="))
+				AddValue(tokenVariable);
+			
+			Token tokenExpresion = GetCurrentToken();
+			
 			if(!Expresion())
 				return false;
+			if(tokenExpresion.code == 43){
+			if(!AddAsignment(tokenVariable, tokenOperator,tokenExpresion.info))
+				return false;
+			}
+			else{
+			if(!AddAsignment(tokenVariable, tokenOperator,GetVariableType(tokenExpresion.description)))
+				return false;
+			}
 			if(usesSemiColon)
 				return Expect(";");
 			return true;		
 		}
 		return false;
 	}
+	
+	private static boolean AddAsignment(Token tokenVariable, Token tokenOperator, String tipoDatoExpresion) throws IOException {
+
+		String operatorAssembly = TranslateToAssembly(tokenOperator.description);
+		String variableType = GetVariableType(tokenVariable.description);
+		// EL TIPO DE DATO DE LA EXPRESION ES DIFERENTE DE LA VARIABLE
+		if(!variableType.equals(tipoDatoExpresion))
+			return false;
+		
+		if(operatorAssembly.equals("="))
+		switch(variableType){
+			case "Int":
+				if(!tokenOperator.description.equals("="))
+					AddInstruction(operatorAssembly);
+				AddInstruction("POPI");
+				AddVariable(tokenVariable.description);
+				break;
+			case "DoubleFloat":
+				if(!tokenOperator.description.equals("="))
+					AddInstruction(operatorAssembly);
+				AddInstruction("POPD");
+				AddVariable(tokenVariable.description);
+				break;
+			case "String":
+				
+				if(operatorAssembly.equals("ADD"))
+				{
+					AddInstruction(operatorAssembly);
+					AddInstruction("POPS");
+					AddVariable(tokenVariable.description);
+				}
+				else if(operatorAssembly.equals("=")){
+					AddInstruction("POPS");
+					AddVariable(tokenVariable.description);
+				}		
+				else
+					return false;
+				break;
+			case "Char":
+				if(!tokenOperator.description.equals("="))
+					return false;
+				AddInstruction("POPC");
+				AddVariable(tokenVariable.description);
+				break;		
+		}
+		
+		return true;
+		
+	}
+	
 	public static boolean IncrementoDecremento() throws IOException{
+		Token currentToken = GetCurrentToken();
+		AddValue(currentToken);
+		String operator = "";
 		if(!Variable())
 			return false;
-		if(CurrentToken("++"))
-			return Expect("++");
-		if(CurrentToken("--"))
-			return Expect("--");	
+		if(CurrentToken("++")){
+			if(!Expect("++"))
+				return false;
+			operator = "ADD";
+		}
+		if(CurrentToken("--")){		
+			 if(!Expect("--"))
+				 return false;
+			 operator = "SUB";
+		}
 		
-		return false;
+		switch(currentToken.description){
+			case "Int":
+				AddInstruction("PUSHKI");
+				AddInteger(1);
+				AddInstruction(operator);
+				break;
+			case "DoubleFloat":
+				AddInstruction("PUSHKD");
+				AddDouble(1);
+				AddInstruction(operator);
+				break;
+			default:
+				return false;
+		}
+		
+		return true;
 	}
 	public static boolean OperadorAsignacion() throws IOException{
 		if(CurrentToken("="))
@@ -777,62 +868,63 @@ public class Compiler {
 */
 	public static boolean Expresion() throws IOException{
 		//<Termino>|<Termino><OperadorSUma><Expresion>  //
-			if(Termino()){
-				if(CurrentToken("+") || CurrentToken("-")){
-					if(CurrentToken("+"))
-						Expect("+");
-					else
-						Expect("-");
-					return Expresion();
+		if(Termino()){
+			if(CurrentToken("+") || CurrentToken("-")){
+				Token tokenOperator = GetCurrentToken();
+				String assemblyOperator = TranslateToAssembly(tokenOperator.description);
+				if(CurrentToken("+")){
+					Expect("+");
 				}
-				return true;
-			}
-			return false;
-		}
-		public static boolean Termino() throws IOException{
-			if(Factor()){
-				if(CurrentToken("*") || CurrentToken("/") || CurrentToken("%")){
-					if(CurrentToken("*"))
-						Expect("*");
-					else{
-						if(CurrentToken("/"))
-							Expect("/");
-						else
-							Expect("%");
-					}
-					return Termino();
+				else{
+					Expect("-");				
 				}
-				return true;
-			}
-			return false;
-		}
-		public static boolean Factor() throws IOException{
-			if(CurrentTokenInFirst("Valor")){
-				return Valor();
-			}
-			if(CurrentToken("(")){
-				Expect("(");
 				if(!Expresion())
 					return false;
-				return Expect(")");
-			}
-			return false;
-		}
-		
-/*	public static boolean Operaciones() throws IOException {
-		if (Operacion()) {
-			if (GetTokenCode(_currentToken.description) != 19) {
-				if (!Operaciones())
-					return false;
-			} else {
-				Expect(GetTokenCode(";"));
+				AddInstruction(assemblyOperator);
 				return true;
 			}
-		} else
-			return false;
-		return true;
+			return true;
+		}
+		return false;
 	}
-*/
+	
+	public static boolean Termino() throws IOException{
+		if(Factor()){
+			if(CurrentToken("*") || CurrentToken("/") || CurrentToken("%")){
+				Token tokenOperator = GetCurrentToken();
+				String assemblyOperator = TranslateToAssembly(tokenOperator.description);
+				if(CurrentToken("*"))
+					Expect("*");
+				else{
+					if(CurrentToken("/"))
+						Expect("/");
+					else
+						Expect("%");
+				}
+				
+				if(!Termino())
+					return false;
+				AddInstruction(assemblyOperator);
+				return true;
+			}
+			return true;
+		}
+		return false;
+	}
+	
+	public static boolean Factor() throws IOException{
+		if(CurrentTokenInFirst("Valor")){
+			return Valor();
+		}
+		if(CurrentToken("(")){
+			Expect("(");
+			if(!Expresion())
+				return false;
+			return Expect(")");
+		}
+		return false;
+	}
+	
 	public static boolean Operacion() throws IOException {
 		if (!Operador())
 			return false;
@@ -851,17 +943,18 @@ public class Compiler {
 	}
 
     public static boolean Valor() throws IOException{
-        // 43 - Constante, 44 - Variable Declarada
-        if(CurrentTokenInFirst("Variable"))
-           return Variable();
+    	// 43 - Constante, 44 - Variable Declarada
+        
+    	AddValue(GetCurrentToken());
+        if(CurrentTokenInFirst("Variable")){
+           return Variable();  
+        }
         
         if(!Expect(43))
            return false;
         
         return true;
     }
-
-	
 
     public static boolean While()  throws IOException{
     	if(!Expect("while"))
@@ -1492,6 +1585,51 @@ public class Compiler {
 		}
 	}
 	
+	private static void AddValue(Token tokenToAdd) throws IOException {
+		// ES CONSTANTE
+		if(tokenToAdd.code == 43){
+		 switch(tokenToAdd.info)
+	        {
+	        	case "Int":
+	        		AddInstruction("PUSHKI");
+	        		AddInteger(Integer.parseInt(tokenToAdd.description));
+	        		break;
+	        	case "DoubleFloat":
+	        		AddInstruction("PUSHKD");
+	        		AddDouble(Double.parseDouble(tokenToAdd.description));
+	        		break;
+	        	case "String":
+	        		AddInstruction("PUSHKS");
+	        		AddString(tokenToAdd.description);
+	        		break;
+	        	case "Char":
+	        		AddInstruction("PUSHKC");
+	        		AddChar(tokenToAdd.description.charAt(0));
+	        		break;
+	        }
+		}
+		// ES VARIABLE
+		else{
+			switch(GetVariableType(tokenToAdd.description))
+	        {
+	        	case "Int":
+	        		AddInstruction("PUSHI");
+	        		break;
+	        	case "DoubleFloat":
+	        		AddInstruction("PUSHD");
+	        		break;
+	        	case "String":
+	        		AddInstruction("PUSHS");
+	        		break;
+	        	case "Char":
+	        		AddInstruction("PUSHC");
+	        		break;
+	        }
+			
+			AddVariable(tokenToAdd.description);
+		}
+	}
+	
 	public static int GetVariableDir(String variable){
 		int dir=0;
 		for(int i=0; i<_variablesTable.length ; i++){
@@ -1521,6 +1659,15 @@ public class Compiler {
 			}
 		}
 		return -1;
+	}
+	
+	public static String GetVariableType(String variable){
+		for(int i=0; i<_variablesTable.length ; i++){
+			if(_variablesTable[i].name.equals(variable)){
+				return _variablesTable[i].type;
+			}
+		}
+		return "";
 	}
 	
 	public static void AddInteger(int variable) throws IOException{
