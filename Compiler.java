@@ -1,4 +1,4 @@
-package compilador;
+package compiler;
 
 import java.awt.FileDialog;
 import java.awt.Frame;
@@ -8,7 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
 
-public class Compilador {
+public class Compiler {
 
 	static int lastByteRead = 0;
 	static boolean lastTokenReadOperator = false;
