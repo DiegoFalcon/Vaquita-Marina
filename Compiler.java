@@ -1,4 +1,4 @@
-package compiler;
+package compilador;
 
 import java.awt.FileDialog;
 import java.awt.Frame;
@@ -8,7 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
 
-public class Compiler {
+public class Compilador {
 
 	static int lastByteRead = 0;
 	static boolean lastTokenReadOperator = false;
@@ -42,11 +42,12 @@ public class Compiler {
 		
 		System.out.println("Tokenizer Finished");
 		
-		if(Instrucciones())
+		if(Instrucciones()){
+			AddInstruction("HALT");
 			System.out.println("Se corrio la semantica correctamente");
+		}
 		else
 			System.out.println("Ocurrio un error en la semantica que no se identifico");
-			
 	}
 
 
@@ -143,23 +144,23 @@ public class Compiler {
 	    }
 	public static boolean TipoDato() throws IOException{
 			if(CurrentToken("#int")){
-				_currentTypeVariable = "int";
+				_currentTypeVariable = "Int";
 				return Expect("#int");
 			}
 			if(CurrentToken("#float")){
-				_currentTypeVariable = "float";
+				_currentTypeVariable = "Float";
 				return Expect("#float");
 			}
 			if(CurrentToken("#double")){
-				_currentTypeVariable = "double";
+				_currentTypeVariable = "Double";
 				return Expect("#double");
 			}
 			if(CurrentToken("#char")){
-				_currentTypeVariable = "char";
+				_currentTypeVariable = "Char";
 				return Expect("#char");
 			}
 			if(CurrentToken("#string")){
-				_currentTypeVariable = "string";
+				_currentTypeVariable = "String";
 				return Expect("#string");
 			}
 			return false;	
@@ -922,12 +923,17 @@ public class Compiler {
 	}
 	
 	private static boolean AddAsignment(Token tokenVariable, Token tokenOperator, String tipoDatoExpresion) throws IOException {
-
 		String operatorAssembly = TranslateToAssembly(tokenOperator.description);
 		String variableType = GetVariableType(tokenVariable.description);
 		// EL TIPO DE DATO DE LA EXPRESION ES DIFERENTE DE LA VARIABLE
-		if(!variableType.equals(tipoDatoExpresion))
+		if(tipoDatoExpresion.equals("DoubleFloat")){
+			if(!variableType.equals("Double") || !variableType.equals("Float"))
+				return false;
+		}
+		else if (!variableType.equals(tipoDatoExpresion)){
 			return false;
+		}
+		
 		
 		if(operatorAssembly.equals("="))
 		switch(variableType){
@@ -965,9 +971,7 @@ public class Compiler {
 				AddVariable(tokenVariable.description);
 				break;		
 		}
-		
 		return true;
-		
 	}
 	
 	public static boolean IncrementoDecremento() throws IOException{
@@ -1222,8 +1226,6 @@ public class Compiler {
 
 			boolean increaseByte = false;
 			if (!commentFound) {
-				if(lastByteRead==24)
-					System.out.println("aqui esta el pedo");
 				switch (_bytesInFile[lastByteRead]) {
 
 				// Separadores de palabra que no se convierten a token
@@ -1523,8 +1525,6 @@ public class Compiler {
 		case "charAt":
 			return 42;
 		default:
-			if(token == "")
-				System.out.println("error");
 			if (isNumber(token) || token.charAt(0) == '"' || ("" + token.charAt(0)).equals("'"))
 				return 43;
 			if (isVariableInTable(token))
@@ -1608,7 +1608,7 @@ public class Compiler {
 			byte[] instructionArray = new byte[1];
 			instructionArray[0] = (byte)instruction;
 			AddToKWA(instructionArray);
-			_SC += 2;
+			_SC += 1;
 		}
 	}
 	
@@ -1617,7 +1617,7 @@ public class Compiler {
 			byte[] instructionArray = new byte[1];
 			instructionArray[0] = (byte)GetInstructionCode(instruction);
 			AddToKWA(instructionArray);
-			_SC += 2;
+			_SC += 1;
 		}
 	}
 		
