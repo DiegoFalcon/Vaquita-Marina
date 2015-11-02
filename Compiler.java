@@ -618,33 +618,65 @@ public class Compiler {
 	}
 
 	public static boolean For() throws IOException{
-	       // For ( [ <Asignacion> ] ; <Condiciones> ; [ <Asignacion> ] ) "{" <Instrucciones> "}" 
-	           if(!Expect("for"))
-	               return false;
-	           if(!Expect("("))
-	               return false;
-	           if(CurrentTokenInFirst("AsignacionFor"))
-	        	   if(!Asignacion(false))
-	        		   return false;
-	           if(!Expect(";"))
-	               return false;
-	           if(!Condiciones())
-	               return false;
-	           if(!Expect(";"))
-	               return false;
-	           if(CurrentTokenInFirst("AsignacionFor"))
-	        	   if(!Asignacion(false))
-	        		   return false;
-	           if(!Expect(")"))
-	               return false;
-	           if(!Expect("{"))
-	               return false;
-	           if(!Instrucciones())
-	        	   return false;
-	           if(!Expect("}"))
-	               return false;
-	           
-	           return true;
+		// For ( [ <Asignacion> ] ; <Condiciones> ; [ <Asignacion> ] ) "{" <Instrucciones> "}" 
+        if(!Expect("for"))
+            return false;
+        if(!Expect("("))
+            return false;
+        if(CurrentTokenInFirst("AsignacionFor"))
+     	   if(!Asignacion(false))
+     		   return false;
+        if(!Expect(";"))
+            return false;
+        
+        //Agregar TAG1
+        Tag tag1 = newTag();
+        UpdateTagInKWA(tag1);
+        AddTag(tag1);
+        
+        if(!Condiciones())
+            return false;
+        if(!Expect(";"))
+            return false;
+        
+        Tag tag2 = newTag();
+        AddInstruction("JMPF "+tag2.name);
+      
+        
+        Tag tag3 = newTag();
+        AddInstruction("JMP "+tag3.name);
+        
+        Tag tag4 = newTag();
+        UpdateTagInKWA(tag4);
+        AddTag(tag4);
+        
+        
+        if(CurrentTokenInFirst("AsignacionFor"))
+     	   if(!Asignacion(false))
+     		   return false;
+        
+        AddInstruction("JMP "+tag1.name);
+   
+        if(!Expect(")"))
+            return false;
+        if(!Expect("{"))
+            return false;
+        
+        UpdateTagInKWA(tag4);
+        AddTag(tag4);
+        
+        if(!Instrucciones())
+     	   return false;
+        
+        AddInstruction("JMP "+tag4.name);
+        
+        if(!Expect("}"))
+            return false;
+        
+        UpdateTagInKWA(tag2);
+        AddTag(tag2);
+        
+        return true;
 	 }
 
 	public static boolean Asignacion(boolean usesSemiColon) throws IOException{
@@ -832,20 +864,28 @@ public class Compiler {
 	
 
     public static boolean While()  throws IOException{
-        if(!Expect("while"))
+    	if(!Expect("while"))
             return false;
         if(!Expect("("))
-            return false;  
+            return false;
+        Tag tag1=newTag();
+        UpdateTagInKWA(tag1);
+        AddTag(tag1);
         if(!Condiciones())
-            return false;     
+            return false;
+        Tag tag2= newTag();
+        AddInstruction("JMPF " + tag2.name);
         if(!Expect(")"))
             return false;
         if(!Expect("{"))
             return false;
         if(!Instrucciones())
             return false;
+        AddInstruction("JMP " + tag1.name);
         if(!Expect("}"))
             return false;
+        UpdateTagInKWA(tag2);
+        AddTag(tag2);
         return true;
     }
 
@@ -1198,31 +1238,39 @@ public class Compiler {
 	}
 
 	public static String TranslateToAssembly(String operator){
-        switch(operator){
-            case "+":
-                return "ADD";
-            case "-":
-                return "SUB";
-            case "*":
-                return "MUL";
-            case "/":
-                return "DIV";
-            case "%":
-                return "MOD";
-            case "=":
-                return "CMPEQ";
-            case "!=":
-                return "CMPNE";
-            case "<":
-                return "CMPLT";
-            case "<=":
-                return "CMPLE";
-            case ">":
-                return "CMPGT";
-            case ">=":
-                return "CMPGE";
-        }
-        return "";
+		switch(operator){
+        case "+":
+            return "ADD";
+        case "-":
+            return "SUB";
+        case "*":
+            return "MUL";
+        case "/":
+            return "DIV";
+        case "%":
+            return "MOD";
+        case "=":
+            return "CMPEQ";
+        case "!=":
+            return "CMPNE";
+        case "<":
+            return "CMPLT";
+        case "<=":
+            return "CMPLE";
+        case ">":
+            return "CMPGT";
+        case ">=":
+            return "CMPGE";
+        case "+=":
+            return "ADD";
+        case "-=":
+            return "SUB";
+        case "*=":
+            return "MUL";
+        case "/=":
+            return "DIV";
+		}
+		return "";
     }
 	
 	public static boolean isNumber(String tokenWord) {
@@ -1565,126 +1613,3 @@ public class Compiler {
     }
     
 }
-public static String TranslateToAssembly(String operator){
-        switch(operator){
-            case "+":
-                return "ADD";
-            case "-":
-                return "SUB";
-            case "*":
-                return "MUL";
-            case "/":
-                return "DIV";
-            case "%":
-                return "MOD";
-            case "=":
-                return "CMPEQ";
-            case "!=":
-                return "CMPNE";
-            case "<":
-                return "CMPLT";
-            case "<=":
-                return "CMPLE";
-            case ">":
-                return "CMPGT";
-            case ">=":
-                return "CMPGE";
-            case "+=":
-                return "ADD";
-            case "-=":
-                return "SUB";
-            case "*=":
-                return "MUL";
-            case "/=":
-                return "DIV";
-        }
-        return "";
-    }
-
-public static boolean WhileCycle() throws IOException{
-        if(!Expect("for"))
-            return false;
-        if(!Expect("("))
-            return false;
-        Tag tag1=newTag();
-        UpdateTagInKWA(tag1);
-        AddTag(tag1);
-        if(!Condiciones())
-            return false;
-        Tag tag2= newTag();
-        AddInstruction("JMPF " + tag2.name);
-        if(!Expect(")"))
-            return false;
-        if(!Expect("{"))
-            return false;
-        if(!Instrucciones())
-            return false;
-        AddInstruccion("JMP " + tag1.name);
-        if(!Expect("}"))
-            return false;
-        UpdateTagInKWA(tag2);
-	AddTag(tag2);
-        return true;
-    }
-
-public static boolean For() throws IOException{
-	       // For ( [ <Asignacion> ] ; <Condiciones> ; [ <Asignacion> ] ) "{" <Instrucciones> "}" 
-	           if(!Expect("for"))
-	               return false;
-	           if(!Expect("("))
-	               return false;
-	           if(CurrentTokenInFirst("AsignacionFor"))
-	        	   if(!Asignacion(false))
-	        		   return false;
-	           if(!Expect(";"))
-	               return false;
-	           
-	           //Agregar TAG1
-	           Tag tag1 = newTag();
-	           updateTagInKWA(tag1);
-	           AddTag(tag1);
-	           
-	           if(!Condiciones())
-	               return false;
-	           if(!Expect(";"))
-	               return false;
-	           
-	           Tag tag2 = newTag();
-	           AddInstruction("JMPF "+tag2.name);
-	         
-	           
-	           Tag tag3 = newTag();
-	           AddInstruction("JMP "+tag3.name);
-	           
-	           Tag tag4 = newTag();
-	           updateTagInKWA(tag4);
-	           AddTag(tag4);
-	           
-	           
-	           if(CurrentTokenInFirst("AsignacionFor"))
-	        	   if(!Asignacion(false))
-	        		   return false;
-	           
-	           AddInstruction("JMP "+tag1.name);
-	      
-	           if(!Expect(")"))
-	               return false;
-	           if(!Expect("{"))
-	               return false;
-	           
-	           updateTagInKWA(tag4);
-	           AddTag(tag4);
-	           
-	           if(!Instrucciones())
-	        	   return false;
-	           
-	           AddInstruction("JMP "+tag4.name);
-	           
-	           if(!Expect("}"))
-	               return false;
-	           
-	           updateTagInKWA(tag2);
-	           AddTag(tag2);
-	           
-	           return true;
-	 }
