@@ -1,4 +1,4 @@
-﻿package compiler;
+package compiler;
 
 import java.awt.FileDialog;
 import java.awt.Frame;
@@ -322,6 +322,9 @@ public class Compiler {
 		case "ListaVariables":
 			result = ListaVariables();
 			break;
+                case "ListaEscritura":
+                        result = ListaEscritura(-1);
+                        break;
 		case "Expresion":
 			result = Expresion();
 			break;
@@ -383,36 +386,11 @@ public class Compiler {
 			return Expect("==");
 		return false;
     }
-	public static boolean ListaEscritura() throws IOException{
-    	if(CurrentTokenInFirst("Variable"))
-        {
-            if(!Variable())
-            	return false;
-            if(CurrentToken("+")){
-            	if(!Expect("+"))
-            		return false;
-            	return ListaEscritura();
-            }
-            return true;    
-        }
-    	if(CurrentTokenInfo("String"))
-        {
-    		if(!Expect(43))
-    			return false;
-            if(CurrentToken("+")){
-            	if(!Expect("+"))
-            		return false;
-            	return ListaEscritura();
-            }
-            return true;             
-        }
-        return false;
-    }
     public static boolean Escritura() throws IOException{
         if(CurrentToken("write")){  
             if(!Expect("write"))
                 return false;
-            if(!ListaEscritura())
+            if(!ListaEscritura(0))
                 return false; 
             if(!Expect(";"))
                 return false;
@@ -423,13 +401,172 @@ public class Compiler {
            {
                 if(!Expect("writeln"))
                     return false;
-                if(!ListaEscritura())
+                if(!ListaEscritura(1))
                     return false;                   
                 if(!Expect(";"))
                     return false;
                 return true;
            }
        return false;
+    }
+    public static boolean ListaEscritura(int writeOption) throws IOException{
+    	if(CurrentTokenInFirst("Variable"))
+        {
+            AddWrite(0,writeOption);
+            if(!Variable())
+            	return false;
+            if(CurrentToken("+")){
+            	if(!Expect("+"))
+            		return false;
+            	return ListaEscritura(writeOption);
+            }
+            return true;    
+        }
+    	if(CurrentTokenInfo("String"))
+        {
+            AddWrite(1,writeOption);
+    		if(!Expect(43))
+    			return false;
+            if(CurrentToken("+")){
+            	if(!Expect("+"))
+            		return false;
+            	return ListaEscritura(writeOption);
+            }
+            return true;             
+        }
+        return false;
+    }
+    public static void AddWrite(int variableOption, int writeOption) throws IOException{
+        /*
+        variableOption, es para diferenciar entre variables y constantes
+        0 - Variables
+        1 - Constante
+        writeOption, es para diferenciar entre un write y writeln
+        -1 - default
+        0 - write
+        1 - writeln
+        */
+        String variable = GetCurrentToken().description;
+        String variableType = GetVariableType(variable);
+        
+        if(writeOption == 0)
+            if(variableOption == 0)
+                if(variable.contains("[")){
+                    switch(variableType){
+                        case "float":
+                            AddInstruction("WRTVI ");
+                            AddVariable(GetCurrentToken().description);
+                        break;
+                        case "int":
+                            AddInstruction("WRTVD ");
+                            AddVariable(GetCurrentToken().description);
+                        break;
+                        case "double":
+                            AddInstruction("WRTVF ");
+                            AddVariable(GetCurrentToken().description);
+                        break;
+                        case "char":
+                            AddInstruction("WRTVC ");
+                            AddVariable(GetCurrentToken().description);
+                        break;
+                        case "string":
+                            AddInstruction("WRTVS ");
+                            AddVariable(GetCurrentToken().description);
+                        break;
+                    }
+                }
+                else
+                    switch(variableType){
+                        case "float":
+                            AddInstruction("WRTI ");
+                            AddVariable(GetCurrentToken().description);
+                        break;
+                        case "int":
+                            AddInstruction("WRTD ");
+                            AddVariable(GetCurrentToken().description);
+                        break;
+                        case "double":
+                            AddInstruction("WRTF ");
+                            AddVariable(GetCurrentToken().description);
+                        break;
+                        case "char":
+                            AddInstruction("WRTC ");
+                            AddVariable(GetCurrentToken().description);
+                        break;
+                        case "string":
+                            AddInstruction("WRTS ");
+                            AddVariable(GetCurrentToken().description);
+                        break;
+                    }
+            else{ 
+                AddInstruction("WRTM ");
+                AddVariable(GetCurrentToken().description);
+            }
+        else
+            if(variableOption == 0)
+                if(variable.contains("[")){
+                    switch(variableType){
+                        case "float":
+                            AddInstruction("WRTVI ");
+                            AddVariable(GetCurrentToken().description);
+                            AddInstruction("WRTLN ");
+                        break;
+                        case "int":
+                            AddInstruction("WRTVD ");
+                            AddVariable(GetCurrentToken().description);
+                            AddInstruction("WRTLN ");
+                        break;
+                        case "double":
+                            AddInstruction("WRTVF ");
+                            AddVariable(GetCurrentToken().description);
+                            AddInstruction("WRTLN ");
+                        break;
+                        case "char":
+                            AddInstruction("WRTVC ");
+                            AddVariable(GetCurrentToken().description);
+                            AddInstruction("WRTLN ");
+                        break;
+                        case "string":
+                            AddInstruction("WRTVS ");
+                            AddVariable(GetCurrentToken().description);
+                            AddInstruction("WRTLN ");
+                        break;
+                    }
+                }
+                else
+                    switch(variableType){
+                        case "float":
+                            AddInstruction("WRTI ");
+                            AddVariable(GetCurrentToken().description);
+                            AddInstruction("WRTLN ");
+                        break;
+                        case "int":
+                            AddInstruction("WRTD ");
+                            AddVariable(GetCurrentToken().description);
+                            AddInstruction("WRTLN ");
+                        break;
+                        case "double":
+                            AddInstruction("WRTF ");
+                            AddVariable(GetCurrentToken().description);
+                            AddInstruction("WRTLN ");
+                        break;
+                        case "char":
+                            AddInstruction("WRTC ");
+                            AddVariable(GetCurrentToken().description);
+                            AddInstruction("WRTLN ");
+                        break;
+                        case "string":
+                            AddInstruction("WRTS ");
+                            AddVariable(GetCurrentToken().description);
+                            AddInstruction("WRTLN ");
+                        break;
+                    }
+            else{ 
+                AddInstruction("WRTM ");
+                AddVariable(GetCurrentToken().description);
+                AddInstruction("WRTLN ");
+            }
+            
     }
 	public static boolean Instruccion() throws IOException {
 		// <For> | <While> | <If> | <Asignaci�n> | <Lectura> | <Escritura> |
@@ -461,17 +598,83 @@ public class Compiler {
 	}
 
 	public static boolean Lectura() throws IOException{
-	       // Read <ListaVariables> ;
+	       // Read <ListaLectura> ;
 	           if(!Expect("read"))
 	               return false;
-	           if(!ListaVariables())
+	           if(!ListaLectura())
 	               return false;
 	           if(!Expect(";"))
 	               return false;
 	           return true;
-	 }
+	}
+        public static boolean ListaLectura() throws IOException{
+        // <Variables> {,<ListaEscritura>}
+            AddRead();
+            if (!Variable())
+                return false;
+
+            if (CurrentToken(","))
+                if(!Expect(","))
+                    return false;
+            while (CurrentTokenInFirst("ListaLectura")) {	
+                if (!ListaLectura())
+                    return false;
+            }
+            return true;
+        }
+        public static void AddRead() throws IOException{
+            String variable = GetCurrentToken().description;
+            String variableType = GetVariableType(variable);
+            
+            if(variable.contains("["))
+                switch(variableType){
+                    case "float":
+                        AddInstruction("READVI ");
+                        AddVariable(GetCurrentToken().description);
+                    break;
+                    case "int":
+                        AddInstruction("READVD ");
+                        AddVariable(GetCurrentToken().description);
+                    break;
+                    case "double":
+                        AddInstruction("READVF ");
+                        AddVariable(GetCurrentToken().description);
+                    break;
+                    case "char":
+                        AddInstruction("READVC ");
+                        AddVariable(GetCurrentToken().description);
+                    break;
+                    case "string":
+                        AddInstruction("READVS ");
+                        AddVariable(GetCurrentToken().description);
+                    break;
+                }
+            else 
+                switch(variableType){
+                    case "float":
+                        AddInstruction("READI ");
+                        AddVariable(GetCurrentToken().description);
+                    break;
+                    case "int":
+                        AddInstruction("READD ");
+                        AddVariable(GetCurrentToken().description);
+                    break;
+                    case "double":
+                        AddInstruction("READF ");
+                        AddVariable(GetCurrentToken().description);
+                    break;
+                    case "char":
+                        AddInstruction("READC ");
+                        AddVariable(GetCurrentToken().description);
+                    break;
+                    case "string":
+                        AddInstruction("READS ");
+                        AddVariable(GetCurrentToken().description);
+                    break;
+                }
+        }
 	public static boolean If() throws IOException{
-		if(!Expect("if"))
+        if(!Expect("if"))
             return false;
         if (!Expect("("))
             return false;
