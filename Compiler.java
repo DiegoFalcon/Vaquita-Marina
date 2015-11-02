@@ -6,8 +6,6 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.io.BufferedOutputStream;
-import java.io.FileOutputStream;
 import java.util.*;
 
 public class Compiler {
@@ -19,12 +17,15 @@ public class Compiler {
 	static byte[] _bytesInFile;
 	static Token _currentToken;
 	static int _tagNumber = 0;
+	static int _SC = 0;
 	static String _filename;
 	static Variable _variablesTable[] = new Variable[0];
 	static Token _arrayToken[];
 	static boolean _isCondition = false;
 	static Stack<Boolean> _stackInsideInstruction = new Stack<Boolean>();
 	static Stack<Integer> _stackIsCondition = new Stack<Integer>();
+	static Stack<Tag> _tagStack = new Stack<Tag>();
+	static byte[] _KWA = new byte[0];
 
 	public static void main(String[] args) throws IOException {
 		// TODO Auto-generated method stub
@@ -108,7 +109,7 @@ public class Compiler {
 		return true;
 	}
 
-	  public static boolean Variable() throws IOException{
+	public static boolean Variable() throws IOException{
 		  	if(!CurrentToken(44) && !CurrentToken(45))
 		  		return false;
 		  	
@@ -128,7 +129,7 @@ public class Compiler {
 	        }
 	        return true;
 	 }
-	  public static boolean IndiceVector() throws IOException{
+	public static boolean IndiceVector() throws IOException{
 	        if(CurrentTokenInFirst("Expresion"))
 	            if(!Expresion())
 	                return false;
@@ -137,7 +138,7 @@ public class Compiler {
 	                return false;
 	        return true;
 	    }
-		public static boolean TipoDato() throws IOException{
+	public static boolean TipoDato() throws IOException{
 			if(CurrentToken("#int"))
 				return Expect("#int");
 			if(CurrentToken("#float"))
@@ -1175,8 +1176,6 @@ public class Compiler {
 		default:
 			if(token == "")
 				System.out.println("error");
-			if(token.equals("a"))
-				System.out.println("es la [a]");
 			if (isNumber(token) || token.charAt(0) == '"' || ("" + token.charAt(0)).equals("'"))
 				return 43;
 			if (isVariableInTable(token))
@@ -1212,6 +1211,7 @@ public class Compiler {
         }
         return "";
     }
+	
 	public static boolean isNumber(String tokenWord) {
 		for (int i = 0; i < tokenWord.length(); i++) {
 			if ((tokenWord.charAt(i) - 48 < 0 || tokenWord.charAt(i) - 48 > 9) && tokenWord.charAt(i) != 41) {
@@ -1220,6 +1220,7 @@ public class Compiler {
 		}
 		return true;
 	}
+	
 	public static boolean isVariableInTable(String variableName) {
 		for (int i = 0; i < _variablesTable.length; i++) {
 			if ((_variablesTable[i].name).equals(variableName)) {
@@ -1228,27 +1229,42 @@ public class Compiler {
 		}
 		return false;
 	}
+	
 	public void AddLength(int length) throws IOException{
-		BufferedOutputStream bufferedOut = new BufferedOutputStream(new FileOutputStream(_filename+".KWA",true)); 
-		bufferedOut.write((byte)length);
-		bufferedOut.close();
+		if(_stackIsCondition.isEmpty()){
+			byte[] instructionArray = new byte[1];
+			instructionArray[0] = (byte)length;
+			AddToKWA(instructionArray);
+			_SC += 1;
+		}
 	}
+	
 	public static Tag newTag(){
 		Tag returnTag = new Tag("ETQ"+_tagNumber);
         _tagNumber++;
+        _tagStack.push(returnTag);
         return returnTag;
 	}	
-	public void AddInstruction(int instruction) throws IOException{
-		BufferedOutputStream bufferedOut = new BufferedOutputStream(new FileOutputStream(_filename+".KWA",true)); 
-		bufferedOut.write((byte)instruction);
-		bufferedOut.close();
+	
+	public static void AddInstruction(int instruction) throws IOException{
+		if(_stackIsCondition.isEmpty()){
+			byte[] instructionArray = new byte[1];
+			instructionArray[0] = (byte)instruction;
+			AddToKWA(instructionArray);
+			_SC += 2;
+		}
 	}
-	public void AddInstruction(String instruction) throws IOException{
-		BufferedOutputStream bufferedOut = new BufferedOutputStream(new FileOutputStream(_filename+".KWA",true)); 
-		bufferedOut.write((byte)GetInstructionCode(instruction));
-		bufferedOut.close();
+	
+	public static void AddInstruction(String instruction) throws IOException{
+		if(_stackIsCondition.isEmpty()){
+			byte[] instructionArray = new byte[1];
+			instructionArray[0] = (byte)GetInstructionCode(instruction);
+			AddToKWA(instructionArray);
+			_SC += 2;
+		}
 	}
-	public int GetInstructionCode(String instruction){
+		
+	public static int GetInstructionCode(String instruction){
 		switch(instruction){
 		case "READI":
             return 1;
@@ -1382,31 +1398,40 @@ public class Compiler {
             return -1;
 		}
 	}
-	public void AddTag(Tag tag) throws IOException{
-		BufferedOutputStream bufferedOut = new BufferedOutputStream(new FileOutputStream(_filename+".KWA",true)); 
-		
-		byte[] variableBytes=new byte[2];
-		variableBytes[1]=(byte)(tag.dir & 0xFF);
-		variableBytes[0]=(byte)((tag.dir>>8) & 0xFF);
-    	
-		bufferedOut.write(variableBytes);
-		
-		bufferedOut.close();
+	
+	public static void AddTag(Tag tag) throws IOException{
+		if(_stackIsCondition.isEmpty()){
+			byte[] variableBytes=new byte[2];
+			tag.referencedDir = _SC;
+			variableBytes[1]=(byte)(tag.dir & 0xFF);
+			variableBytes[0]=(byte)((tag.dir>>8) & 0xFF);
+			AddToKWA(variableBytes);
+			_SC += 2;
+		}
 	}
-	public void AddVariable(String variable) throws IOException{
-		BufferedOutputStream bufferedOut = new BufferedOutputStream(new FileOutputStream(_filename+".KWA",true)); 
-		
-		int variableDir = GetVariableDir(variable);
-		
-		byte[] variableBytes=new byte[2];
-		variableBytes[1]=(byte)(variableDir & 0xFF);
-		variableBytes[0]=(byte)((variableDir>>8) & 0xFF);
-    	
-		bufferedOut.write(variableBytes);
-		
-		bufferedOut.close();
+	
+	public static void UpdateTagInKWA(Tag tagToUpdate){
+		if(_stackIsCondition.isEmpty()){
+			byte[] tagBytes=new byte[2];
+			tagBytes[1]=(byte)(tagToUpdate.dir & 0xFF);
+			tagBytes[0]=(byte)((tagToUpdate.dir>>8) & 0xFF);
+			_KWA[tagToUpdate.referencedDir] = tagBytes[0];
+			_KWA[tagToUpdate.referencedDir + 1] = tagBytes[1];
+		}
 	}
-	public int GetVariableDir(String variable){
+	
+	public static void AddVariable(String variable) throws IOException{		
+		if(_stackIsCondition.isEmpty()){
+			int variableDir = GetVariableDir(variable);
+			byte[] variableBytes=new byte[2];
+			variableBytes[1]=(byte)(variableDir & 0xFF);
+			variableBytes[0]=(byte)((variableDir>>8) & 0xFF);
+			AddToKWA(variableBytes);
+			_SC += 2;
+		}
+	}
+	
+	public static int GetVariableDir(String variable){
 		int dir=0;
 		for(int i=0; i<_variablesTable.length ; i++){
 			if(_variablesTable[i].name.equals(variable)){
@@ -1436,32 +1461,94 @@ public class Compiler {
 		}
 		return -1;
 	}
+	
 	public static void AddInteger(int variable) throws IOException{
-        BufferedOutputStream bufferedOut = new BufferedOutputStream(new FileOutputStream(_filename + ".KWA",true));
-        bufferedOut.write(ByteBuffer.allocate(4).putInt(variable).array());
-        bufferedOut.close();
-    }
-    public static void AddDouble (double variable) throws IOException{
-        BufferedOutputStream bufferedOut = new BufferedOutputStream(new FileOutputStream(_filename + ".KWA",true));
-        bufferedOut.write(ByteBuffer.allocate(8).putDouble(variable).array());
-        bufferedOut.close();
-    }
-    public static void AddFloat (float variable) throws IOException{
-        BufferedOutputStream bufferedOut = new BufferedOutputStream(new FileOutputStream(_filename + ".KWA",true));
-        bufferedOut.write(ByteBuffer.allocate(4).putFloat(variable).array());
-        bufferedOut.close();
-    }
-    public static void AddChar (char variable) throws IOException{
-        BufferedOutputStream bufferedOut = new BufferedOutputStream(new FileOutputStream(_filename + ".KWA",true));
-        bufferedOut.write((byte)variable);
-        bufferedOut.close();
-    }
-    public static void AddString (String variable) throws IOException{
-        BufferedOutputStream bufferedOut = new BufferedOutputStream(new FileOutputStream(_filename + ".KWA",true)); 
-        for(int i=0;i<variable.length();i++){
-        	bufferedOut.write((byte)variable.charAt(i));
-        }
-        bufferedOut.close();
+		if(_stackIsCondition.isEmpty()){
+			AddToKWA(ByteBuffer.allocate(4).putInt(variable).array());
+			_SC += 4;
+		}
     }
 	
+	public static void AddDouble (double variable) throws IOException{
+		if(_stackIsCondition.isEmpty()){
+			AddToKWA(ByteBuffer.allocate(8).putDouble(variable).array());
+			_SC += 8;
+		}
+    }
+    
+	public static void AddFloat (float variable) throws IOException{
+		if(_stackIsCondition.isEmpty()){
+			AddToKWA(ByteBuffer.allocate(4).putFloat(variable).array());
+			_SC += 4;
+		}
+    }
+    
+	public static void AddChar (char variable) throws IOException{
+		if(_stackIsCondition.isEmpty()){
+			byte[] instructionArray = new byte[1];
+			instructionArray[0] = (byte)variable;
+			AddToKWA(instructionArray);
+			_SC += 1;
+		}
+    }
+    
+	public static void AddString (String variable) throws IOException{
+		if(_stackIsCondition.isEmpty()){
+			byte[] instructionArray = new byte[1];
+	    	for(int i=0;i<variable.length();i++){
+	    		instructionArray[0] = (byte)variable.charAt(i);
+	        	AddToKWA(instructionArray);
+	        	_SC += 1;
+	        }
+		}
+    }
+	
+	public static void AddToKWA(byte[] bytesToAdd){
+    	byte[] newKWA = new byte[_KWA.length + bytesToAdd.length];
+    	
+    	for(int i=0; i<_KWA.length; i++)
+    		newKWA[i] = _KWA[i];
+    	
+    	for(int i = _KWA.length ; i<newKWA.length ; i++)
+    		newKWA[i] = bytesToAdd[i-_KWA.length];
+    	_KWA = newKWA;
+    }
+
+	public static void AddToVariableTable(String name, String type) throws IOException{
+        int newLength;
+        Variable arrayTemp[] = null;
+  
+        //variable a agregar es un arreglo
+        if (name.contains("[") && name.contains("]")){ 
+            String varName, indexOfArray, elementOfArray;
+            int numericIndex;
+  
+            varName = name.substring(0,name.indexOf('[')-1);
+            indexOfArray = name.substring(name.indexOf('[')+1, name.indexOf(']')-1);
+  
+            //indice del arreglo es un numero
+            if (isNumber(indexOfArray)){
+                numericIndex = Integer.parseInt(indexOfArray);
+                newLength = _variablesTable.length + numericIndex;
+                arrayTemp = java.util.Arrays.copyOf(_variablesTable, newLength);
+                for(int x=0; x<newLength; x++){
+                    elementOfArray = varName + "[" + x + "]";
+                    CreateNewVariableInTable(arrayTemp, _variablesTable.length+x, elementOfArray, type);
+                }
+            }
+        }
+        //varible sencilla (no es arreglo)
+        else{
+            newLength = _variablesTable.length + 1;
+            arrayTemp = java.util.Arrays.copyOf(_variablesTable, newLength);
+            CreateNewVariableInTable(arrayTemp, newLength-1, name, type);
+        }
+        _variablesTable = arrayTemp;
+    }
+  
+    public static void CreateNewVariableInTable(Variable arrayTemp[], int position, String name, String type) throws IOException{
+        Variable newObject = new Variable(name,"",type);
+        arrayTemp[position] = newObject;
+    }
+    
 }
