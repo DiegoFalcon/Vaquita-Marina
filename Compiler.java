@@ -21,6 +21,7 @@ public class Compiler {
 	static String _filename;
 	static Variable _variablesTable[] = new Variable[0];
 	static Token _arrayToken[];
+	static String _currentTypeVariable;
 	static boolean _isCondition = false;
 	static Stack<Boolean> _stackInsideInstruction = new Stack<Boolean>();
 	static Stack<Integer> _stackIsCondition = new Stack<Integer>();
@@ -95,8 +96,10 @@ public class Compiler {
 
 	public static boolean ListaVariables() throws IOException {
 		// <Variables> {,<ListaVariables>}
+		String currentNameVariable = GetCurrentToken().description;
 		if (!Variable())
 			return false;
+		AddToVariableTable(currentNameVariable,_currentTypeVariable);
 
 		if (CurrentToken(","))
 			if(!Expect(","))
@@ -139,16 +142,26 @@ public class Compiler {
 	        return true;
 	    }
 	public static boolean TipoDato() throws IOException{
-			if(CurrentToken("#int"))
+			if(CurrentToken("#int")){
+				_currentTypeVariable = "int";
 				return Expect("#int");
-			if(CurrentToken("#float"))
+			}
+			if(CurrentToken("#float")){
+				_currentTypeVariable = "float";
 				return Expect("#float");
-			if(CurrentToken("#double"))
+			}
+			if(CurrentToken("#double")){
+				_currentTypeVariable = "double";
 				return Expect("#double");
-			if(CurrentToken("#char"))
+			}
+			if(CurrentToken("#char")){
+				_currentTypeVariable = "char";
 				return Expect("#char");
-			if(CurrentToken("#string"))
+			}
+			if(CurrentToken("#string")){
+				_currentTypeVariable = "string";
 				return Expect("#string");
+			}
 			return false;	
 		}
 
