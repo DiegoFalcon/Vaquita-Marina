@@ -27,11 +27,13 @@ public class Compiler {
     static Stack<Integer> _stackIsCondition = new Stack<Integer>();
     static Stack<Tag> _tagStack = new Stack<Tag>();
     static byte[] _KWA = new byte[0];
+    static Stack<Token> _stackValoresExpresion = new Stack<Token>();
 
     public static void mainCompiler(String[] args) throws IOException {
             // TODO Auto-generated method stub
             openFile();
             cleanLastBytesInFile();
+            
             /*
             while (!isFileFinished) {
                     String sToken = ReadTokenFromFile();
@@ -45,6 +47,7 @@ public class Compiler {
             if(Instrucciones()){
                     AddInstruction("HALT");
                     System.out.println("Se corrio la semantica correctamente");
+                    WriteAssemblyFile();
             }
             else
                     System.out.println("Ocurrio un error en la semantica que no se identifico");
@@ -748,6 +751,7 @@ public class Compiler {
     }
     public static void openFile() throws IOException {
             Frame f = new Frame();
+            f.setAlwaysOnTop(true);
             boolean error = false;
             FileDialog fd = new FileDialog(f, "Choose a file", FileDialog.LOAD);
             fd.setDirectory("C:\\");
@@ -824,6 +828,7 @@ public class Compiler {
 
     //Agregar TAG1
     Tag tag1 = newTag();
+    AddTag(tag1);
     UpdateTagInKWA(tag1);
     AddTag(tag1);
 
@@ -840,8 +845,8 @@ public class Compiler {
     AddInstruction("JMP "+tag3.name);
 
     Tag tag4 = newTag();
-    UpdateTagInKWA(tag4);
     AddTag(tag4);
+    UpdateTagInKWA(tag4);
 
 
     if(CurrentTokenInFirst("AsignacionFor"))
@@ -854,9 +859,9 @@ public class Compiler {
         return false;
     if(!Expect("{"))
         return false;
-
-    UpdateTagInKWA(tag4);
+    
     AddTag(tag4);
+    UpdateTagInKWA(tag4);
 
     if(!Instrucciones())
        return false;
@@ -866,8 +871,8 @@ public class Compiler {
     if(!Expect("}"))
         return false;
 
-    UpdateTagInKWA(tag2);
     AddTag(tag2);
+    UpdateTagInKWA(tag2);
 
     return true;
      }
@@ -889,10 +894,11 @@ public class Compiler {
                     if(!tokenOperator.description.equals("="))
                             AddValue(tokenVariable);
 
-                    Token tokenExpresion = GetCurrentToken();
-
+                    _stackValoresExpresion.clear();
                     if(!Expresion())
                             return false;
+                    while(!_stackValoresExpresion.isEmpty()){
+                    Token tokenExpresion = _stackValoresExpresion.pop();
                     if(tokenExpresion.code == 43){
                     if(!AddAsignment(tokenVariable, tokenOperator,tokenExpresion.info))
                             return false;
@@ -900,9 +906,10 @@ public class Compiler {
                     else{
                     if(!AddAsignment(tokenVariable, tokenOperator,GetVariableType(tokenExpresion.description)))
                             return false;
-                    }
+                    }//else        
+                    }//while(!_stackValoresExpresion.isEmpty()){
                     if(usesSemiColon)
-                            return Expect(";");
+                        return Expect(";");
                     return true;		
             }
             return false;
@@ -912,10 +919,10 @@ public class Compiler {
             String variableType = GetVariableType(tokenVariable.description);
             // EL TIPO DE DATO DE LA EXPRESION ES DIFERENTE DE LA VARIABLE
             if(tipoDatoExpresion.equals("DoubleFloat")){
-                    if(!variableType.equals("Double") || !variableType.equals("Float"))
+                    if(!variableType.equals("Double") && !variableType.equals("Float"))
                             return false;
             }
-            else if (!variableType.equals(tipoDatoExpresion)){
+            else if (!variableType.equals(tipoDatoExpresion) && (!variableType.equals("Double") && !tipoDatoExpresion.equals("Int"))){
                     return false;
             }
 
@@ -1136,23 +1143,26 @@ public class Compiler {
     	// 43 - Constante, 44 - Variable Declarada
         
     	AddValue(GetCurrentToken());
+    	_stackValoresExpresion.push(GetCurrentToken());
         if(CurrentTokenInFirst("Variable")){
            return Variable();  
         }
         
-        if(!Expect(43))
+        if(!Expect(43)){
+        	_stackValoresExpresion.pop();
            return false;
+        }
         
         return true;
     }
     public static boolean While()  throws IOException{
-    	if(!Expect("while"))
+        if(!Expect("while"))
             return false;
         if(!Expect("("))
             return false;
         Tag tag1=newTag();
-        UpdateTagInKWA(tag1);
         AddTag(tag1);
+        UpdateTagInKWA(tag1);
         if(!Condiciones())
             return false;
         Tag tag2= newTag();
@@ -1166,8 +1176,8 @@ public class Compiler {
         AddInstruction("JMP " + tag1.name);
         if(!Expect("}"))
             return false;
-        UpdateTagInKWA(tag2);
         AddTag(tag2);
+        UpdateTagInKWA(tag2);
         return true;
     }
     public static String ReadTokenFromFile() throws IOException {
@@ -1416,7 +1426,7 @@ public class Compiler {
     	}
     	return false;
     }
-    public static int GetTokenCode(String token) {
+   public static int GetTokenCode(String token) {
             switch (token) {
 
             case "+":
@@ -1503,6 +1513,12 @@ public class Compiler {
                     return 41;
             case "charAt":
                     return 42;
+            case "*=":
+                return 46;
+            case "/=":
+                return 47;
+            case "%=":
+                return 48;
             default:
                     if (isNumber(token) || token.charAt(0) == '"' || ("" + token.charAt(0)).equals("'"))
                             return 43;
@@ -1512,40 +1528,40 @@ public class Compiler {
             }
     }
     public static String TranslateToAssembly(String operator){
-            switch(operator){
-    case "+":
-        return "ADD";
-    case "-":
-        return "SUB";
-    case "*":
-        return "MUL";
-    case "/":
-        return "DIV";
-    case "%":
-        return "MOD";
-    case "=":
-        return "CMPEQ";
-    case "!=":
-        return "CMPNE";
-    case "<":
-        return "CMPLT";
-    case "<=":
-        return "CMPLE";
-    case ">":
-        return "CMPGT";
-    case ">=":
-        return "CMPGE";
-    case "+=":
-        return "ADD";
-    case "-=":
-        return "SUB";
-    case "*=":
-        return "MUL";
-    case "/=":
-        return "DIV";
-            }
-            return "";
-}
+        switch(operator){
+            case "+":
+                return "ADD";
+            case "-":
+                return "SUB";
+            case "*":
+                return "MUL";
+            case "/":
+                return "DIV";
+            case "%":
+                return "MOD";
+            case "==":
+                return "CMPEQ";
+            case "!=":
+                return "CMPNE";
+            case "<":
+                return "CMPLT";
+            case "<=":
+                return "CMPLE";
+            case ">":
+                return "CMPGT";
+            case ">=":
+                return "CMPGE";
+            case "+=":
+                return "ADD";
+            case "-=":
+                return "SUB";
+            case "*=":
+                return "MUL";
+            case "/=":
+                return "DIV";
+        }
+        return "";
+    }
     public static boolean isNumber(String tokenWord) {
             for (int i = 0; i < tokenWord.length(); i++) {
                     if ((tokenWord.charAt(i) - 48 < 0 || tokenWord.charAt(i) - 48 > 9) && tokenWord.charAt(i) != 41) {
