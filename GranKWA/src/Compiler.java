@@ -1564,7 +1564,7 @@ public class Compiler {
     }
     public static boolean isNumber(String tokenWord) {
             for (int i = 0; i < tokenWord.length(); i++) {
-                    if ((tokenWord.charAt(i) - 48 < 0 || tokenWord.charAt(i) - 48 > 9) && tokenWord.charAt(i) != 41) {
+                    if ((tokenWord.charAt(i) - 48 < 0 || tokenWord.charAt(i) - 48 > 9) && tokenWord.charAt(i) != 46) {
                             return false;
                     }
             }
