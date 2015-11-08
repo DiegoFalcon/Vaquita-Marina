@@ -1,5 +1,7 @@
 import java.awt.FileDialog;
 import java.awt.Frame;
+import java.io.BufferedOutputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
@@ -312,6 +314,9 @@ public class Compiler {
             case "ListaEscritura":
                     result = ListaEscritura(-1);
                     break;
+                case "ListaLectura":
+                        result = ListaLectura(1);
+                        break;
             case "Expresion":
                     result = Expresion();
                     break;
@@ -582,81 +587,86 @@ public class Compiler {
             return false;
     }
     public static boolean Lectura() throws IOException{
-           // Read <ListaLectura> ;
-               if(!Expect("read"))
-                   return false;
-               if(!ListaLectura())
-                   return false;
-               if(!Expect(";"))
-                   return false;
-               return true;
-    }
-    public static boolean ListaLectura() throws IOException{
-    // <Variables> {,<ListaEscritura>}
-        AddRead();
-        if (!Variable())
+    // Read <ListaLectura> ;
+        if(!Expect("read"))
             return false;
-
-        if (CurrentToken(","))
-            if(!Expect(","))
-                return false;
-        while (CurrentTokenInFirst("ListaLectura")) {	
-            if (!ListaLectura())
-                return false;
-        }
+        if(!ListaLectura(0))
+            return false;
+        if(!Expect(";"))
+            return false;
         return true;
     }
-    public static void AddRead() throws IOException{
-        String variable = GetCurrentToken().description;
-        String variableType = GetVariableType(variable);
+    public static boolean ListaLectura(int option) throws IOException{
+        // <Variables> {,<ListaEscritura>}
+        // option es para saber si se mandó desde currentTokenInFirst
+        // 0 - no se mandó desde CTIF
+        // 1 - Se mandó desde currentTokenInFirst
+            if(option != 1)
+                AddRead();
+            
+            if (!Variable())
+                return false;
 
-        if(variable.contains("["))
-            switch(variableType){
-                case "float":
-                    AddInstruction("READVI ");
-                    AddVariable(GetCurrentToken().description);
-                break;
-                case "int":
-                    AddInstruction("READVD ");
-                    AddVariable(GetCurrentToken().description);
-                break;
-                case "double":
-                    AddInstruction("READVF ");
-                    AddVariable(GetCurrentToken().description);
-                break;
-                case "char":
-                    AddInstruction("READVC ");
-                    AddVariable(GetCurrentToken().description);
-                break;
-                case "string":
-                    AddInstruction("READVS ");
-                    AddVariable(GetCurrentToken().description);
-                break;
+            if (CurrentToken(","))
+                if(!Expect(","))
+                    return false;
+            while (CurrentTokenInFirst("ListaLectura")) {	
+                if (!ListaLectura(0))
+                    return false;
             }
-        else 
-            switch(variableType){
-                case "float":
-                    AddInstruction("READI ");
-                    AddVariable(GetCurrentToken().description);
-                break;
-                case "int":
-                    AddInstruction("READD ");
-                    AddVariable(GetCurrentToken().description);
-                break;
-                case "double":
-                    AddInstruction("READF ");
-                    AddVariable(GetCurrentToken().description);
-                break;
-                case "char":
-                    AddInstruction("READC ");
-                    AddVariable(GetCurrentToken().description);
-                break;
-                case "string":
-                    AddInstruction("READS ");
-                    AddVariable(GetCurrentToken().description);
-                break;
-            }
-    }
+            return true;
+        }
+    public static void AddRead() throws IOException{
+            String variable = GetCurrentToken().description;
+            String variableType = GetVariableType(variable);
+            
+            if(variable.contains("["))
+                switch(variableType){
+                    case "Float":
+                        AddInstruction("READVF ");
+                        AddVariable(GetCurrentToken().description);
+                    break;
+                    case "Int":
+                        AddInstruction("READVI ");
+                        AddVariable(GetCurrentToken().description);
+                    break;
+                    case "Double":
+                        AddInstruction("READVD ");
+                        AddVariable(GetCurrentToken().description);
+                    break;
+                    case "Char":
+                        AddInstruction("READVC ");
+                        AddVariable(GetCurrentToken().description);
+                    break;
+                    case "String":
+                        AddInstruction("READVS ");
+                        AddVariable(GetCurrentToken().description);
+                    break;
+                }
+            else 
+                switch(variableType){
+                    case "Float":
+                        AddInstruction("READF ");
+                        AddVariable(GetCurrentToken().description);
+                    break;
+                    case "Int":
+                        AddInstruction("READI ");
+                        AddVariable(GetCurrentToken().description);
+                    break;
+                    case "Double":
+                        AddInstruction("READD ");
+                        AddVariable(GetCurrentToken().description);
+                    break;
+                    case "Char":
+                        AddInstruction("READC ");
+                        AddVariable(GetCurrentToken().description);
+                    break;
+                    case "String":
+                        AddInstruction("READS ");
+                        AddVariable(GetCurrentToken().description);
+                    break;
+                }
+        }
     public static boolean If() throws IOException{
         if(!Expect("if"))
             return false;
@@ -1906,4 +1916,59 @@ public class Compiler {
         Variable newObject = new Variable(name,"",type);
         arrayTemp[position] = newObject;
     }   
+    public static int GetVariableSize(){
+        int size=0;
+        for(int i=0; i<_variablesTable.length ; i++){
+            switch(_variablesTable[i].type){
+                case "Int":
+                    size+=4;
+                break;
+                
+                case "Float":
+                    size+=4;
+                break;
+                
+                case "Double":
+                    size+=8;
+                break;
+                
+                case "String":
+                    size+=255;
+                break;
+                
+                case "Char":
+                    size+=1;
+                break;
+            }
+        }
+        return size;
+    }
+    public static void getHeader(){
+    	byte[] KWAWithHeader=new byte[_KWA.length+14]; 
+        KWAWithHeader[0]=(byte)'(';
+        KWAWithHeader[1]=(byte)'C';
+        KWAWithHeader[2]=(byte)')';
+        KWAWithHeader[3]=(byte)'K';
+        KWAWithHeader[4]=(byte)'W';
+        KWAWithHeader[5]=(byte)'A';
+        KWAWithHeader[6]=(byte)'2';
+        KWAWithHeader[7]=(byte)'0';
+        KWAWithHeader[8]=(byte)'1';
+        KWAWithHeader[9]=(byte)'5';
+        KWAWithHeader[10]=(byte)((_SC>>8) & 0xFF);
+        KWAWithHeader[11]=(byte)(_SC & 0xFF);;
+        int variableSize = GetVariableSize();
+        KWAWithHeader[12]=(byte)((variableSize>>8) & 0xFF);
+        KWAWithHeader[13]=(byte)(variableSize & 0xFF);
+        
+        for(int i=0;i<_KWA.length;i++)
+        	KWAWithHeader[i+14]=_KWA[i];
+        _KWA=KWAWithHeader;
+    }
+    public static void WriteAssemblyFile() throws NumberFormatException, IOException{
+		BufferedOutputStream bufferedOut = new BufferedOutputStream(new FileOutputStream(_filename+".KWA")); 
+		getHeader();
+		bufferedOut.write(_KWA);
+		bufferedOut.close();
+    }
 }
