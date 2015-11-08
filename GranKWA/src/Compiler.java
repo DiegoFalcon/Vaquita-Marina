@@ -31,7 +31,7 @@ public class Compiler {
     public static void mainCompiler(String[] args) throws IOException {
             // TODO Auto-generated method stub
             openFile();
-
+            cleanLastBytesInFile();
             /*
             while (!isFileFinished) {
                     String sToken = ReadTokenFromFile();
@@ -969,13 +969,16 @@ public class Compiler {
                             return false;
                     operator = "ADD";
             }
-            if(CurrentToken("--")){		
+            else if(CurrentToken("--")){		
                      if(!Expect("--"))
                              return false;
                      operator = "SUB";
             }
+            else 
+            	return false;
+            
 
-            switch(currentToken.description){
+            switch(GetVariableType(currentToken.description)){
                     case "Int":
                             AddInstruction("PUSHKI");
                             AddInteger(1);
@@ -1971,4 +1974,28 @@ public class Compiler {
 		bufferedOut.write(_KWA);
 		bufferedOut.close();
     }
+    public static void cleanLastBytesInFile(){
+		
+		int nArrayLength = _bytesInFile.length;
+		
+		int newLength = nArrayLength;
+		for(int i = nArrayLength-1; i > 0; i--){
+			if(_bytesInFile[i] == 10 || _bytesInFile[i] == 13 || _bytesInFile[i] == 32 || _bytesInFile[i] == 9){
+				
+			} else {
+				newLength = i+1;
+				break;
+			}
+		}
+		
+		if(nArrayLength != newLength){
+			byte[] _newBytesInFile = new byte[newLength];
+			
+			for(int i = 0; i < newLength; i++){
+				_newBytesInFile[i] = _bytesInFile[i];
+			}
+			
+			_bytesInFile = _newBytesInFile;
+		}
+	}
 }
