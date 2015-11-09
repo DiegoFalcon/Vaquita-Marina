@@ -217,6 +217,7 @@ public class Compiler {
             if(lastByteRead < _bytesInFile.length)
                     isFileFinished = false;
             lastTokenReadOperator = templastTokenReadOperator;
+            _stackValoresExpresion.clear();
             return tokenToReturn;
     }
     public static boolean CurrentToken(String instruction) throws IOException {
@@ -235,6 +236,7 @@ public class Compiler {
             if(lastByteRead < _bytesInFile.length)
                     isFileFinished = false;
             lastTokenReadOperator = templastTokenReadOperator;
+            _stackValoresExpresion.clear();
             return true;
     }
     public static boolean CurrentToken(int instruction) throws IOException {
@@ -253,6 +255,7 @@ public class Compiler {
             if(lastByteRead < _bytesInFile.length)
                     isFileFinished = false;
             lastTokenReadOperator = templastTokenReadOperator;
+            _stackValoresExpresion.clear();
             return true;
     }
     public static boolean CurrentTokenInfo(String info) throws IOException{
@@ -270,6 +273,7 @@ public class Compiler {
             if(lastByteRead < _bytesInFile.length)
                     isFileFinished = false;
             lastTokenReadOperator = templastTokenReadOperator;
+            _stackValoresExpresion.clear();
             return false;
     }
     public static boolean CurrentTokenInFirst(String instruction) throws IOException {
@@ -352,6 +356,7 @@ public class Compiler {
             if(lastByteRead < _bytesInFile.length)
                     isFileFinished = false;
             lastTokenReadOperator = templastTokenReadOperator;
+            _stackValoresExpresion.clear();
             return result;
     }
     public static boolean Condicion() throws IOException {
@@ -908,6 +913,7 @@ public class Compiler {
                             return false;
                     }//else        
                     }//while(!_stackValoresExpresion.isEmpty()){
+                   
                     if(usesSemiColon)
                         return Expect(";");
                     return true;		
@@ -926,8 +932,7 @@ public class Compiler {
                     return false;
             }
 
-
-            if(operatorAssembly.equals("="))
+            //SI ESTA VACIO ES EL IGUAL "="
             switch(variableType){
                     case "Int":
                             if(!tokenOperator.description.equals("="))
@@ -935,12 +940,18 @@ public class Compiler {
                             AddInstruction("POPI");
                             AddVariable(tokenVariable.description);
                             break;
-                    case "DoubleFloat":
+                    case "Double":
                             if(!tokenOperator.description.equals("="))
                                     AddInstruction(operatorAssembly);
                             AddInstruction("POPD");
                             AddVariable(tokenVariable.description);
                             break;
+                    case "Float":
+                        if(!tokenOperator.description.equals("="))
+                                AddInstruction(operatorAssembly);
+                        AddInstruction("POPF");
+                        AddVariable(tokenVariable.description);
+                        break;
                     case "String":
 
                             if(operatorAssembly.equals("ADD"))
@@ -949,7 +960,7 @@ public class Compiler {
                                     AddInstruction("POPS");
                                     AddVariable(tokenVariable.description);
                             }
-                            else if(operatorAssembly.equals("=")){
+                            else if(tokenOperator.description.equals("=")){
                                     AddInstruction("POPS");
                                     AddVariable(tokenVariable.description);
                             }		
@@ -966,8 +977,8 @@ public class Compiler {
             return true;
     }
     public static boolean IncrementoDecremento() throws IOException{
-            Token currentToken = GetCurrentToken();
-            AddValue(currentToken);
+            Token tokenVariable = GetCurrentToken();
+            AddValue(tokenVariable);
             String operator = "";
             if(!Variable())
                     return false;
@@ -985,16 +996,20 @@ public class Compiler {
             	return false;
             
 
-            switch(GetVariableType(currentToken.description)){
+            switch(GetVariableType(tokenVariable.description)){
                     case "Int":
                             AddInstruction("PUSHKI");
                             AddInteger(1);
                             AddInstruction(operator);
+                            AddInstruction("POPI");
+                            AddVariable(tokenVariable.description);
                             break;
                     case "DoubleFloat":
                             AddInstruction("PUSHKD");
                             AddDouble(1);
                             AddInstruction(operator);
+                            AddInstruction("POPD");
+                            AddVariable(tokenVariable.description);
                             break;
                     default:
                             return false;
@@ -1143,11 +1158,12 @@ public class Compiler {
     	// 43 - Constante, 44 - Variable Declarada
         
     	AddValue(GetCurrentToken());
-    	_stackValoresExpresion.push(GetCurrentToken());
+    	
         if(CurrentTokenInFirst("Variable")){
+        	_stackValoresExpresion.push(GetCurrentToken());
            return Variable();  
         }
-        
+        _stackValoresExpresion.push(GetCurrentToken());
         if(!Expect(43)){
         	_stackValoresExpresion.pop();
            return false;
@@ -1559,6 +1575,8 @@ public class Compiler {
                 return "MUL";
             case "/=":
                 return "DIV";
+            case "%=":
+                return "MOD";
         }
         return "";
     }
@@ -1610,6 +1628,8 @@ public class Compiler {
     }	
     public static int GetInstructionCode(String instruction){
 		switch(instruction){
+		case "HALT":
+			return 0;
 		case "READI":
             return 1;
         case "READD":
@@ -1802,9 +1822,12 @@ public class Compiler {
                     case "Int":
                             AddInstruction("PUSHI");
                             break;
-                    case "DoubleFloat":
+                    case "Double":
                             AddInstruction("PUSHD");
                             break;
+                    case "Float":
+                        	AddInstruction("PUSHF");
+                        	break;
                     case "String":
                             AddInstruction("PUSHS");
                             break;
