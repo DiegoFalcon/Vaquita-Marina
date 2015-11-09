@@ -13,7 +13,8 @@ public class GranKWA {
             System.out.println("2. Disassembler");
             System.out.println("3. Virtual Machine");
             System.out.println("4. Compiler");
-            System.out.println("5. Exit");
+            System.out.println("5. Checador");
+            System.out.println("6. Exit");
             System.out.println("====================");
             System.out.print("Choose Option: ");
             option = Integer.parseInt(sc.next());
@@ -36,12 +37,16 @@ public class GranKWA {
                 test4.mainCompiler(args);
                 break;
             case 5:
+                checadorKWA test5 = new checadorKWA();
+                test5.mainChecador(args);
+                break;
+            case 6:
                 break;
             default: 
                 System.out.println("Invalid Option. Please type in a number 1-5.");
                 break;
             }
-        } while(option>0 & option<5);
+        } while(option>0 & option<6);
     }
     
 }
