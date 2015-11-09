@@ -1991,27 +1991,49 @@ public class Compiler {
 		bufferedOut.close();
     }
     public static void cleanLastBytesInFile(){
-		
-		int nArrayLength = _bytesInFile.length;
-		
-		int newLength = nArrayLength;
-		for(int i = nArrayLength-1; i > 0; i--){
-			if(_bytesInFile[i] == 10 || _bytesInFile[i] == 13 || _bytesInFile[i] == 32 || _bytesInFile[i] == 9){
-				
-			} else {
-				newLength = i+1;
-				break;
-			}
-		}
-		
-		if(nArrayLength != newLength){
-			byte[] _newBytesInFile = new byte[newLength];
-			
-			for(int i = 0; i < newLength; i++){
-				_newBytesInFile[i] = _bytesInFile[i];
-			}
-			
-			_bytesInFile = _newBytesInFile;
-		}
-	}
+        
+        int nArrayLength = _bytesInFile.length;
+        int newLength = nArrayLength;
+        byte[] _copyBytesInFile = new byte[nArrayLength];
+        
+        boolean bCommentFound = false;
+        
+        //Eliminar de comentarios
+        int j = 0;
+        for(int i = 0; i < nArrayLength; i++){
+            if(_bytesInFile[i] == 92){
+                bCommentFound = true;
+            }
+            if(_bytesInFile[i] == 13){
+                bCommentFound = false;
+            }
+            
+            if(!bCommentFound){
+                _copyBytesInFile[j] = _bytesInFile[i];
+                j++;
+            }
+        }
+        
+        _bytesInFile = _copyBytesInFile;
+        
+        //Eliminar ultimos saltos de linea y enter
+        for(int i = nArrayLength-1; i > 0; i--){
+            if(_bytesInFile[i] == 10 || _bytesInFile[i] == 13 || _bytesInFile[i] == 32 || _bytesInFile[i] == 9 || _bytesInFile[i] == 0){
+                
+            } else {
+                newLength = i+1;
+                break;
+            }
+        }
+        
+        if(nArrayLength != newLength){
+            byte[] _newBytesInFile = new byte[newLength];
+            
+            for(int i = 0; i < newLength; i++){
+                _newBytesInFile[i] = _bytesInFile[i];
+            }
+            
+            _bytesInFile = _newBytesInFile;
+        }
+    }
 }
