@@ -22,9 +22,8 @@ public class Compiler {
     static Variable _variablesTable[] = new Variable[0];
     static Token _arrayToken[];
     static String _currentTypeVariable;
-    static boolean _isCondition = false;
     static Stack<Boolean> _stackInsideInstruction = new Stack<Boolean>();
-    static Stack<Integer> _stackIsCondition = new Stack<Integer>();
+    static Stack<DatosRecursividad> _stackIsCondition = new Stack<DatosRecursividad>();
     static Stack<Tag> _tagStack = new Stack<Tag>();
     static byte[] _KWA = new byte[0];
     static Stack<Token> _stackValoresExpresion = new Stack<Token>();
@@ -244,147 +243,55 @@ public static boolean Variable() throws IOException{
 
             if (isFileFinished)
                     return new Token();
-            boolean templastTokenReadOperator = lastTokenReadOperator;
-            _stackIsCondition.push(lastByteRead);
-            Stack<Token> _stackstackValoresExpresionTemp = new Stack<Token>();
-            while(!_stackValoresExpresion.isEmpty())
-            	_stackstackValoresExpresionTemp.push(_stackValoresExpresion.pop());
-            Stack<Integer> _stackTokensInIndexTemp = new Stack<Integer>();
-            while(!_stackTokensInIndex.isEmpty())
-            	_stackTokensInIndexTemp.push(_stackTokensInIndex.pop());
+            GuardarDatosRecursividad();
             Token tokenToReturn = Tokenizer();
-            lastByteRead = _stackIsCondition.pop();
-            if(lastByteRead < _bytesInFile.length)
-                    isFileFinished = false;
-            lastTokenReadOperator = templastTokenReadOperator;
-         //   _stackValoresExpresion.clear();
-            _stackValoresExpresion.clear();
-            while(!_stackstackValoresExpresionTemp.isEmpty())
-            	_stackValoresExpresion.push(_stackstackValoresExpresionTemp.pop());
-            _stackTokensInIndex.clear();
-            while(!_stackTokensInIndexTemp.isEmpty())
-            	_stackTokensInIndex.push(_stackTokensInIndexTemp.pop());
+            RestaurarDatosRecursividad();
             return tokenToReturn;
     }
     public static boolean CurrentToken(String instruction) throws IOException {
             if (isFileFinished)
                     return false;
-            boolean templastTokenReadOperator = lastTokenReadOperator;
-            _stackIsCondition.push(lastByteRead);
-            Stack<Token> _stackstackValoresExpresionTemp = new Stack<Token>();
-            while(!_stackValoresExpresion.isEmpty())
-            	_stackstackValoresExpresionTemp.push(_stackValoresExpresion.pop());
-            Stack<Integer> _stackTokensInIndexTemp = new Stack<Integer>();
-            while(!_stackTokensInIndex.isEmpty())
-            	_stackTokensInIndexTemp.push(_stackTokensInIndex.pop());
+           GuardarDatosRecursividad();
             if (!Expect(instruction)) {
-                    lastByteRead = _stackIsCondition.pop();
-                    if(lastByteRead < _bytesInFile.length)
-                            isFileFinished = false;
-                    lastTokenReadOperator = templastTokenReadOperator;
-                    _stackValoresExpresion.clear();
-                    while(!_stackstackValoresExpresionTemp.isEmpty())
-                    	_stackValoresExpresion.push(_stackstackValoresExpresionTemp.pop());
-                    _stackTokensInIndex.clear();
-                    while(!_stackTokensInIndexTemp.isEmpty())
-                    	_stackTokensInIndex.push(_stackTokensInIndexTemp.pop());
+            	RestaurarDatosRecursividad();
                     return false;
             }
-            lastByteRead = _stackIsCondition.pop();
-            if(lastByteRead < _bytesInFile.length)
-                    isFileFinished = false;
-            lastTokenReadOperator = templastTokenReadOperator;
-          //  _stackValoresExpresion.clear();
-            _stackValoresExpresion.clear();
-            while(!_stackstackValoresExpresionTemp.isEmpty())
-            	_stackValoresExpresion.push(_stackstackValoresExpresionTemp.pop());
-            _stackTokensInIndex.clear();
-            while(!_stackTokensInIndexTemp.isEmpty())
-            	_stackTokensInIndex.push(_stackTokensInIndexTemp.pop());
+            RestaurarDatosRecursividad();
             return true;
     }
     public static boolean CurrentToken(int instruction) throws IOException {
             if (isFileFinished)
                     return false;
-            boolean templastTokenReadOperator = lastTokenReadOperator;
-            _stackIsCondition.push(lastByteRead);
-            Stack<Token> _stackstackValoresExpresionTemp = new Stack<Token>();
-            while(!_stackValoresExpresion.isEmpty())
-            	_stackstackValoresExpresionTemp.push(_stackValoresExpresion.pop());
-            Stack<Integer> _stackTokensInIndexTemp = new Stack<Integer>();
-            while(!_stackTokensInIndex.isEmpty())
-            	_stackTokensInIndexTemp.push(_stackTokensInIndex.pop());
+            GuardarDatosRecursividad();
             if (!Expect(instruction)) {
-                    lastByteRead = _stackIsCondition.pop();
-                    if(lastByteRead < _bytesInFile.length)
-                            isFileFinished = false;
-                    lastTokenReadOperator = templastTokenReadOperator;
-                    _stackValoresExpresion.clear();
-                    while(!_stackstackValoresExpresionTemp.isEmpty())
-                    	_stackValoresExpresion.push(_stackstackValoresExpresionTemp.pop());
-                    _stackTokensInIndex.clear();
-                    while(!_stackTokensInIndexTemp.isEmpty())
-                    	_stackTokensInIndex.push(_stackTokensInIndexTemp.pop());
+                  	RestaurarDatosRecursividad();
                     return false;
             }
-            lastByteRead = _stackIsCondition.pop();
-            if(lastByteRead < _bytesInFile.length)
-                    isFileFinished = false;
-            lastTokenReadOperator = templastTokenReadOperator;
-         //   _stackValoresExpresion.clear();
-            _stackValoresExpresion.clear();
-            while(!_stackstackValoresExpresionTemp.isEmpty())
-            	_stackValoresExpresion.push(_stackstackValoresExpresionTemp.pop());
-            _stackTokensInIndex.clear();
-            while(!_stackTokensInIndexTemp.isEmpty())
-            	_stackTokensInIndex.push(_stackTokensInIndexTemp.pop());
+            RestaurarDatosRecursividad();
             return true;
     }
     public static boolean CurrentTokenInfo(String info) throws IOException{
             if (isFileFinished)
                     return false;
-            boolean templastTokenReadOperator = lastTokenReadOperator;
-            _stackIsCondition.push(lastByteRead);
-            Stack<Token> _stackstackValoresExpresionTemp = new Stack<Token>();
-            while(!_stackValoresExpresion.isEmpty())
-            	_stackstackValoresExpresionTemp.push(_stackValoresExpresion.pop());
-            Stack<Integer> _stackTokensInIndexTemp = new Stack<Integer>();
-            while(!_stackTokensInIndex.isEmpty())
-            	_stackTokensInIndexTemp.push(_stackTokensInIndex.pop());
+          
+            GuardarDatosRecursividad();
             _currentToken = Tokenizer();
             if (_currentToken.info.equals(info)) {
-                    lastByteRead = _stackIsCondition.pop();
-                    lastTokenReadOperator = templastTokenReadOperator;
+
+            		RestaurarDatosRecursividad();
                     return true;
             }		
-            lastByteRead = _stackIsCondition.pop();
-            if(lastByteRead < _bytesInFile.length)
-                    isFileFinished = false;
-            lastTokenReadOperator = templastTokenReadOperator;
-         //   _stackValoresExpresion.clear();
-            _stackValoresExpresion.clear();
-            while(!_stackstackValoresExpresionTemp.isEmpty())
-            	_stackValoresExpresion.push(_stackstackValoresExpresionTemp.pop());
-            _stackTokensInIndex.clear();
-            while(!_stackTokensInIndexTemp.isEmpty())
-            	_stackTokensInIndex.push(_stackTokensInIndexTemp.pop());
+            RestaurarDatosRecursividad();
             return false;
     }
     public static boolean CurrentTokenInFirst(String instruction) throws IOException {
 
             if (isFileFinished)
                     return false;
-            boolean templastTokenReadOperator = lastTokenReadOperator;
             boolean result = false;
-            _stackIsCondition.push(lastByteRead);
-            Stack<Token> _stackstackValoresExpresionTemp = new Stack<Token>();
-            while(!_stackValoresExpresion.isEmpty())
-            	_stackstackValoresExpresionTemp.push(_stackValoresExpresion.pop());
-            Stack<Integer> _stackTokensInIndexTemp = new Stack<Integer>();
-            while(!_stackTokensInIndex.isEmpty())
-            	_stackTokensInIndexTemp.push(_stackTokensInIndex.pop());
             
-            
+            GuardarDatosRecursividad();
+                     
             switch (instruction) {
             case "Instruccion":
                     result = Instruccion();
@@ -453,18 +360,29 @@ public static boolean Variable() throws IOException{
                     result = Asignacion(false);
                     break;
             }
-            lastByteRead = _stackIsCondition.pop();
-            if(lastByteRead < _bytesInFile.length)
-                    isFileFinished = false;
-            lastTokenReadOperator = templastTokenReadOperator;
-           // _stackValoresExpresion.clear();
-            _stackValoresExpresion.clear();
-            while(!_stackstackValoresExpresionTemp.isEmpty())
-            	_stackValoresExpresion.push(_stackstackValoresExpresionTemp.pop());
-            _stackTokensInIndex.clear();
-            while(!_stackTokensInIndexTemp.isEmpty())
-            	_stackTokensInIndex.push(_stackTokensInIndexTemp.pop());
+            RestaurarDatosRecursividad();
             return result;
+    }
+    public static void GuardarDatosRecursividad(){
+    	
+    	DatosRecursividad dr = new DatosRecursividad(lastByteRead, lastTokenReadSubstractOperator, lastTokenReadOperator, _stackValoresExpresion, _stackTokensInIndex);
+    	_stackIsCondition.push(dr);
+    }
+    public static void RestaurarDatosRecursividad(){
+    	DatosRecursividad dr = _stackIsCondition.pop();
+    	lastByteRead = dr.lastByteRead;
+    	lastTokenReadSubstractOperator = dr.lastTokenReadSubstractOperator;
+    	lastTokenReadOperator = dr.lastTokenReadOperator;
+    	
+    	  _stackValoresExpresion.clear();
+          while(!dr.stackValoresExpresion.isEmpty())
+          	_stackValoresExpresion.push(dr.stackValoresExpresion.pop());
+          _stackTokensInIndex.clear();
+          while(!dr.stackTokensInIndex.isEmpty())
+          	_stackTokensInIndex.push(dr.stackTokensInIndex.pop());
+          if(lastByteRead < _bytesInFile.length)
+              isFileFinished = false;
+          
     }
     public static boolean Condicion() throws IOException {
             if (!Expresion())
