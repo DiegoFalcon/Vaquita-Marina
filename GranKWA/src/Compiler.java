@@ -963,7 +963,9 @@ public static boolean Variable() throws IOException{
             }
             
 
-            //SI ESTA VACIO ES EL IGUAL "="
+            //SI LA PILA EXPRESION AUN TIENE DATOS NO HACE NADA, SIGUE VALIDANDO LOS DATOS DE LA EXPRESION
+            if(!_stackValoresExpresion.isEmpty())
+            	return true;
             switch(variableType){
                     case "Int":
                             if(!tokenOperator.description.equals("="))
