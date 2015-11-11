@@ -28,7 +28,8 @@ public class Compiler {
     static Stack<Tag> _tagStack = new Stack<Tag>();
     static byte[] _KWA = new byte[0];
     static Stack<Token> _stackValoresExpresion = new Stack<Token>();
-
+    static Stack<Integer> _stackTokensInIndex = new Stack<Integer>();
+    static boolean _isDeclaration = false;
     public static void mainCompiler(String[] args) throws IOException {
             // TODO Auto-generated method stub
             openFile();
@@ -86,59 +87,93 @@ public class Compiler {
             }*/
     }
     public static boolean Declaracion() throws IOException{
-            //#<TipoDato> <ListaVariables> ;
-            if(!TipoDato())
-                    return false;
-            if(!ListaVariables())
-                    return false;
-            return Expect(";");
-    }
-    public static boolean ListaVariables() throws IOException {
+        //#<TipoDato> <ListaVariables> ;
+        if(_stackIsCondition.isEmpty())
+            _isDeclaration = true;
+        if(!TipoDato())
+                return false;
+        if(!ListaVariables())
+                return false;
+        _isDeclaration = false;
+        return Expect(";");
+}
+
+public static boolean ListaVariables() throws IOException {
             // <Variables> {,<ListaVariables>}
             String currentNameVariable = GetCurrentToken().description;
             if (!Variable())
                     return false;
-            AddToVariableTable(currentNameVariable,_currentTypeVariable);
+            if(_stackIsCondition.isEmpty())
+                AddToVariableTable(currentNameVariable,_currentTypeVariable);
 
             if (CurrentToken(","))
                     if(!Expect(","))
                             return false;
-            while (CurrentTokenInFirst("ListaVariables")) {	
+            while (CurrentTokenInFirst("ListaVariables")) { 
                     if (!ListaVariables())
                             return false;
             }
 
             return true;
     }
-    public static boolean Variable() throws IOException{
-                    if(!CurrentToken(44) && !CurrentToken(45))
-                            return false;
 
-                    if(CurrentToken(44))
-                            if(!Expect(44))
-                                    return false;
-                    if(CurrentToken(45))
-                            if(!Expect(45))
-                                    return false;
-            if(CurrentToken("[")){
-              if(!Expect("["))
-                 return false;
-              if(!IndiceVector())
-                 return false;
-               if(!Expect("]"))
-                 return false;
-            }
-            return true;
-     }
-    public static boolean IndiceVector() throws IOException{
+public static boolean Variable() throws IOException{
+    Token variable = GetCurrentToken();
+                if(!CurrentToken(44) && !CurrentToken(45))
+                        return false;
+
+                if(CurrentToken(44))
+                        if(!Expect(44))
+                                return false;
+                if(CurrentToken(45))
+                        if(!Expect(45))
+                                return false;
+        if(CurrentToken("[")){
+          if(!Expect("["))
+             return false;
+          _stackTokensInIndex.push(0);
+          if(!IndiceVector(variable))
+             return false;
+           if(!Expect("]"))
+             return false;
+        }
+        return true;
+}
+	public static boolean IndiceVector(Token variable) throws IOException{
+        String size = GetCurrentToken().description;    
             if(CurrentTokenInFirst("Expresion"))
                 if(!Expresion())
                     return false;
-            if(CurrentTokenInFirst("IncrementoDecremento"))
-                if(!IncrementoDecremento())
-                    return false;
+            
+            if(!checkIfIndexArray())
+                return false;
+            
+            if(!_isDeclaration)
+                AddInstruction("POPINDEX");
+            else
+                for(int i=0 ; i<Integer.parseInt(size) ; i++)
+                    AddToVariableTable(variable.description,_currentTypeVariable);
+            //if(CurrentTokenInFirst("IncrementoDecremento"))
+            //    if(!IncrementoDecremento())
+            //        return false;
             return true;
+}
+	
+    public static boolean checkIfIndexArray() throws IOException{
+        String variableType;
+        Token token;
+        int indexCount = _stackTokensInIndex.pop();
+        // EL TIPO DE DATO DE LA EXPRESION ES DIFERENTE DE LA VARIABLE
+        for(int i =0; i<indexCount; i++){
+        	token = _stackValoresExpresion.pop();
+        	variableType = GetVariableType(token.description);
+	        if (variableType != "" && !variableType.equals("Int"))
+	        	return false;
+	        if(variableType == "" && !isNumber(token.description))
+	        	return false;
         }
+        return true;
+}
     public static boolean TipoDato() throws IOException{
                     if(CurrentToken("#int")){
                             _currentTypeVariable = "Int";
@@ -211,13 +246,24 @@ public class Compiler {
                     return new Token();
             boolean templastTokenReadOperator = lastTokenReadOperator;
             _stackIsCondition.push(lastByteRead);
-
+            Stack<Token> _stackstackValoresExpresionTemp = new Stack<Token>();
+            while(!_stackValoresExpresion.isEmpty())
+            	_stackstackValoresExpresionTemp.push(_stackValoresExpresion.pop());
+            Stack<Integer> _stackTokensInIndexTemp = new Stack<Integer>();
+            while(!_stackTokensInIndex.isEmpty())
+            	_stackTokensInIndexTemp.push(_stackTokensInIndex.pop());
             Token tokenToReturn = Tokenizer();
             lastByteRead = _stackIsCondition.pop();
             if(lastByteRead < _bytesInFile.length)
                     isFileFinished = false;
             lastTokenReadOperator = templastTokenReadOperator;
+         //   _stackValoresExpresion.clear();
             _stackValoresExpresion.clear();
+            while(!_stackstackValoresExpresionTemp.isEmpty())
+            	_stackValoresExpresion.push(_stackstackValoresExpresionTemp.pop());
+            _stackTokensInIndex.clear();
+            while(!_stackTokensInIndexTemp.isEmpty())
+            	_stackTokensInIndex.push(_stackTokensInIndexTemp.pop());
             return tokenToReturn;
     }
     public static boolean CurrentToken(String instruction) throws IOException {
@@ -225,18 +271,36 @@ public class Compiler {
                     return false;
             boolean templastTokenReadOperator = lastTokenReadOperator;
             _stackIsCondition.push(lastByteRead);
+            Stack<Token> _stackstackValoresExpresionTemp = new Stack<Token>();
+            while(!_stackValoresExpresion.isEmpty())
+            	_stackstackValoresExpresionTemp.push(_stackValoresExpresion.pop());
+            Stack<Integer> _stackTokensInIndexTemp = new Stack<Integer>();
+            while(!_stackTokensInIndex.isEmpty())
+            	_stackTokensInIndexTemp.push(_stackTokensInIndex.pop());
             if (!Expect(instruction)) {
                     lastByteRead = _stackIsCondition.pop();
                     if(lastByteRead < _bytesInFile.length)
                             isFileFinished = false;
                     lastTokenReadOperator = templastTokenReadOperator;
+                    _stackValoresExpresion.clear();
+                    while(!_stackstackValoresExpresionTemp.isEmpty())
+                    	_stackValoresExpresion.push(_stackstackValoresExpresionTemp.pop());
+                    _stackTokensInIndex.clear();
+                    while(!_stackTokensInIndexTemp.isEmpty())
+                    	_stackTokensInIndex.push(_stackTokensInIndexTemp.pop());
                     return false;
             }
             lastByteRead = _stackIsCondition.pop();
             if(lastByteRead < _bytesInFile.length)
                     isFileFinished = false;
             lastTokenReadOperator = templastTokenReadOperator;
+          //  _stackValoresExpresion.clear();
             _stackValoresExpresion.clear();
+            while(!_stackstackValoresExpresionTemp.isEmpty())
+            	_stackValoresExpresion.push(_stackstackValoresExpresionTemp.pop());
+            _stackTokensInIndex.clear();
+            while(!_stackTokensInIndexTemp.isEmpty())
+            	_stackTokensInIndex.push(_stackTokensInIndexTemp.pop());
             return true;
     }
     public static boolean CurrentToken(int instruction) throws IOException {
@@ -244,18 +308,36 @@ public class Compiler {
                     return false;
             boolean templastTokenReadOperator = lastTokenReadOperator;
             _stackIsCondition.push(lastByteRead);
+            Stack<Token> _stackstackValoresExpresionTemp = new Stack<Token>();
+            while(!_stackValoresExpresion.isEmpty())
+            	_stackstackValoresExpresionTemp.push(_stackValoresExpresion.pop());
+            Stack<Integer> _stackTokensInIndexTemp = new Stack<Integer>();
+            while(!_stackTokensInIndex.isEmpty())
+            	_stackTokensInIndexTemp.push(_stackTokensInIndex.pop());
             if (!Expect(instruction)) {
                     lastByteRead = _stackIsCondition.pop();
                     if(lastByteRead < _bytesInFile.length)
                             isFileFinished = false;
                     lastTokenReadOperator = templastTokenReadOperator;
+                    _stackValoresExpresion.clear();
+                    while(!_stackstackValoresExpresionTemp.isEmpty())
+                    	_stackValoresExpresion.push(_stackstackValoresExpresionTemp.pop());
+                    _stackTokensInIndex.clear();
+                    while(!_stackTokensInIndexTemp.isEmpty())
+                    	_stackTokensInIndex.push(_stackTokensInIndexTemp.pop());
                     return false;
             }
             lastByteRead = _stackIsCondition.pop();
             if(lastByteRead < _bytesInFile.length)
                     isFileFinished = false;
             lastTokenReadOperator = templastTokenReadOperator;
+         //   _stackValoresExpresion.clear();
             _stackValoresExpresion.clear();
+            while(!_stackstackValoresExpresionTemp.isEmpty())
+            	_stackValoresExpresion.push(_stackstackValoresExpresionTemp.pop());
+            _stackTokensInIndex.clear();
+            while(!_stackTokensInIndexTemp.isEmpty())
+            	_stackTokensInIndex.push(_stackTokensInIndexTemp.pop());
             return true;
     }
     public static boolean CurrentTokenInfo(String info) throws IOException{
@@ -263,6 +345,12 @@ public class Compiler {
                     return false;
             boolean templastTokenReadOperator = lastTokenReadOperator;
             _stackIsCondition.push(lastByteRead);
+            Stack<Token> _stackstackValoresExpresionTemp = new Stack<Token>();
+            while(!_stackValoresExpresion.isEmpty())
+            	_stackstackValoresExpresionTemp.push(_stackValoresExpresion.pop());
+            Stack<Integer> _stackTokensInIndexTemp = new Stack<Integer>();
+            while(!_stackTokensInIndex.isEmpty())
+            	_stackTokensInIndexTemp.push(_stackTokensInIndex.pop());
             _currentToken = Tokenizer();
             if (_currentToken.info.equals(info)) {
                     lastByteRead = _stackIsCondition.pop();
@@ -273,7 +361,13 @@ public class Compiler {
             if(lastByteRead < _bytesInFile.length)
                     isFileFinished = false;
             lastTokenReadOperator = templastTokenReadOperator;
+         //   _stackValoresExpresion.clear();
             _stackValoresExpresion.clear();
+            while(!_stackstackValoresExpresionTemp.isEmpty())
+            	_stackValoresExpresion.push(_stackstackValoresExpresionTemp.pop());
+            _stackTokensInIndex.clear();
+            while(!_stackTokensInIndexTemp.isEmpty())
+            	_stackTokensInIndex.push(_stackTokensInIndexTemp.pop());
             return false;
     }
     public static boolean CurrentTokenInFirst(String instruction) throws IOException {
@@ -283,7 +377,14 @@ public class Compiler {
             boolean templastTokenReadOperator = lastTokenReadOperator;
             boolean result = false;
             _stackIsCondition.push(lastByteRead);
-
+            Stack<Token> _stackstackValoresExpresionTemp = new Stack<Token>();
+            while(!_stackValoresExpresion.isEmpty())
+            	_stackstackValoresExpresionTemp.push(_stackValoresExpresion.pop());
+            Stack<Integer> _stackTokensInIndexTemp = new Stack<Integer>();
+            while(!_stackTokensInIndex.isEmpty())
+            	_stackTokensInIndexTemp.push(_stackTokensInIndex.pop());
+            
+            
             switch (instruction) {
             case "Instruccion":
                     result = Instruccion();
@@ -356,17 +457,25 @@ public class Compiler {
             if(lastByteRead < _bytesInFile.length)
                     isFileFinished = false;
             lastTokenReadOperator = templastTokenReadOperator;
+           // _stackValoresExpresion.clear();
             _stackValoresExpresion.clear();
+            while(!_stackstackValoresExpresionTemp.isEmpty())
+            	_stackValoresExpresion.push(_stackstackValoresExpresionTemp.pop());
+            _stackTokensInIndex.clear();
+            while(!_stackTokensInIndexTemp.isEmpty())
+            	_stackTokensInIndex.push(_stackTokensInIndexTemp.pop());
             return result;
     }
     public static boolean Condicion() throws IOException {
             if (!Expresion())
                     return false;
+            Token tokenOperator = GetCurrentToken();
             if (!OperadoresLogicos())
                     return false;
             if (!Expresion())
                     return false;
-
+            String assemblyOperator = TranslateToAssembly(tokenOperator.description);
+            AddInstruction(assemblyOperator);
             return true;
     }
     public static boolean OperadoresLogicos() throws IOException{
@@ -435,137 +544,137 @@ public class Compiler {
         return false;
     }
     public static void AddWrite(int variableOption, int writeOption) throws IOException{
-        /*
-        variableOption, es para diferenciar entre variables y constantes
-        0 - Variables
-        1 - Constante
-        writeOption, es para diferenciar entre un write y writeln
-        -1 - default
-        0 - write
-        1 - writeln
-        */
-        String variable = GetCurrentToken().description;
-        String variableType = GetVariableType(variable);
+    /*
+    variableOption, es para diferenciar entre variables y constantes
+    0 - Variables
+    1 - Constante
+    writeOption, es para diferenciar entre un write y writeln
+    -1 - default
+    0 - write
+    1 - writeln
+    */
+    String variable = GetCurrentToken().description;
+    String variableType = GetVariableType(variable);
+    
+    if(writeOption == 0)
+        if(variableOption == 0)
+            if(variable.contains("[")){
+                switch(variableType){
+                    case "Float":
+                        AddInstruction("WRTVF");
+                        AddVariable(GetCurrentToken().description);
+                    break;
+                    case "Int":
+                        AddInstruction("WRTVI");
+                        AddVariable(GetCurrentToken().description);
+                    break;
+                    case "Double":
+                        AddInstruction("WRTVD");
+                        AddVariable(GetCurrentToken().description);
+                    break;
+                    case "Char":
+                        AddInstruction("WRTVC");
+                        AddVariable(GetCurrentToken().description);
+                    break;
+                    case "String":
+                        AddInstruction("WRTVS");
+                        AddVariable(GetCurrentToken().description);
+                    break;
+                }
+            }
+            else
+                switch(variableType){
+                    case "Float":
+                        AddInstruction("WRTF");
+                        AddVariable(GetCurrentToken().description);
+                    break;
+                    case "Int":
+                        AddInstruction("WRTI");
+                        AddVariable(GetCurrentToken().description);
+                    break;
+                    case "Double":
+                        AddInstruction("WRTD");
+                        AddVariable(GetCurrentToken().description);
+                    break;
+                    case "Char":
+                        AddInstruction("WRTC");
+                        AddVariable(GetCurrentToken().description);
+                    break;
+                    case "String":
+                        AddInstruction("WRTS");
+                        AddVariable(GetCurrentToken().description);
+                    break;
+                }
+        else{ 
+            AddInstruction("WRTM");
+            AddString(GetCurrentToken().description);
+        }
+    else
+        if(variableOption == 0)
+            if(variable.contains("[")){
+                switch(variableType){
+                    case "Float":
+                        AddInstruction("WRTVF");
+                        AddVariable(GetCurrentToken().description);
+                        AddInstruction("WRTLN");
+                    break;
+                    case "Int":
+                        AddInstruction("WRTVI");
+                        AddVariable(GetCurrentToken().description);
+                        AddInstruction("WRTLN");
+                    break;
+                    case "Double":
+                        AddInstruction("WRTVD");
+                        AddVariable(GetCurrentToken().description);
+                        AddInstruction("WRTLN");
+                    break;
+                    case "Char":
+                        AddInstruction("WRTVC");
+                        AddVariable(GetCurrentToken().description);
+                        AddInstruction("WRTLN");
+                    break;
+                    case "String":
+                        AddInstruction("WRTVS");
+                        AddVariable(GetCurrentToken().description);
+                        AddInstruction("WRTLN");
+                    break;
+                }
+            }
+            else
+                switch(variableType){
+                    case "Float":
+                        AddInstruction("WRTF");
+                        AddVariable(GetCurrentToken().description);
+                        AddInstruction("WRTLN");
+                    break;
+                    case "Int":
+                        AddInstruction("WRTI");
+                        AddVariable(GetCurrentToken().description);
+                        AddInstruction("WRTLN");
+                    break;
+                    case "Double":
+                        AddInstruction("WRTD");
+                        AddVariable(GetCurrentToken().description);
+                        AddInstruction("WRTLN");
+                    break;
+                    case "Char":
+                        AddInstruction("WRTC");
+                        AddVariable(GetCurrentToken().description);
+                        AddInstruction("WRTLN");
+                    break;
+                    case "String":
+                        AddInstruction("WRTS");
+                        AddVariable(GetCurrentToken().description);
+                        AddInstruction("WRTLN");
+                    break;
+                }
+        else{ 
+            AddInstruction("WRTM");
+            AddString(GetCurrentToken().description);
+            AddInstruction("WRTLN");
+        }
         
-        if(writeOption == 0)
-            if(variableOption == 0)
-                if(variable.contains("[")){
-                    switch(variableType){
-                        case "float":
-                            AddInstruction("WRTVI ");
-                            AddVariable(GetCurrentToken().description);
-                        break;
-                        case "int":
-                            AddInstruction("WRTVD ");
-                            AddVariable(GetCurrentToken().description);
-                        break;
-                        case "double":
-                            AddInstruction("WRTVF ");
-                            AddVariable(GetCurrentToken().description);
-                        break;
-                        case "char":
-                            AddInstruction("WRTVC ");
-                            AddVariable(GetCurrentToken().description);
-                        break;
-                        case "string":
-                            AddInstruction("WRTVS ");
-                            AddVariable(GetCurrentToken().description);
-                        break;
-                    }
-                }
-                else
-                    switch(variableType){
-                        case "float":
-                            AddInstruction("WRTI ");
-                            AddVariable(GetCurrentToken().description);
-                        break;
-                        case "int":
-                            AddInstruction("WRTD ");
-                            AddVariable(GetCurrentToken().description);
-                        break;
-                        case "double":
-                            AddInstruction("WRTF ");
-                            AddVariable(GetCurrentToken().description);
-                        break;
-                        case "char":
-                            AddInstruction("WRTC ");
-                            AddVariable(GetCurrentToken().description);
-                        break;
-                        case "string":
-                            AddInstruction("WRTS ");
-                            AddVariable(GetCurrentToken().description);
-                        break;
-                    }
-            else{ 
-                AddInstruction("WRTM ");
-                AddVariable(GetCurrentToken().description);
-            }
-        else
-            if(variableOption == 0)
-                if(variable.contains("[")){
-                    switch(variableType){
-                        case "float":
-                            AddInstruction("WRTVI ");
-                            AddVariable(GetCurrentToken().description);
-                            AddInstruction("WRTLN ");
-                        break;
-                        case "int":
-                            AddInstruction("WRTVD ");
-                            AddVariable(GetCurrentToken().description);
-                            AddInstruction("WRTLN ");
-                        break;
-                        case "double":
-                            AddInstruction("WRTVF ");
-                            AddVariable(GetCurrentToken().description);
-                            AddInstruction("WRTLN ");
-                        break;
-                        case "char":
-                            AddInstruction("WRTVC ");
-                            AddVariable(GetCurrentToken().description);
-                            AddInstruction("WRTLN ");
-                        break;
-                        case "string":
-                            AddInstruction("WRTVS ");
-                            AddVariable(GetCurrentToken().description);
-                            AddInstruction("WRTLN ");
-                        break;
-                    }
-                }
-                else
-                    switch(variableType){
-                        case "float":
-                            AddInstruction("WRTI ");
-                            AddVariable(GetCurrentToken().description);
-                            AddInstruction("WRTLN ");
-                        break;
-                        case "int":
-                            AddInstruction("WRTD ");
-                            AddVariable(GetCurrentToken().description);
-                            AddInstruction("WRTLN ");
-                        break;
-                        case "double":
-                            AddInstruction("WRTF ");
-                            AddVariable(GetCurrentToken().description);
-                            AddInstruction("WRTLN ");
-                        break;
-                        case "char":
-                            AddInstruction("WRTC ");
-                            AddVariable(GetCurrentToken().description);
-                            AddInstruction("WRTLN ");
-                        break;
-                        case "string":
-                            AddInstruction("WRTS ");
-                            AddVariable(GetCurrentToken().description);
-                            AddInstruction("WRTLN ");
-                        break;
-                    }
-            else{ 
-                AddInstruction("WRTM ");
-                AddVariable(GetCurrentToken().description);
-                AddInstruction("WRTLN ");
-            }
-            
-    }
+}
     public static boolean Instruccion() throws IOException {
             // <For> | <While> | <If> | <Asignaci�n> | <Lectura> | <Escritura> |
             // <Declaraci�n>
@@ -625,78 +734,84 @@ public class Compiler {
             return true;
         }
     public static void AddRead() throws IOException{
-            String variable = GetCurrentToken().description;
-            String variableType = GetVariableType(variable);
-            
-            if(variable.contains("["))
-                switch(variableType){
-                    case "Float":
-                        AddInstruction("READVF ");
-                        AddVariable(GetCurrentToken().description);
-                    break;
-                    case "Int":
-                        AddInstruction("READVI ");
-                        AddVariable(GetCurrentToken().description);
-                    break;
-                    case "Double":
-                        AddInstruction("READVD ");
-                        AddVariable(GetCurrentToken().description);
-                    break;
-                    case "Char":
-                        AddInstruction("READVC ");
-                        AddVariable(GetCurrentToken().description);
-                    break;
-                    case "String":
-                        AddInstruction("READVS ");
-                        AddVariable(GetCurrentToken().description);
-                    break;
-                }
-            else 
-                switch(variableType){
-                    case "Float":
-                        AddInstruction("READF ");
-                        AddVariable(GetCurrentToken().description);
-                    break;
-                    case "Int":
-                        AddInstruction("READI ");
-                        AddVariable(GetCurrentToken().description);
-                    break;
-                    case "Double":
-                        AddInstruction("READD ");
-                        AddVariable(GetCurrentToken().description);
-                    break;
-                    case "Char":
-                        AddInstruction("READC ");
-                        AddVariable(GetCurrentToken().description);
-                    break;
-                    case "String":
-                        AddInstruction("READS ");
-                        AddVariable(GetCurrentToken().description);
-                    break;
-                }
-        }
-    public static boolean If() throws IOException{
-        if(!Expect("if"))
-            return false;
-        if (!Expect("("))
-            return false;
-        if(!Condiciones())
-            return false;
-        if(!Expect(")"))
-            return false;
-        AddInstruction("JMPF");
-        AddTag(newTag());
-        if(!Expect("{"))
-            return false;
-        if(!Instrucciones())
-            return false;
-        if(!Expect("}"))
-            return false;
-        UpdateTagInKWA(_tagStack.pop());
-        if(CurrentTokenInFirst("Else"))
-            if(!Else())
-                return false;
-        return true;
+        String variable = GetCurrentToken().description;
+        String variableType = GetVariableType(variable);
+        
+        if(variable.contains("["))
+            switch(variableType){
+                case "Float":
+                    AddInstruction("READVF");
+                    AddVariable(GetCurrentToken().description);
+                break;
+                case "Int":
+                    AddInstruction("READVI");
+                    AddVariable(GetCurrentToken().description);
+                break;
+                case "Double":
+                    AddInstruction("READVD");
+                    AddVariable(GetCurrentToken().description);
+                break;
+                case "Char":
+                    AddInstruction("READVC");
+                    AddVariable(GetCurrentToken().description);
+                break;
+                case "String":
+                    AddInstruction("READVS");
+                    AddVariable(GetCurrentToken().description);
+                break;
+            }
+        else 
+            switch(variableType){
+                case "Float":
+                    AddInstruction("READF");
+                    AddVariable(GetCurrentToken().description);
+                break;
+                case "Int":
+                    AddInstruction("READI");
+                    AddVariable(GetCurrentToken().description);
+                break;
+                case "Double":
+                    AddInstruction("READD");
+                    AddVariable(GetCurrentToken().description);
+                break;
+                case "Char":
+                    AddInstruction("READC");
+                    AddVariable(GetCurrentToken().description);
+                break;
+                case "String":
+                    AddInstruction("READS");
+                    AddVariable(GetCurrentToken().description);
+                break;
+            }
+    }
+    public static boolean If() throws IOException {
+		if (!Expect("if"))
+			return false;
+		if (!Expect("("))
+			return false;
+		if (!Condiciones())
+			return false;
+		if (!Expect(")"))
+			return false;
+		
+
+		Tag tag1 = newTag();
+		AddInstruction("JMPF");
+		AddTag(tag1);
+		
+		if (!Expect("{"))
+			return false;
+		if (!Instrucciones())
+			return false;
+		if (!Expect("}"))
+			return false;
+		
+		UpdateTagInKWA(tag1,true);
+		
+		if (CurrentTokenInFirst("Else"))
+			if (!Else())
+				return false;
+		return true;
 	}
     public static boolean Else() throws IOException{
         //else �{� <Instrucciones> �}�
@@ -819,68 +934,64 @@ public class Compiler {
                     return Expect("OR");
             return false;
     }
-    public static boolean For() throws IOException{
-            // For ( [ <Asignacion> ] ; <Condiciones> ; [ <Asignacion> ] ) "{" <Instrucciones> "}" 
-    if(!Expect("for"))
-        return false;
-    if(!Expect("("))
-        return false;
-    if(CurrentTokenInFirst("AsignacionFor"))
-       if(!Asignacion(false))
-               return false;
-    if(!Expect(";"))
-        return false;
+    public static boolean For() throws IOException {
+		// For ( [ <Asignacion> ] ; <Condiciones> ; [ <Asignacion> ] ) "{"
+		// <Instrucciones> "}"
+		if (!Expect("for"))
+			return false;
+		if (!Expect("("))
+			return false;
+		if (CurrentTokenInFirst("AsignacionFor"))
+			if (!Asignacion(false))
+				return false;
+		if (!Expect(";"))
+			return false;
 
-    //Agregar TAG1
-    Tag tag1 = newTag();
-    AddTag(tag1);
-    UpdateTagInKWA(tag1);
-    AddTag(tag1);
+		// Agregar TAG1
+		Tag tag1 = newTag();
+		UpdateTagInKWA(tag1,false);
 
-    if(!Condiciones())
-        return false;
-    if(!Expect(";"))
-        return false;
+		if (!Condiciones())
+			return false;
+		if (!Expect(";"))
+			return false;
 
-    Tag tag2 = newTag();
-    AddInstruction("JMPF "+tag2.name);
+		Tag tag2 = newTag();
+		AddInstruction("JMPF");
+		AddTag(tag2);
 
+		Tag tag3 = newTag();
+		AddInstruction("JMP");
+		AddTag(tag3);
 
-    Tag tag3 = newTag();
-    AddInstruction("JMP "+tag3.name);
+		Tag tag4 = newTag();
+		UpdateTagInKWA(tag4,false);
 
-    Tag tag4 = newTag();
-    AddTag(tag4);
-    UpdateTagInKWA(tag4);
+		if (CurrentTokenInFirst("AsignacionFor"))
+			if (!Asignacion(false))
+				return false;
 
+		AddInstruction("JMP");
 
-    if(CurrentTokenInFirst("AsignacionFor"))
-       if(!Asignacion(false))
-               return false;
+		if (!Expect(")"))
+			return false;
+		if (!Expect("{"))
+			return false;
 
-    AddInstruction("JMP "+tag1.name);
+		UpdateTagInKWA(tag3,true);
 
-    if(!Expect(")"))
-        return false;
-    if(!Expect("{"))
-        return false;
-    
-    AddTag(tag4);
-    UpdateTagInKWA(tag4);
+		if (!Instrucciones())
+			return false;
 
-    if(!Instrucciones())
-       return false;
+		AddInstruction("JMP");
 
-    AddInstruction("JMP "+tag4.name);
+		if (!Expect("}"))
+			return false;
 
-    if(!Expect("}"))
-        return false;
+		UpdateTagInKWA(tag2,true);
 
-    AddTag(tag2);
-    UpdateTagInKWA(tag2);
-
-    return true;
-     }
+		return true;
+	}
     public static boolean Asignacion(boolean usesSemiColon) throws IOException{
             if(CurrentTokenInFirst("IncrementoDecremento")){
                     if(!IncrementoDecremento())
@@ -925,12 +1036,14 @@ public class Compiler {
             String variableType = GetVariableType(tokenVariable.description);
             // EL TIPO DE DATO DE LA EXPRESION ES DIFERENTE DE LA VARIABLE
             if(tipoDatoExpresion.equals("DoubleFloat")){
-                    if(!variableType.equals("Double") && !variableType.equals("Float"))
+                    if(!variableType.equals("Double") && !variableType.equals("Float")){
                             return false;
+                    }
             }
             else if (!variableType.equals(tipoDatoExpresion) && (!variableType.equals("Double") && !tipoDatoExpresion.equals("Int"))){
                     return false;
             }
+            
 
             //SI ESTA VACIO ES EL IGUAL "="
             switch(variableType){
@@ -1155,47 +1268,60 @@ public class Compiler {
 		return true;
 	}
     public static boolean Valor() throws IOException{
-    	// 43 - Constante, 44 - Variable Declarada
+        // 43 - Constante, 44 - Variable Declarada
         
-    	AddValue(GetCurrentToken());
-    	
-        if(CurrentTokenInFirst("Variable")){
-        	_stackValoresExpresion.push(GetCurrentToken());
-           return Variable();  
-        }
+        AddValue(GetCurrentToken());
         _stackValoresExpresion.push(GetCurrentToken());
+        if(!_stackTokensInIndex.isEmpty())
+            _stackTokensInIndex.push(_stackTokensInIndex.pop()+1);
+        
+        if(CurrentTokenInFirst("Variable")){
+           return Variable();
+        }
+        
         if(!Expect(43)){
-        	_stackValoresExpresion.pop();
+        	if(!_stackTokensInIndex.isEmpty())
+            _stackTokensInIndex.push(_stackTokensInIndex.pop()-1);
+            _stackValoresExpresion.pop();
            return false;
         }
         
         return true;
     }
-    public static boolean While()  throws IOException{
-        if(!Expect("while"))
-            return false;
-        if(!Expect("("))
-            return false;
-        Tag tag1=newTag();
-        AddTag(tag1);
-        UpdateTagInKWA(tag1);
-        if(!Condiciones())
-            return false;
-        Tag tag2= newTag();
-        AddInstruction("JMPF " + tag2.name);
-        if(!Expect(")"))
-            return false;
-        if(!Expect("{"))
-            return false;
-        if(!Instrucciones())
-            return false;
-        AddInstruction("JMP " + tag1.name);
-        if(!Expect("}"))
-            return false;
-        AddTag(tag2);
-        UpdateTagInKWA(tag2);
-        return true;
-    }
+    public static boolean While() throws IOException {
+		if (!Expect("while"))
+			return false;
+		if (!Expect("("))
+			return false;
+		
+		Tag tag1 = newTag();
+		UpdateTagInKWA(tag1,false);
+		
+		if (!Condiciones())
+			return false;
+		
+		if (!Expect(")"))
+			return false;
+		if (!Expect("{"))
+			return false;
+		
+		Tag tag2 = newTag();
+		AddInstruction("JMPF");
+		AddTag(tag2);
+		
+		if (!Instrucciones())
+			return false;
+		
+		AddInstruction("JMP");
+		AddTag(tag1);
+		
+		if (!Expect("}"))
+			return false;
+		
+		UpdateTagInKWA(tag2,true);
+		
+		return true;
+	}
     public static String ReadTokenFromFile() throws IOException {
 
 		// 9 - Tab
@@ -1326,6 +1452,8 @@ public class Compiler {
 				case 41:
 				case 44:
 				case 59:
+				case 91:
+				case 93:
 				case 123:
 				case 125:
 					if (!quotationFound) {
@@ -1357,14 +1485,14 @@ public class Compiler {
 						quotationFound = !quotationFound;
 					}
 					
-					if (_bytesInFile[lastByteRead] == 91) {
-						vectorIndexFound = true;
-					}
+					//if (_bytesInFile[lastByteRead] == 91) {
+					//	vectorIndexFound = true;
+					//}
 					
-					if (_bytesInFile[lastByteRead] == 93) {
-						vectorIndexFound = false;
-						justClosedVector = true;
-					}
+					//if (_bytesInFile[lastByteRead] == 93) {
+					//	vectorIndexFound = false;
+					//	justClosedVector = true;
+					//}
 					
 					if (_bytesInFile[lastByteRead] >= 48 && _bytesInFile[lastByteRead] <=57) {
 						//Es numero
@@ -1762,26 +1890,30 @@ public class Compiler {
             return -1;
 		}
 	}
-    public static void AddTag(Tag tag) throws IOException{
-            if(_stackIsCondition.isEmpty()){
-                    byte[] variableBytes=new byte[2];
-                    tag.referencedDir = _SC;
-                    variableBytes[1]=(byte)(tag.dir & 0xFF);
-                    variableBytes[0]=(byte)((tag.dir>>8) & 0xFF);
-                    AddToKWA(variableBytes);
-                    _SC += 2;
-            }
-    }
-    public static void UpdateTagInKWA(Tag tagToUpdate){
-            if(_stackIsCondition.isEmpty()){
-                    tagToUpdate.dir = _SC;
-                    byte[] tagBytes=new byte[2];
-                    tagBytes[1]=(byte)(tagToUpdate.dir & 0xFF);
-                    tagBytes[0]=(byte)((tagToUpdate.dir>>8) & 0xFF);
-                    _KWA[tagToUpdate.referencedDir] = tagBytes[0];
-                    _KWA[tagToUpdate.referencedDir + 1] = tagBytes[1];
-            }
-    }
+    public static void AddTag(Tag tag) throws IOException {
+		if (_stackIsCondition.isEmpty()) {
+			byte[] variableBytes = new byte[2];
+			tag.referencedDir = _SC;
+			variableBytes[1] = (byte) (tag.dir & 0xFF);
+			variableBytes[0] = (byte) ((tag.dir >> 8) & 0xFF);
+			AddToKWA(variableBytes);
+			_SC += 2;
+		}
+	}
+    public static void UpdateTagInKWA(Tag tagToUpdate, boolean isTagAlreadyInCode) {
+		if (_stackIsCondition.isEmpty()) {
+			
+			tagToUpdate.dir = _SC;
+			
+			if(isTagAlreadyInCode){
+				byte[] tagBytes = new byte[2];
+				tagBytes[1] = (byte) (tagToUpdate.dir & 0xFF);
+				tagBytes[0] = (byte) ((tagToUpdate.dir >> 8) & 0xFF);
+				_KWA[tagToUpdate.referencedDir] = tagBytes[0];
+				_KWA[tagToUpdate.referencedDir + 1] = tagBytes[1];
+			}
+		}
+	}
     public static void AddVariable(String variable) throws IOException{		
             if(_stackIsCondition.isEmpty()){
                     int variableDir = GetVariableDir(variable);
@@ -1903,16 +2035,23 @@ public class Compiler {
                     _SC += 1;
             }
 }
-    public static void AddString (String variable) throws IOException{
-            if(_stackIsCondition.isEmpty()){
-                    byte[] instructionArray = new byte[1];
-            for(int i=0;i<variable.length();i++){
-                    instructionArray[0] = (byte)variable.charAt(i);
-                    AddToKWA(instructionArray);
-                    _SC += 1;
-            }
-            }
-}
+    public static void AddString(String variable) throws IOException {
+		if (_stackIsCondition.isEmpty()) {
+			
+			int size = variable.length() - 2;
+			
+			byte[] instructionArray = new byte[1];
+			instructionArray[0] = (byte) size;
+			AddToKWA(instructionArray);
+			_SC += 1;
+			
+			for (int i = 1; i < variable.length() - 1; i++) {
+				instructionArray[0] = (byte) variable.charAt(i);
+				AddToKWA(instructionArray);
+				_SC += 1;
+			}
+		}
+	}
     public static void AddToKWA(byte[] bytesToAdd){
     byte[] newKWA = new byte[_KWA.length + bytesToAdd.length];
 
@@ -1924,35 +2063,14 @@ public class Compiler {
     _KWA = newKWA;
 }
     public static void AddToVariableTable(String name, String type) throws IOException{
-        int newLength;
-        Variable arrayTemp[] = null;
-  
-        //variable a agregar es un arreglo
-        if (name.contains("[") && name.contains("]")){ 
-            String varName, indexOfArray, elementOfArray;
-            int numericIndex;
-  
-            varName = name.substring(0,name.indexOf('[')-1);
-            indexOfArray = name.substring(name.indexOf('[')+1, name.indexOf(']')-1);
-  
-            //indice del arreglo es un numero
-            if (isNumber(indexOfArray)){
-                numericIndex = Integer.parseInt(indexOfArray);
-                newLength = _variablesTable.length + numericIndex;
-                arrayTemp = java.util.Arrays.copyOf(_variablesTable, newLength);
-                for(int x=0; x<newLength; x++){
-                    elementOfArray = varName + "[" + x + "]";
-                    CreateNewVariableInTable(arrayTemp, _variablesTable.length+x, elementOfArray, type);
-                }
-            }
-        }
-        //varible sencilla (no es arreglo)
-        else{
+        if(_stackIsCondition.isEmpty()){
+            int newLength;
+            Variable arrayTemp[] = null;
             newLength = _variablesTable.length + 1;
             arrayTemp = java.util.Arrays.copyOf(_variablesTable, newLength);
             CreateNewVariableInTable(arrayTemp, newLength-1, name, type);
+            _variablesTable = arrayTemp;
         }
-        _variablesTable = arrayTemp;
     }
     public static void CreateNewVariableInTable(Variable arrayTemp[], int position, String name, String type) throws IOException{
         Variable newObject = new Variable(name,"",type);
