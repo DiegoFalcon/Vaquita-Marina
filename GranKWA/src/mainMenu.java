@@ -19,7 +19,7 @@ public class mainMenu extends javax.swing.JFrame {
      */
     public mainMenu() {
         initComponents();
-        this.getContentPane().setBackground(new java.awt.Color(72,72,72));
+        //this.getContentPane().setBackground(new java.awt.Color(72,72,72));
         //jButton1.getContentPane().setBackground(new java.awt.Color(72,72,72));
     }
 
@@ -42,7 +42,7 @@ public class mainMenu extends javax.swing.JFrame {
         setLocationByPlatform(true);
 
         jLabel1.setFont(new java.awt.Font("Tahoma", 1, 48)); // NOI18N
-        jLabel1.setForeground(new java.awt.Color(0, 204, 255));
+        jLabel1.setForeground(new java.awt.Color(51, 51, 51));
         jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jLabel1.setText(" K W A");
 
