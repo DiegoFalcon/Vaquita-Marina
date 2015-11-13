@@ -7,7 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Scanner;
 
-public class virtualMachine{
+public class VirtualMachine {
     //Contador de la linea actual (PC)  
     static int _currentLine;
     //Direccion de la variable dentro del segmento de datos
@@ -34,10 +34,10 @@ public class virtualMachine{
         RunVirtualMachine();
     }
     public static void RunVirtualMachine(){
-    	while(_currentLine <= _sc.length && ByteToInstruction(_sc[_currentLine])!=0){
-        	//System.out.println(ByteToInstruction(_sc[_currentLine]));
+        while(_currentLine <= _sc.length && ByteToInstruction(_sc[_currentLine])!=0){
+            //System.out.println(ByteToInstruction(_sc[_currentLine]));
 
-    		switch(ByteToInstruction(_sc[_currentLine])){
+            switch(ByteToInstruction(_sc[_currentLine])){
                 case 1:
                     ReadI();
                     break;
@@ -269,51 +269,51 @@ public class virtualMachine{
     
     //Leer Segmento de C�digo
     public static void GetSC() throws IOException{
-    	byte[] bytesInFile=Files.readAllBytes(Paths.get(_fileName));
-    	byte[] segment=new byte[2];
-    	segment[0]=bytesInFile[10];
-    	segment[1]=bytesInFile[11];
-    	_sc=new byte[ByteArrayToSegment(segment)];
-    	
-    	for(int i=14;i<bytesInFile.length;i++){
-    		_sc[i-14]=bytesInFile[i];
-    	}
-    	
+        byte[] bytesInFile=Files.readAllBytes(Paths.get(_fileName));
+        byte[] segment=new byte[2];
+        segment[0]=bytesInFile[10];
+        segment[1]=bytesInFile[11];
+        _sc=new byte[ByteArrayToSegment(segment)];
+        
+        for(int i=14;i<bytesInFile.length;i++){
+            _sc[i-14]=bytesInFile[i];
+        }
+        
     }
     public static void GetSD() throws IOException{
-    	byte[] bytesInFile=Files.readAllBytes(Paths.get(_fileName));
-    	byte[] segment=new byte[2];
-    	segment[0]=bytesInFile[12];
-    	segment[1]=bytesInFile[13];
-    	_sd=new byte[ByteArrayToSegment(segment)];
+        byte[] bytesInFile=Files.readAllBytes(Paths.get(_fileName));
+        byte[] segment=new byte[2];
+        segment[0]=bytesInFile[12];
+        segment[1]=bytesInFile[13];
+        _sd=new byte[ByteArrayToSegment(segment)];
     }
     
     //Metodos
     public static void WRTI(){
-	int x=0;
+    int x=0;
         varPrint(x);
     }
     public static void WRTD(){
-	int x=1;
+    int x=1;
         varPrint(x);
     }
     public static void WRTF(){
-	int x=2;
+    int x=2;
         varPrint(x);
     }
     public static void WRTC(){
-	int x=3;
+    int x=3;
         varPrint(x);
     }
     public static void WRTS(){
-	int x=4;
+    int x=4;
         varPrint(x);
     }
     public static void varPrint(int x){
-    	_currentLine++;
-    	// 0 = int -- 1 = double -- 2 = float -- 3 = char -- 4 = string
-    	int esInt=0;
-    	 double esDouble=0;
+        _currentLine++;
+        // 0 = int -- 1 = double -- 2 = float -- 3 = char -- 4 = string
+        int esInt=0;
+         double esDouble=0;
          char esChar='0';
          float esFloat=0f;
          String esString="0";
@@ -341,32 +341,32 @@ public class virtualMachine{
                 System.out.print(GetVariableValue(_dir, esString));
                 break;
         }
-    	_currentLine += 2;
+        _currentLine += 2;
     }
     public static void WRTM(){
         String x="0";
-    	_currentLine++;
-    	x=GetConstantValue(x);
-    	System.out.print(x);
-    	_currentLine += x.length()+1;
+        _currentLine++;
+        x=GetConstantValue(x);
+        System.out.print(x);
+        _currentLine += x.length()+1;
     }
     public static void WRTLN(){
         _currentLine++;
-    	System.out.println("");
+        System.out.println("");
     }
     public static void WRTVI(){
-    	_currentLine++;
+        _currentLine++;
         int x=0;
-    	_dir = GetDir();
-    	System.out.print(GetVariableValue(_dir+_index*4, x));
-    	_currentLine += 2;
+        _dir = GetDir();
+        System.out.print(GetVariableValue(_dir+_index*4, x));
+        _currentLine += 2;
     }
     public static void WRTVD(){
-    	_currentLine++;
+        _currentLine++;
         double x=0;
-    	_dir = GetDir();
-    	System.out.print(GetVariableValue(_dir+_index*8,x));
-    	_currentLine += 2;
+        _dir = GetDir();
+        System.out.print(GetVariableValue(_dir+_index*8,x));
+        _currentLine += 2;
     }
     public static void WRTVF(){
         _currentLine++;
@@ -395,7 +395,7 @@ public class virtualMachine{
         _currentLine++;
         int newValue = 0;
         try{
-        	newValue = Integer.parseInt(scan.nextLine());
+            newValue = Integer.parseInt(scan.nextLine());
             _dir=GetDir();
             }
         catch(Exception e){
@@ -405,11 +405,11 @@ public class virtualMachine{
         _currentLine+=2;
     }
     public static void ReadD() {
-    	 Scanner scan=new Scanner(System.in);
+         Scanner scan=new Scanner(System.in);
          _currentLine++;
          double newValue = 0;
          try{
-        	newValue = Double.parseDouble(scan.nextLine());
+            newValue = Double.parseDouble(scan.nextLine());
              _dir=GetDir();
              }
          catch(Exception e){
@@ -419,11 +419,11 @@ public class virtualMachine{
          _currentLine+=2;
     }
     public static void ReadF(){
-    	 Scanner scan=new Scanner(System.in);
+         Scanner scan=new Scanner(System.in);
          _currentLine++;
          float newValue = 0;
          try{
-        	 newValue = Float.parseFloat(scan.nextLine());
+             newValue = Float.parseFloat(scan.nextLine());
              _dir=GetDir();
              }
          catch(Exception e){
@@ -433,11 +433,11 @@ public class virtualMachine{
          _currentLine+=2;
     }
     public static void ReadC() {
-    	 Scanner scan=new Scanner(System.in);
+         Scanner scan=new Scanner(System.in);
          _currentLine++;
          char newValue = ' ';
          try{
-        	 newValue = (scan.nextLine()).charAt(0);
+             newValue = (scan.nextLine()).charAt(0);
              _dir=GetDir();
              }
          catch(Exception e){
@@ -447,11 +447,11 @@ public class virtualMachine{
          _currentLine+=2;
     }
     public static void ReadS(){
-    	 Scanner scan=new Scanner(System.in);
+         Scanner scan=new Scanner(System.in);
          _currentLine++;
          String newValue = "";
          try{
-        	 newValue = scan.nextLine();
+             newValue = scan.nextLine();
              _dir=GetDir();
              }
          catch(Exception e){
@@ -465,8 +465,8 @@ public class virtualMachine{
         int newValue = 0;
         _currentLine++;
         try{
-        	 newValue = Integer.parseInt(scan.nextLine());
-        	 _dir=GetDir();
+             newValue = Integer.parseInt(scan.nextLine());
+             _dir=GetDir();
         }
         catch(Exception e){
             System.out.println(e.getMessage());
@@ -475,12 +475,12 @@ public class virtualMachine{
         _currentLine+=2;
     }
     public static void ReadVD(){
-    	 Scanner scan=new Scanner(System.in);
+         Scanner scan=new Scanner(System.in);
          double newValue = 0;
          _currentLine++;
          try{
-        	 newValue = Double.parseDouble(scan.nextLine());
-         	 _dir=GetDir();
+             newValue = Double.parseDouble(scan.nextLine());
+             _dir=GetDir();
          }
          catch(Exception e){
              System.out.println(e.getMessage());
@@ -489,12 +489,12 @@ public class virtualMachine{
          _currentLine+=2;
     }
     public static void ReadVF(){
-    	 Scanner scan=new Scanner(System.in);
+         Scanner scan=new Scanner(System.in);
          float newValue = 0;
          _currentLine++;
          try{
-        	 newValue = Float.parseFloat(scan.nextLine());
-         	 _dir=GetDir();
+             newValue = Float.parseFloat(scan.nextLine());
+             _dir=GetDir();
          }
          catch(Exception e){
              System.out.println(e.getMessage());
@@ -503,12 +503,12 @@ public class virtualMachine{
          _currentLine+=2;
     }
     public static void ReadVC(){
-    	 Scanner scan=new Scanner(System.in);
+         Scanner scan=new Scanner(System.in);
          char newValue = ' ';
          _currentLine++;
          try{
-        	 newValue = scan.nextLine().charAt(0);
-         	 _dir=GetDir();
+             newValue = scan.nextLine().charAt(0);
+             _dir=GetDir();
          }
          catch(Exception e){
              System.out.println(e.getMessage());
@@ -517,12 +517,12 @@ public class virtualMachine{
          _currentLine+=2;
     }
     public static void ReadVS(){
-    	 Scanner scan=new Scanner(System.in);
+         Scanner scan=new Scanner(System.in);
          String newValue = "";
          _currentLine++;
          try{
-        	 newValue = scan.nextLine();
-         	 _dir=GetDir();
+             newValue = scan.nextLine();
+             _dir=GetDir();
          }
          catch(Exception e){
              System.out.println(e.getMessage());
@@ -738,11 +738,11 @@ public class virtualMachine{
         switch (type)
         {
             case 0:
-            	num2=_stack.POPI();
-            	num1=_stack.POPI();
-            	
+                num2=_stack.POPI();
+                num1=_stack.POPI();
+                
                 if(num1>num2)
-            	//if(_stack.POPI()<_stack.POPI())
+                //if(_stack.POPI()<_stack.POPI())
                     _stack.PUSHI(1);
                 else
                     _stack.PUSHI(0);
@@ -1115,7 +1115,7 @@ public class virtualMachine{
                     //String
                     if (_stack.getType() == 4){
                         varString2 = _stack.POPS();
-                        varString2 = varString1 + varString2;
+                        varString2 = varString2 + varString1;
                         resultString = varString2;
                         _stack.PUSHS(resultString);
                         result = 0;
@@ -1259,7 +1259,7 @@ public class virtualMachine{
         //Entero
         if (_stack.getType() == 0){
             var2 = _stack.POPD();
-            if(var2 != 0){
+            if(var1 != 0){
                 var2 = var2 / var1;
                 result = var2;
                 _stack.PUSHI((int)result);
@@ -1271,7 +1271,7 @@ public class virtualMachine{
         //float
             if (_stack.getType() == 1){
                 var2 = _stack.POPD();
-                if(var2 != 0){
+                if(var1 != 0){
                     var2 = var2 / var1;
                     result = var2;
                     _stack.PUSHF((float)result);
@@ -1283,7 +1283,7 @@ public class virtualMachine{
                 //double
                 if (_stack.getType() == 2){
                     var2 = _stack.POPD();
-                    if(var2 != 0){
+                    if(var1 != 0){
                         var2 = var2 / var1;
                         result = var2;
                         _stack.PUSHD(result);
@@ -1324,7 +1324,7 @@ public class virtualMachine{
         //Entero
         if (_stack.getType() == 0){
             var2 = _stack.POPD();
-            if(var2 != 0){
+            if(var1 != 0){
                 var2 = var2 % var1;
                 result = var2;
                 _stack.PUSHI((int)result);
@@ -1336,7 +1336,7 @@ public class virtualMachine{
         //float
             if (_stack.getType() == 1){
                 var2 = _stack.POPD();
-                if(var2 != 0){
+                if(var1 != 0){
                     var2 = var2 % var1;
                     result = var2;
                     _stack.PUSHF((float)result);
@@ -1348,7 +1348,7 @@ public class virtualMachine{
                 //double
                 if (_stack.getType() == 2){
                     var2 = _stack.POPD();
-                    if(var2 != 0){
+                    if(var1 != 0){
                         var2 = var2 % var1;
                         result = var2;
                         _stack.PUSHD(result);
@@ -1366,215 +1366,215 @@ public class virtualMachine{
     
     //******BYTE CONVERSIONS*********
     public static int getVariableTypeCode(String instruction){
-    	switch(instruction.charAt(instruction.length()-1)){
-	    	case 'I':
-    		case 'K':
-	    		return 0;    	
-	    	case 'F':
-	    		return 1;    	
-	    	case 'D':
-	    		return 2;    	
-	    	case 'S':
-	    	case 'M':
-	    		return 3;    	
-	    	case 'C':
-	    		return 4;
-	    	default:
-	    		return -1;
-    	}
+        switch(instruction.charAt(instruction.length()-1)){
+            case 'I':
+            case 'K':
+                return 0;       
+            case 'F':
+                return 1;       
+            case 'D':
+                return 2;       
+            case 'S':
+            case 'M':
+                return 3;       
+            case 'C':
+                return 4;
+            default:
+                return -1;
+        }
     }
     public static int getInstructionVariableSize(int instructionCode){
-    	switch(instructionCode){
-    		//READs
-    		case 1:case 2:case 3:case 4:case 5:case 6:case 7:case 8:case 9:case 10:
-    		//WRTs
-    		case 11:case 12:case 13:case 14:case 15:
-    		//WRTVs
-    		case 18:case 19:case 20:case 21:case 22:
-    		//SETINDEX & POPINDEX
-    		case 23:case 25:case 26:case 27:case 28:case 29:case 30:
-    		//PUSHVs
-    		case 36:case 37:case 38:case 39:case 40:
-    		//POPs
-    		case 41:case 42:case 43:case 44:case 45:case 46:case 47:case 48:case 49:
-    		//JMPs
-    		case 50:case 57:case 58:case 59:
-    			return 2;
-    		//SETINDEXK PUSHKI PUSHKF
-    		case 24:case 31:case 32:
-    			return 4;
-    		//PUSHKD
-    		case 33:
-    			return 8;
-    		//PUSHKC
-    		case 34:
-    			return 1; 	
-    		//constant string
-    		case 16:case 35:
-    			return -1;
-    		//CMP & Arithmetic
-    		default:
-    			return 0;
-    	}
+        switch(instructionCode){
+            //READs
+            case 1:case 2:case 3:case 4:case 5:case 6:case 7:case 8:case 9:case 10:
+            //WRTs
+            case 11:case 12:case 13:case 14:case 15:
+            //WRTVs
+            case 18:case 19:case 20:case 21:case 22:
+            //SETINDEX & POPINDEX
+            case 23:case 25:case 26:case 27:case 28:case 29:case 30:
+            //PUSHVs
+            case 36:case 37:case 38:case 39:case 40:
+            //POPs
+            case 41:case 42:case 43:case 44:case 45:case 46:case 47:case 48:case 49:
+            //JMPs
+            case 50:case 57:case 58:case 59:
+                return 2;
+            //SETINDEXK PUSHKI PUSHKF
+            case 24:case 31:case 32:
+                return 4;
+            //PUSHKD
+            case 33:
+                return 8;
+            //PUSHKC
+            case 34:
+                return 1;   
+            //constant string
+            case 16:case 35:
+                return -1;
+            //CMP & Arithmetic
+            default:
+                return 0;
+        }
     }
     public static int ByteToStringLength(byte byteStringLength){
-    	return byteStringLength & 0xff;
+        return byteStringLength & 0xff;
     }
     public static int ByteToInstruction(byte byteInstruction){
-    	return byteInstruction & 0xff;
+        return byteInstruction & 0xff;
     }
     public static int ByteArrayToInt(byte[] byteArray) {
-	    return ByteBuffer.wrap(byteArray).getInt();
-	}
+        return ByteBuffer.wrap(byteArray).getInt();
+    }
     public static float ByteArrayToFloat(byte[] byteArray){
-	    return ByteBuffer.wrap(byteArray).getFloat();
-	}
+        return ByteBuffer.wrap(byteArray).getFloat();
+    }
     public static double ByteArrayToDouble(byte[] byteArray) {
-	    return ByteBuffer.wrap(byteArray).getDouble();
-	}
+        return ByteBuffer.wrap(byteArray).getDouble();
+    }
     public static char ByteToChar(byte byteArray) {
-		return (char)(byteArray & 0xff);
-	}
+        return (char)(byteArray & 0xff);
+    }
     public static int ByteArrayToSegment(byte[] segment){
-    	return ((segment[0] & 0xff) << 8) | (segment[1] & 0xff);
+        return ((segment[0] & 0xff) << 8) | (segment[1] & 0xff);
     }
     public static int ByteArrayToDir(byte[] dir){
-    	return ((dir[0] & 0xff) << 8) | (dir[1] & 0xff);
+        return ((dir[0] & 0xff) << 8) | (dir[1] & 0xff);
     }
     
     public static byte StringLengthToByte(int stringLengthToConvert){
-    	return (byte)stringLengthToConvert;
- 	}
+        return (byte)stringLengthToConvert;
+    }
     public static byte InstructionToByte(int instructionToConvert){
-    	return (byte)instructionToConvert;
- 	}
+        return (byte)instructionToConvert;
+    }
     public static byte[] IntToByteArray(int numberToConvert){
-	   return ByteBuffer.allocate(4).putInt(numberToConvert).array();
-	}
+       return ByteBuffer.allocate(4).putInt(numberToConvert).array();
+    }
     public static byte[] FloatToByteArray(float numberToConvert){
- 	   return ByteBuffer.allocate(4).putFloat(numberToConvert).array();
-	} 
+       return ByteBuffer.allocate(4).putFloat(numberToConvert).array();
+    } 
     public static byte[] DoubleToByteArray(double numberToConvert){
- 	   return ByteBuffer.allocate(8).putDouble(numberToConvert).array();
-	}
+       return ByteBuffer.allocate(8).putDouble(numberToConvert).array();
+    }
     public static byte CharToByte(char charToConvert){
-    	return (byte)charToConvert;
-	}
+        return (byte)charToConvert;
+    }
     public static byte[] SegmentsToByteArray(int segmentSize){
-    	byte[] segmentIn2Bytes=new byte[2];
-    	segmentIn2Bytes[1]=(byte)(segmentSize & 0xFF);
-    	segmentIn2Bytes[0]=(byte)((segmentSize>>8) & 0xFF);
-    	return segmentIn2Bytes;
+        byte[] segmentIn2Bytes=new byte[2];
+        segmentIn2Bytes[1]=(byte)(segmentSize & 0xFF);
+        segmentIn2Bytes[0]=(byte)((segmentSize>>8) & 0xFF);
+        return segmentIn2Bytes;
     }
     public static byte[] DirToByteArray(int dir){
-    	byte[] segmentIn2Bytes=new byte[2];
-    	segmentIn2Bytes[1]=(byte)(dir & 0xFF);
-    	segmentIn2Bytes[0]=(byte)((dir>>8) & 0xFF);
-    	return segmentIn2Bytes;
+        byte[] segmentIn2Bytes=new byte[2];
+        segmentIn2Bytes[1]=(byte)(dir & 0xFF);
+        segmentIn2Bytes[0]=(byte)((dir>>8) & 0xFF);
+        return segmentIn2Bytes;
     }
     
     public static int GetVariableValue(int dir, int dummyValue){
-    	byte[] intToConvert=new byte[4];
-    	intToConvert[0]=_sd[dir];
-    	intToConvert[1]=_sd[dir+1];
-    	intToConvert[2]=_sd[dir+2];
-    	intToConvert[3]=_sd[dir+3];
-    	return ByteArrayToInt(intToConvert);
+        byte[] intToConvert=new byte[4];
+        intToConvert[0]=_sd[dir];
+        intToConvert[1]=_sd[dir+1];
+        intToConvert[2]=_sd[dir+2];
+        intToConvert[3]=_sd[dir+3];
+        return ByteArrayToInt(intToConvert);
     }
     public static float GetVariableValue(int dir, float dummyValue){
-    	byte[] floatToConvert=new byte[4];
-    	floatToConvert[0]=_sd[dir];
-    	floatToConvert[1]=_sd[dir+1];
-    	floatToConvert[2]=_sd[dir+2];
-    	floatToConvert[3]=_sd[dir+3];
-    	return ByteArrayToFloat(floatToConvert);
+        byte[] floatToConvert=new byte[4];
+        floatToConvert[0]=_sd[dir];
+        floatToConvert[1]=_sd[dir+1];
+        floatToConvert[2]=_sd[dir+2];
+        floatToConvert[3]=_sd[dir+3];
+        return ByteArrayToFloat(floatToConvert);
     }
     public static double GetVariableValue(int dir, double dummyValue){
-    	byte[] doubleToConvert=new byte[8];
-    	doubleToConvert[0]=_sd[dir];
-    	doubleToConvert[1]=_sd[dir+1];
-    	doubleToConvert[2]=_sd[dir+2];
-    	doubleToConvert[3]=_sd[dir+3];
-    	doubleToConvert[4]=_sd[dir+4];
-    	doubleToConvert[5]=_sd[dir+5];
-    	doubleToConvert[6]=_sd[dir+6];
-    	doubleToConvert[7]=_sd[dir+7];
-    	return ByteArrayToDouble(doubleToConvert);
+        byte[] doubleToConvert=new byte[8];
+        doubleToConvert[0]=_sd[dir];
+        doubleToConvert[1]=_sd[dir+1];
+        doubleToConvert[2]=_sd[dir+2];
+        doubleToConvert[3]=_sd[dir+3];
+        doubleToConvert[4]=_sd[dir+4];
+        doubleToConvert[5]=_sd[dir+5];
+        doubleToConvert[6]=_sd[dir+6];
+        doubleToConvert[7]=_sd[dir+7];
+        return ByteArrayToDouble(doubleToConvert);
     }
     public static char GetVariableValue(int dir, char dummyValue){
-    	return ByteToChar(_sd[dir]);
+        return ByteToChar(_sd[dir]);
     }
     public static String GetVariableValue(int dir, String dummyValue){
-    	String stringToReturn="";
-    	//int stringLength=ByteToStringLength(_sc[_currentLine]);
-    	for(int i=0 ; ByteToChar(_sd[dir+i])!=_nullValue && i<255; i++){
-    		stringToReturn+=""+(ByteToChar(_sd[dir+i]));
-    	}
-    	return stringToReturn;
+        String stringToReturn="";
+        //int stringLength=ByteToStringLength(_sc[_currentLine]);
+        for(int i=0 ; ByteToChar(_sd[dir+i])!=_nullValue && i<255; i++){
+            stringToReturn+=""+(ByteToChar(_sd[dir+i]));
+        }
+        return stringToReturn;
     }
 
     public static void SetVariableValue(int dir, int value){
-    	byte[] intToSet=IntToByteArray(value);
-    	for(int i=0;i<4;i++)
-    		_sd[dir+i]=intToSet[i];
+        byte[] intToSet=IntToByteArray(value);
+        for(int i=0;i<4;i++)
+            _sd[dir+i]=intToSet[i];
     }
     public static void SetVariableValue(int dir, float value){
-    	byte[] floatToSet=FloatToByteArray(value);
-    	for(int i=0;i<4;i++)
-    		_sd[dir+i]=floatToSet[i];
+        byte[] floatToSet=FloatToByteArray(value);
+        for(int i=0;i<4;i++)
+            _sd[dir+i]=floatToSet[i];
     }
     public static void SetVariableValue(int dir, double value){
-    	byte[] doubleToSet=DoubleToByteArray(value);
-    	for(int i=0;i<8;i++)
-    		_sd[dir+i]=doubleToSet[i];
+        byte[] doubleToSet=DoubleToByteArray(value);
+        for(int i=0;i<8;i++)
+            _sd[dir+i]=doubleToSet[i];
     }
     public static void SetVariableValue(int dir, char value){
-    	_sd[dir]=CharToByte(value);
+        _sd[dir]=CharToByte(value);
     }
     public static void SetVariableValue(int dir, String value){
-    	int stringLength=value.length();
-    	for(int i=0 ; i<255 ; i++){
-    		if(i<stringLength)
-    			_sd[dir+i]=CharToByte(value.charAt(i));
-    		else
-    			_sd[dir+i]=CharToByte(_nullValue);
-    	}
+        int stringLength=value.length();
+        for(int i=0 ; i<255 ; i++){
+            if(i<stringLength)
+                _sd[dir+i]=CharToByte(value.charAt(i));
+            else
+                _sd[dir+i]=CharToByte(_nullValue);
+        }
     }
 
     public static int GetDir(){
-    	byte[] dirInByte = new byte[2];
-    	dirInByte[0]=_sc[_currentLine];
-    	dirInByte[1]=_sc[_currentLine+1];
-    	return ByteArrayToDir(dirInByte);
+        byte[] dirInByte = new byte[2];
+        dirInByte[0]=_sc[_currentLine];
+        dirInByte[1]=_sc[_currentLine+1];
+        return ByteArrayToDir(dirInByte);
     }
     
     public static int GetConstantValue(int dummyValue){
-    	byte[] intToConvert=new byte[4];
-    	for(int i=0;i<4;i++)
-    		intToConvert[i]=_sc[_currentLine+i];
-    	return ByteArrayToInt(intToConvert);
+        byte[] intToConvert=new byte[4];
+        for(int i=0;i<4;i++)
+            intToConvert[i]=_sc[_currentLine+i];
+        return ByteArrayToInt(intToConvert);
     }
     public static float GetConstantValue(float dummyValue){
-    	byte[] floatToConvert=new byte[4];
-    	for(int i=0;i<4;i++)
-    		floatToConvert[i]=_sc[_currentLine+i];
-    	return ByteArrayToFloat(floatToConvert);
+        byte[] floatToConvert=new byte[4];
+        for(int i=0;i<4;i++)
+            floatToConvert[i]=_sc[_currentLine+i];
+        return ByteArrayToFloat(floatToConvert);
     }
     public static double GetConstantValue(double dummyValue){
-    	byte[] doubleToConvert=new byte[8];
-    	for(int i=0;i<8;i++)
-    		doubleToConvert[i]=_sc[_currentLine+i];
-    	return ByteArrayToDouble(doubleToConvert);
+        byte[] doubleToConvert=new byte[8];
+        for(int i=0;i<8;i++)
+            doubleToConvert[i]=_sc[_currentLine+i];
+        return ByteArrayToDouble(doubleToConvert);
     }
     public static char GetConstantValue(char dummyValue){
-    	return ByteToChar(_sc[_currentLine]);
+        return ByteToChar(_sc[_currentLine]);
     } 
     public static String GetConstantValue(String dummyValue){
-    	String stringToReturn="";
-    	int stringLength=ByteToStringLength(_sc[_currentLine]);
-    	for(int i=1 ; i<(stringLength+1) ; i++){
-    		stringToReturn+=""+(ByteToChar(_sc[_currentLine+i]));
-    	}
-    	return stringToReturn;
+        String stringToReturn="";
+        int stringLength=ByteToStringLength(_sc[_currentLine]);
+        for(int i=1 ; i<(stringLength+1) ; i++){
+            stringToReturn+=""+(ByteToChar(_sc[_currentLine+i]));
+        }
+        return stringToReturn;
     }
 }

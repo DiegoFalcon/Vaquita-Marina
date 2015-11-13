@@ -31,17 +31,9 @@ public class Compiler {
     static boolean _isDeclaration = false;
     public static void mainCompiler(String[] args) throws IOException {
             // TODO Auto-generated method stub
+            Initialize();
             openFile();
             cleanLastBytesInFile();
-            
-            /*
-            while (!isFileFinished) {
-                    String sToken = ReadTokenFromFile();
-                    int nTokenCode = GetTokenCode(sToken);
-                    System.out.println("Token: "+sToken);
-            }
-            */
-
             System.out.println("Tokenizer Finished");
 
             if(Instrucciones()){
@@ -49,9 +41,28 @@ public class Compiler {
                     System.out.println("Se corrio la semantica correctamente");
                     WriteAssemblyFile();
             }
+            
             else
-                    System.out.println("Ocurrio un error en la semantica que no se identifico");
+                System.out.println("Ocurrio un error en la semantica que no se identifico");
     }
+    
+    public static void Initialize(){
+        lastByteRead = 0;
+        lastTokenReadOperator = false;
+        lastTokenReadSubstractOperator = false;
+        isFileFinished = false;
+        _tagNumber = 0;
+        _SC = 0;
+        _variablesTable = new Variable[0];
+        _stackInsideInstruction = new Stack<Boolean>();
+        _stackIsCondition = new Stack<DatosRecursividad>();
+        _tagStack = new Stack<Tag>();
+        _KWA = new byte[0];
+        _stackValoresExpresion = new Stack<Token>();
+        _stackTokensInIndex = new Stack<Integer>();
+        _isDeclaration = false;
+    }
+    
     public static boolean Instrucciones() throws IOException {
             // <Instrucci�n> {<Instrucciones>}
             // _currentToken = Tokenizer();
@@ -62,7 +73,7 @@ public class Compiler {
                     {
                             if(CurrentToken("}")){
                                     _stackInsideInstruction.push(true);
-                                    return true;				
+                                    return true;                
                             }
                             if(!Instruccion())
                                     return false;
@@ -138,7 +149,7 @@ public static boolean Variable() throws IOException{
         }
         return true;
 }
-	public static boolean IndiceVector(Token variable) throws IOException{
+    public static boolean IndiceVector(Token variable) throws IOException{
         String size = GetCurrentToken().description;    
             if(CurrentTokenInFirst("Expresion"))
                 if(!Expresion())
@@ -157,19 +168,19 @@ public static boolean Variable() throws IOException{
             //        return false;
             return true;
 }
-	
+    
     public static boolean checkIfIndexArray() throws IOException{
         String variableType;
         Token token;
         int indexCount = _stackTokensInIndex.pop();
         // EL TIPO DE DATO DE LA EXPRESION ES DIFERENTE DE LA VARIABLE
         for(int i =0; i<indexCount; i++){
-        	token = _stackValoresExpresion.pop();
-        	variableType = GetVariableType(token.description);
-	        if (variableType != "" && !variableType.equals("Int"))
-	        	return false;
-	        if(variableType == "" && !isNumber(token.description))
-	        	return false;
+            token = _stackValoresExpresion.pop();
+            variableType = GetVariableType(token.description);
+            if (variableType != "" && !variableType.equals("Int"))
+                return false;
+            if(variableType == "" && !isNumber(token.description))
+                return false;
         }
         return true;
 }
@@ -194,7 +205,7 @@ public static boolean Variable() throws IOException{
                             _currentTypeVariable = "String";
                             return Expect("#string");
                     }
-                    return false;	
+                    return false;   
             }
     public static boolean Expect(int tokenCode) throws IOException {
             _currentToken = Tokenizer();
@@ -206,7 +217,7 @@ public static boolean Variable() throws IOException{
                     if(tokenCode==26)
                     {
                             _stackInsideInstruction.pop();
-                    //	_stackInsideInstruction.push(false);
+                    //  _stackInsideInstruction.push(false);
                     }
                     if (_stackIsCondition.isEmpty())
                             System.out.println(_currentToken.description);
@@ -219,7 +230,7 @@ public static boolean Variable() throws IOException{
             return false;
     }
     public static boolean Expect(String instruction) throws IOException {
-            _currentToken = Tokenizer();	
+            _currentToken = Tokenizer();    
             if (_currentToken.description.equals(instruction)) {
                     if(instruction.equals("{"))
                             _stackInsideInstruction.push(true);
@@ -253,7 +264,7 @@ public static boolean Variable() throws IOException{
                     return false;
            GuardarDatosRecursividad();
             if (!Expect(instruction)) {
-            	RestaurarDatosRecursividad();
+                RestaurarDatosRecursividad();
                     return false;
             }
             RestaurarDatosRecursividad();
@@ -264,7 +275,7 @@ public static boolean Variable() throws IOException{
                     return false;
             GuardarDatosRecursividad();
             if (!Expect(instruction)) {
-                  	RestaurarDatosRecursividad();
+                    RestaurarDatosRecursividad();
                     return false;
             }
             RestaurarDatosRecursividad();
@@ -278,9 +289,9 @@ public static boolean Variable() throws IOException{
             _currentToken = Tokenizer();
             if (_currentToken.info.equals(info)) {
 
-            		RestaurarDatosRecursividad();
+                    RestaurarDatosRecursividad();
                     return true;
-            }		
+            }       
             RestaurarDatosRecursividad();
             return false;
     }
@@ -364,22 +375,22 @@ public static boolean Variable() throws IOException{
             return result;
     }
     public static void GuardarDatosRecursividad(){
-    	
-    	DatosRecursividad dr = new DatosRecursividad(lastByteRead, lastTokenReadSubstractOperator, lastTokenReadOperator, _stackValoresExpresion, _stackTokensInIndex);
-    	_stackIsCondition.push(dr);
+        
+        DatosRecursividad dr = new DatosRecursividad(lastByteRead, lastTokenReadSubstractOperator, lastTokenReadOperator, _stackValoresExpresion, _stackTokensInIndex);
+        _stackIsCondition.push(dr);
     }
     public static void RestaurarDatosRecursividad(){
-    	DatosRecursividad dr = _stackIsCondition.pop();
-    	lastByteRead = dr.lastByteRead;
-    	lastTokenReadSubstractOperator = dr.lastTokenReadSubstractOperator;
-    	lastTokenReadOperator = dr.lastTokenReadOperator;
-    	
-    	  _stackValoresExpresion.clear();
+        DatosRecursividad dr = _stackIsCondition.pop();
+        lastByteRead = dr.lastByteRead;
+        lastTokenReadSubstractOperator = dr.lastTokenReadSubstractOperator;
+        lastTokenReadOperator = dr.lastTokenReadOperator;
+        
+          _stackValoresExpresion.clear();
           while(!dr.stackValoresExpresion.isEmpty())
-          	_stackValoresExpresion.push(dr.stackValoresExpresion.pop());
+            _stackValoresExpresion.push(dr.stackValoresExpresion.pop());
           _stackTokensInIndex.clear();
           while(!dr.stackTokensInIndex.isEmpty())
-          	_stackTokensInIndex.push(dr.stackTokensInIndex.pop());
+            _stackTokensInIndex.push(dr.stackTokensInIndex.pop());
           if(lastByteRead < _bytesInFile.length)
               isFileFinished = false;
           
@@ -397,19 +408,19 @@ public static boolean Variable() throws IOException{
             return true;
     }
     public static boolean OperadoresLogicos() throws IOException{
-		if(CurrentToken("<"))
-			return Expect("<");
-		if(CurrentToken(">"))
-			return Expect(">");
-		if(CurrentToken("<="))
-			return Expect("<=");
-		if(CurrentToken(">="))
-			return Expect(">=");
-		if(CurrentToken("!="))
-			return Expect("!=");
-		if(CurrentToken("=="))
-			return Expect("==");
-		return false;
+        if(CurrentToken("<"))
+            return Expect("<");
+        if(CurrentToken(">"))
+            return Expect(">");
+        if(CurrentToken("<="))
+            return Expect("<=");
+        if(CurrentToken(">="))
+            return Expect(">=");
+        if(CurrentToken("!="))
+            return Expect("!=");
+        if(CurrentToken("=="))
+            return Expect("==");
+        return false;
     }
     public static boolean Escritura() throws IOException{
         if(CurrentToken("write")){  
@@ -435,27 +446,27 @@ public static boolean Variable() throws IOException{
        return false;
     }
     public static boolean ListaEscritura(int writeOption) throws IOException{
-    	if(CurrentTokenInFirst("Variable"))
+        if(CurrentTokenInFirst("Variable"))
         {
             AddWrite(0,writeOption);
             if(!Variable())
-            	return false;
+                return false;
             if(CurrentToken("+")){
-            	if(!Expect("+"))
-            		return false;
-            	return ListaEscritura(writeOption);
+                if(!Expect("+"))
+                    return false;
+                return ListaEscritura(writeOption);
             }
             return true;    
         }
-    	if(CurrentTokenInfo("String"))
+        if(CurrentTokenInfo("String"))
         {
             AddWrite(1,writeOption);
-    		if(!Expect(43))
-    			return false;
+            if(!Expect(43))
+                return false;
             if(CurrentToken("+")){
-            	if(!Expect("+"))
-            		return false;
-            	return ListaEscritura(writeOption);
+                if(!Expect("+"))
+                    return false;
+                return ListaEscritura(writeOption);
             }
             return true;             
         }
@@ -645,7 +656,7 @@ public static boolean Variable() throws IOException{
             if (CurrentToken(","))
                 if(!Expect(","))
                     return false;
-            while (CurrentTokenInFirst("ListaLectura")) {	
+            while (CurrentTokenInFirst("ListaLectura")) {   
                 if (!ListaLectura(0))
                     return false;
             }
@@ -703,34 +714,34 @@ public static boolean Variable() throws IOException{
             }
     }
     public static boolean If() throws IOException {
-		if (!Expect("if"))
-			return false;
-		if (!Expect("("))
-			return false;
-		if (!Condiciones())
-			return false;
-		if (!Expect(")"))
-			return false;
-		
+        if (!Expect("if"))
+            return false;
+        if (!Expect("("))
+            return false;
+        if (!Condiciones())
+            return false;
+        if (!Expect(")"))
+            return false;
+        
 
-		Tag tag1 = newTag();
-		AddInstruction("JMPF");
-		AddTag(tag1);
-		
-		if (!Expect("{"))
-			return false;
-		if (!Instrucciones())
-			return false;
-		if (!Expect("}"))
-			return false;
-		
-		UpdateTagInKWA(tag1,true);
-		
-		if (CurrentTokenInFirst("Else"))
-			if (!Else())
-				return false;
-		return true;
-	}
+        Tag tag1 = newTag();
+        AddInstruction("JMPF");
+        AddTag(tag1);
+        
+        if (!Expect("{"))
+            return false;
+        if (!Instrucciones())
+            return false;
+        if (!Expect("}"))
+            return false;
+        
+        UpdateTagInKWA(tag1,true);
+        
+        if (CurrentTokenInFirst("Else"))
+            if (!Else())
+                return false;
+        return true;
+    }
     public static boolean Else() throws IOException{
         //else �{� <Instrucciones> �}�
         if(!Expect("else"))
@@ -830,7 +841,7 @@ public static boolean Variable() throws IOException{
                             if(!AndOr())
                                     return false;
                             if (!Condiciones())
-                                    return false;			
+                                    return false;           
                     }
             }
 
@@ -841,7 +852,7 @@ public static boolean Variable() throws IOException{
                             return false;
                     if(!Expect(")"))
                             return false;
-            }	
+            }   
             return true;
 
     }
@@ -853,63 +864,63 @@ public static boolean Variable() throws IOException{
             return false;
     }
     public static boolean For() throws IOException {
-		// For ( [ <Asignacion> ] ; <Condiciones> ; [ <Asignacion> ] ) "{"
-		// <Instrucciones> "}"
-		if (!Expect("for"))
-			return false;
-		if (!Expect("("))
-			return false;
-		if (CurrentTokenInFirst("AsignacionFor"))
-			if (!Asignacion(false))
-				return false;
-		if (!Expect(";"))
-			return false;
+        // For ( [ <Asignacion> ] ; <Condiciones> ; [ <Asignacion> ] ) "{"
+        // <Instrucciones> "}"
+        if (!Expect("for"))
+            return false;
+        if (!Expect("("))
+            return false;
+        if (CurrentTokenInFirst("AsignacionFor"))
+            if (!Asignacion(false))
+                return false;
+        if (!Expect(";"))
+            return false;
 
-		// Agregar TAG1
-		Tag tag1 = newTag();
-		UpdateTagInKWA(tag1,false);
+        // Agregar TAG1
+        Tag tag1 = newTag();
+        UpdateTagInKWA(tag1,false);
 
-		if (!Condiciones())
-			return false;
-		if (!Expect(";"))
-			return false;
+        if (!Condiciones())
+            return false;
+        if (!Expect(";"))
+            return false;
 
-		Tag tag2 = newTag();
-		AddInstruction("JMPF");
-		AddTag(tag2);
+        Tag tag2 = newTag();
+        AddInstruction("JMPF");
+        AddTag(tag2);
 
-		Tag tag3 = newTag();
-		AddInstruction("JMP");
-		AddTag(tag3);
+        Tag tag3 = newTag();
+        AddInstruction("JMP");
+        AddTag(tag3);
 
-		Tag tag4 = newTag();
-		UpdateTagInKWA(tag4,false);
+        Tag tag4 = newTag();
+        UpdateTagInKWA(tag4,false);
 
-		if (CurrentTokenInFirst("AsignacionFor"))
-			if (!Asignacion(false))
-				return false;
+        if (CurrentTokenInFirst("AsignacionFor"))
+            if (!Asignacion(false))
+                return false;
 
-		AddInstruction("JMP");
+        if (!Expect(")"))
+            return false;
+        if (!Expect("{"))
+            return false;
 
-		if (!Expect(")"))
-			return false;
-		if (!Expect("{"))
-			return false;
+        AddInstruction("JMP");
+        AddTag(tag1);
+        
+        UpdateTagInKWA(tag3,true);
 
-		UpdateTagInKWA(tag3,true);
+        if (!Instrucciones())
+            return false;
 
-		if (!Instrucciones())
-			return false;
+        AddInstruction("JMP");
+        AddTag(tag4);
 
-		AddInstruction("JMP");
+        if (!Expect("}"))
+            return false;
 
-		if (!Expect("}"))
-			return false;
-
-		UpdateTagInKWA(tag2,true);
-
-		return true;
-	}
+        return true;
+    }
     public static boolean Asignacion(boolean usesSemiColon) throws IOException{
             if(CurrentTokenInFirst("IncrementoDecremento")){
                     if(!IncrementoDecremento())
@@ -945,7 +956,7 @@ public static boolean Variable() throws IOException{
                    
                     if(usesSemiColon)
                         return Expect(";");
-                    return true;		
+                    return true;        
             }
             return false;
     }
@@ -965,7 +976,7 @@ public static boolean Variable() throws IOException{
 
             //SI LA PILA EXPRESION AUN TIENE DATOS NO HACE NADA, SIGUE VALIDANDO LOS DATOS DE LA EXPRESION
             if(!_stackValoresExpresion.isEmpty())
-            	return true;
+                return true;
             switch(variableType){
                     case "Int":
                             if(!tokenOperator.description.equals("="))
@@ -996,7 +1007,7 @@ public static boolean Variable() throws IOException{
                             else if(tokenOperator.description.equals("=")){
                                     AddInstruction("POPS");
                                     AddVariable(tokenVariable.description);
-                            }		
+                            }       
                             else
                                     return false;
                             break;
@@ -1005,7 +1016,7 @@ public static boolean Variable() throws IOException{
                                     return false;
                             AddInstruction("POPC");
                             AddVariable(tokenVariable.description);
-                            break;		
+                            break;      
             }
             return true;
     }
@@ -1020,13 +1031,13 @@ public static boolean Variable() throws IOException{
                             return false;
                     operator = "ADD";
             }
-            else if(CurrentToken("--")){		
+            else if(CurrentToken("--")){        
                      if(!Expect("--"))
                              return false;
                      operator = "SUB";
             }
             else 
-            	return false;
+                return false;
             
 
             switch(GetVariableType(tokenVariable.description)){
@@ -1079,41 +1090,41 @@ public static boolean Variable() throws IOException{
             return false;
     }
     public static boolean OperadorUnitario() throws IOException{
-		if(CurrentToken("-"))
-			return Expect("-");
-		return false;
-	}
-	/*public static boolean Expresion() throws IOException{
-		//<Expresi�n> <OperadorAritmetico> <Expresi�n> | <OperadorUnitario> <Expresi�n> | (<Expresi�n>) | <Valor>
-		if(CurrentTokenInFirst("Expresion")){
-			if(!Expresion())
-				return false;
-			if(!Operador())
-				return false;
-			if(!Expresion())
-				return false;
-			return true;
-		}
-		if(CurrentTokenInFirst("OperadorUnitario")){
-			if(!OperadorUnitario())
-				return false;
-			if(!Expresion())
-				return false;
-			return true;
-		}
-		if(CurrentToken("(")){
-			Expect("(");
-			if(!Expresion())
-				return false;
-			return Expect(")");
-		}
-		if(CurrentTokenInFirst("Valor")){
-			if(!Valor())
-				return false;
-			return true;
-		}
-		return false;
-	}
+        if(CurrentToken("-"))
+            return Expect("-");
+        return false;
+    }
+    /*public static boolean Expresion() throws IOException{
+        //<Expresi�n> <OperadorAritmetico> <Expresi�n> | <OperadorUnitario> <Expresi�n> | (<Expresi�n>) | <Valor>
+        if(CurrentTokenInFirst("Expresion")){
+            if(!Expresion())
+                return false;
+            if(!Operador())
+                return false;
+            if(!Expresion())
+                return false;
+            return true;
+        }
+        if(CurrentTokenInFirst("OperadorUnitario")){
+            if(!OperadorUnitario())
+                return false;
+            if(!Expresion())
+                return false;
+            return true;
+        }
+        if(CurrentToken("(")){
+            Expect("(");
+            if(!Expresion())
+                return false;
+            return Expect(")");
+        }
+        if(CurrentTokenInFirst("Valor")){
+            if(!Valor())
+                return false;
+            return true;
+        }
+        return false;
+    }
 */
     public static boolean Expresion() throws IOException{
             //<Termino>|<Termino><OperadorSUma><Expresion>  //
@@ -1125,7 +1136,7 @@ public static boolean Variable() throws IOException{
                                     Expect("+");
                             }
                             else{
-                                    Expect("-");				
+                                    Expect("-");                
                             }
                             if(!Expresion())
                                     return false;
@@ -1172,21 +1183,21 @@ public static boolean Variable() throws IOException{
             return false;
     }
     public static boolean Operacion() throws IOException {
-		if (!Operador())
-			return false;
+        if (!Operador())
+            return false;
 
-		if (GetTokenCode(_currentToken.description) == 23) {
-			Expect(GetTokenCode("("));
-		}
+        if (GetTokenCode(_currentToken.description) == 23) {
+            Expect(GetTokenCode("("));
+        }
 
-		if (!Valor())
-			return false;
+        if (!Valor())
+            return false;
 
-		if (GetTokenCode(_currentToken.description) == 24) {
-			Expect(GetTokenCode(")"));
-		}
-		return true;
-	}
+        if (GetTokenCode(_currentToken.description) == 24) {
+            Expect(GetTokenCode(")"));
+        }
+        return true;
+    }
     public static boolean Valor() throws IOException{
         // 43 - Constante, 44 - Variable Declarada
         
@@ -1200,295 +1211,302 @@ public static boolean Variable() throws IOException{
         }
         
         if(!Expect(43)){
-        	if(!_stackTokensInIndex.isEmpty())
+            if(!_stackTokensInIndex.isEmpty())
             _stackTokensInIndex.push(_stackTokensInIndex.pop()-1);
             _stackValoresExpresion.pop();
            return false;
         }
+        /*else{
+            Token t = GetCurrentToken();
+            if(GetCurrentToken().info.equals("Char")){
+                if(!(""+GetCurrentToken().description.charAt(2)).equals("'") || !(""+GetCurrentToken().description.charAt(0)).equals("'"))
+                    return false;
+            }
+        }*/
         
         return true;
     }
     public static boolean While() throws IOException {
-		if (!Expect("while"))
-			return false;
-		if (!Expect("("))
-			return false;
-		
-		Tag tag1 = newTag();
-		UpdateTagInKWA(tag1,false);
-		
-		if (!Condiciones())
-			return false;
-		
-		if (!Expect(")"))
-			return false;
-		if (!Expect("{"))
-			return false;
-		
-		Tag tag2 = newTag();
-		AddInstruction("JMPF");
-		AddTag(tag2);
-		
-		if (!Instrucciones())
-			return false;
-		
-		AddInstruction("JMP");
-		AddTag(tag1);
-		
-		if (!Expect("}"))
-			return false;
-		
-		UpdateTagInKWA(tag2,true);
-		
-		return true;
-	}
+        if (!Expect("while"))
+            return false;
+        if (!Expect("("))
+            return false;
+        
+        Tag tag1 = newTag();
+        UpdateTagInKWA(tag1,false);
+        
+        if (!Condiciones())
+            return false;
+        
+        if (!Expect(")"))
+            return false;
+        if (!Expect("{"))
+            return false;
+        
+        Tag tag2 = newTag();
+        AddInstruction("JMPF");
+        AddTag(tag2);
+        
+        if (!Instrucciones())
+            return false;
+        
+        AddInstruction("JMP");
+        AddTag(tag1);
+        
+        if (!Expect("}"))
+            return false;
+        
+        UpdateTagInKWA(tag2,true);
+        
+        return true;
+    }
     public static String ReadTokenFromFile() throws IOException {
 
-		// 9 - Tab
-		// 10 - Salto de linea
-		// 32 - Espacio
-		// 33 - !
-		// 37 - %
-		// 40 - Abrir parentesis
-		// 41 - Cerrar parentesis
-		// 42 - *
-		// 43 - +
-		// 44 - ,
-		// 45 - -
-		// 47 - /
-		// 59 - ;
-		// 60 - <
-		// 61 - =
-		// 62 - >
-		// 91 - Abrir corchete
-		// 92 - \
-		// 93 - Cerrar corchete
-		// 123 - Abrir llave
-		// 125 - Cerrar Llave
+        // 9 - Tab
+        // 10 - Salto de linea
+        // 32 - Espacio
+        // 33 - !
+        // 37 - %
+        // 40 - Abrir parentesis
+        // 41 - Cerrar parentesis
+        // 42 - *
+        // 43 - +
+        // 44 - ,
+        // 45 - -
+        // 47 - /
+        // 59 - ;
+        // 60 - <
+        // 61 - =
+        // 62 - >
+        // 91 - Abrir corchete
+        // 92 - \
+        // 93 - Cerrar corchete
+        // 123 - Abrir llave
+        // 125 - Cerrar Llave
 
-		boolean isComplete = false;
-		String tokenWord = "";
+        boolean isComplete = false;
+        String tokenWord = "";
 
-		boolean commentFound = false;
-		boolean quotationFound = false;
-		boolean vectorIndexFound = false;
-		boolean justClosedVector = false;
-		
+        boolean commentFound = false;
+        boolean quotationFound = false;
+        boolean vectorIndexFound = false;
+        boolean justClosedVector = false;
+        
 
-		while (!isComplete) {
+        while (!isComplete) {
 
-			boolean increaseByte = false;
-			if (!commentFound) {
-				switch (_bytesInFile[lastByteRead]) {
+            boolean increaseByte = false;
+            if (!commentFound) {
+                switch (_bytesInFile[lastByteRead]) {
 
-				// Separadores de palabra que no se convierten a token
-				case 9:
-				case 10:
-				case 13:
-				case 32: //Vacio
-					increaseByte = true;
-					if (!quotationFound) {
-						if(vectorIndexFound){
-							tokenWord += (char) _bytesInFile[lastByteRead];
-						} else {
-							if (!tokenWord.equals("")) {
-								isComplete = true;
-							}
-						}
-						
-					} else {
-						tokenWord += (char) _bytesInFile[lastByteRead];
-					}
+                // Separadores de palabra que no se convierten a token
+                case 9:
+                case 10:
+                case 13:
+                case 32: //Vacio
+                    increaseByte = true;
+                    if (!quotationFound) {
+                        if(vectorIndexFound){
+                            tokenWord += (char) _bytesInFile[lastByteRead];
+                        } else {
+                            if (!tokenWord.equals("")) {
+                                isComplete = true;
+                            }
+                        }
+                        
+                    } else {
+                        tokenWord += (char) _bytesInFile[lastByteRead];
+                    }
 
-					lastTokenReadOperator = false;
-					lastTokenReadSubstractOperator = false;
-					break;
+                    lastTokenReadOperator = false;
+                    lastTokenReadSubstractOperator = false;
+                    break;
 
-				// Comentarios
-				case 92:
-					increaseByte = true;
-					if (!quotationFound) {
-						if(vectorIndexFound){
-							tokenWord += (char) _bytesInFile[lastByteRead];
-						} else {
-							commentFound = true;
-						}
-						
-					}
-					else{
-						tokenWord += (char) _bytesInFile[lastByteRead];
-					}
-					
-					lastTokenReadOperator = false;
-					lastTokenReadSubstractOperator = false;
-					
-					break;
-					
-				//Operadores logicos aritmeticos que pueden estar juntos
-				case 33: //!
-				case 37: //%
-				case 42: //*
-				case 43: //+
-				case 45: // -
-				case 47: // /
-				case 60: // <
-				case 61: // =
-				case 62: // >
-					if(!quotationFound){
-						if(vectorIndexFound){
-							tokenWord += (char) _bytesInFile[lastByteRead];
-							increaseByte=true;
-						} else {
-							if(!lastTokenReadOperator){
-								if (tokenWord.length() != 0) {
-									isComplete = true;
-								}
-							} else {
-								tokenWord += (char) _bytesInFile[lastByteRead];
-								increaseByte = true;
-							}
-							
-							lastTokenReadOperator = true;
-						}
-						
-						
-					} else {
-						tokenWord += (char) _bytesInFile[lastByteRead];
-						increaseByte = true;
-					}
-					
-					lastTokenReadSubstractOperator = false;
-					
-					if (_bytesInFile[lastByteRead] == 45) {
-						lastTokenReadSubstractOperator = true;
-					}
-					
-					
-					
-					break;
-					
-				// Separadores de palabra que se convierten a token
-				case 40:
-				case 41:
-				case 44:
-				case 59:
-				case 91:
-				case 93:
-				case 123:
-				case 125:
-					if (!quotationFound) {
-						if(vectorIndexFound){
-							tokenWord += (char) _bytesInFile[lastByteRead];
-						} else {
-							if (tokenWord.length() == 0) {
-								tokenWord += (char) _bytesInFile[lastByteRead];
-								increaseByte = true;
-							}
-							isComplete = true;
-						}
-						
-						
-					} else {
-						increaseByte = true;
-					}
-					
-					lastTokenReadOperator = false;
-					lastTokenReadSubstractOperator = false;
-					
-					break;
-					
-					// No separadores de palabra
-				default:
-					boolean thisNumber = false;
-					
-					if (_bytesInFile[lastByteRead] == 34) {
-						quotationFound = !quotationFound;
-					}
-					
-					//if (_bytesInFile[lastByteRead] == 91) {
-					//	vectorIndexFound = true;
-					//}
-					
-					//if (_bytesInFile[lastByteRead] == 93) {
-					//	vectorIndexFound = false;
-					//	justClosedVector = true;
-					//}
-					
-					if (_bytesInFile[lastByteRead] >= 48 && _bytesInFile[lastByteRead] <=57) {
-						//Es numero
-						thisNumber = true;
-					} 
-					
-					if(!justClosedVector){
-						
-						if(lastTokenReadOperator){
-							
-							//Si este es numero y el pasado fue menos
-							if(thisNumber){
-								if(lastTokenReadSubstractOperator){
-									
-									if(tokenWord.length()==1){
-										increaseByte = true;
-										tokenWord += (char) _bytesInFile[lastByteRead];
-									} else {
-										tokenWord = tokenWord.substring(0, tokenWord.length()-1);
-										lastByteRead--;
-									}
-								} else{
-									isComplete = true;
-								}
-							} else {
-								isComplete = true;
-							}
-							
-						} else {
-							increaseByte = true;
-							tokenWord += (char) _bytesInFile[lastByteRead];
-						}
-						
-					} else {
-						//Se acaba indice de vector corchetes
-						isComplete = true;
-						increaseByte = true;
-						tokenWord += (char) _bytesInFile[lastByteRead];
-					}
-					
-					justClosedVector = false;
-					
-					
-					lastTokenReadOperator = false;
-					lastTokenReadSubstractOperator = false;
-					
-					break;
-				}
-				
+                // Comentarios
+                case 92:
+                    increaseByte = true;
+                    if (!quotationFound) {
+                        if(vectorIndexFound){
+                            tokenWord += (char) _bytesInFile[lastByteRead];
+                        } else {
+                            commentFound = true;
+                        }
+                        
+                    }
+                    else{
+                        tokenWord += (char) _bytesInFile[lastByteRead];
+                    }
+                    
+                    lastTokenReadOperator = false;
+                    lastTokenReadSubstractOperator = false;
+                    
+                    break;
+                    
+                //Operadores logicos aritmeticos que pueden estar juntos
+                case 33: //!
+                case 37: //%
+                case 42: //*
+                case 43: //+
+                case 45: // -
+                case 47: // /
+                case 60: // <
+                case 61: // =
+                case 62: // >
+                    if(!quotationFound){
+                        if(vectorIndexFound){
+                            tokenWord += (char) _bytesInFile[lastByteRead];
+                            increaseByte=true;
+                        } else {
+                            if(!lastTokenReadOperator){
+                                if (tokenWord.length() != 0) {
+                                    isComplete = true;
+                                }
+                            } else {
+                                tokenWord += (char) _bytesInFile[lastByteRead];
+                                increaseByte = true;
+                            }
+                            
+                            lastTokenReadOperator = true;
+                        }
+                        
+                        
+                    } else {
+                        tokenWord += (char) _bytesInFile[lastByteRead];
+                        increaseByte = true;
+                    }
+                    
+                    lastTokenReadSubstractOperator = false;
+                    
+                    if (_bytesInFile[lastByteRead] == 45) {
+                        lastTokenReadSubstractOperator = true;
+                    }
+                    
+                    
+                    
+                    break;
+                    
+                // Separadores de palabra que se convierten a token
+                case 40:
+                case 41:
+                case 44:
+                case 59:
+                case 91:
+                case 93:
+                case 123:
+                case 125:
+                    if (!quotationFound) {
+                        if(vectorIndexFound){
+                            tokenWord += (char) _bytesInFile[lastByteRead];
+                        } else {
+                            if (tokenWord.length() == 0) {
+                                tokenWord += (char) _bytesInFile[lastByteRead];
+                                increaseByte = true;
+                            }
+                            isComplete = true;
+                        }
+                        
+                        
+                    } else {
+                        increaseByte = true;
+                    }
+                    
+                    lastTokenReadOperator = false;
+                    lastTokenReadSubstractOperator = false;
+                    
+                    break;
+                    
+                    // No separadores de palabra
+                default:
+                    boolean thisNumber = false;
+                    
+                    if (_bytesInFile[lastByteRead] == 34) {
+                        quotationFound = !quotationFound;
+                    }
+                    
+                    //if (_bytesInFile[lastByteRead] == 91) {
+                    //  vectorIndexFound = true;
+                    //}
+                    
+                    //if (_bytesInFile[lastByteRead] == 93) {
+                    //  vectorIndexFound = false;
+                    //  justClosedVector = true;
+                    //}
+                    
+                    if (_bytesInFile[lastByteRead] >= 48 && _bytesInFile[lastByteRead] <=57) {
+                        //Es numero
+                        thisNumber = true;
+                    } 
+                    
+                    if(!justClosedVector){
+                        
+                        if(lastTokenReadOperator){
+                            
+                            //Si este es numero y el pasado fue menos
+                            if(thisNumber){
+                                if(lastTokenReadSubstractOperator){
+                                    
+                                    if(tokenWord.length()==1){
+                                        increaseByte = true;
+                                        tokenWord += (char) _bytesInFile[lastByteRead];
+                                    } else {
+                                        tokenWord = tokenWord.substring(0, tokenWord.length()-1);
+                                        lastByteRead--;
+                                    }
+                                } else{
+                                    isComplete = true;
+                                }
+                            } else {
+                                isComplete = true;
+                            }
+                            
+                        } else {
+                            increaseByte = true;
+                            tokenWord += (char) _bytesInFile[lastByteRead];
+                        }
+                        
+                    } else {
+                        //Se acaba indice de vector corchetes
+                        isComplete = true;
+                        increaseByte = true;
+                        tokenWord += (char) _bytesInFile[lastByteRead];
+                    }
+                    
+                    justClosedVector = false;
+                    
+                    
+                    lastTokenReadOperator = false;
+                    lastTokenReadSubstractOperator = false;
+                    
+                    break;
+                }
+                
 
-				if (increaseByte) {
-					lastByteRead++;
-				}
+                if (increaseByte) {
+                    lastByteRead++;
+                }
 
-				if (lastByteRead == _bytesInFile.length) {
-					isFileFinished = true;
-					isComplete = true;
-				}
+                if (lastByteRead == _bytesInFile.length) {
+                    isFileFinished = true;
+                    isComplete = true;
+                }
 
-			} else {
-				if (_bytesInFile[lastByteRead] == 10) {
-					commentFound = false;
-				}
-				lastByteRead++;
-			}
+            } else {
+                if (_bytesInFile[lastByteRead] == 10) {
+                    commentFound = false;
+                }
+                lastByteRead++;
+            }
 
-		}
-		
-		return tokenWord;
-	}
+        }
+        
+        return tokenWord;
+    }
     public static boolean isOperator(char character){
-    	if(character == 33 || character == 37 || character == 42 || character == 43 || character == 45 || character == 47
-    			|| character == 60 || character == 61 || character == 62){
-    		return true;
-    	}
-    	return false;
+        if(character == 33 || character == 37 || character == 42 || character == 43 || character == 45 || character == 47
+                || character == 60 || character == 61 || character == 62){
+            return true;
+        }
+        return false;
     }
    public static int GetTokenCode(String token) {
             switch (token) {
@@ -1657,7 +1675,7 @@ public static boolean Variable() throws IOException{
     _tagNumber++;
     _tagStack.push(returnTag);
     return returnTag;
-    }	
+    }   
     public static void AddInstruction(int instruction) throws IOException{
             if(_stackIsCondition.isEmpty()){
                     byte[] instructionArray = new byte[1];
@@ -1673,12 +1691,12 @@ public static boolean Variable() throws IOException{
                     AddToKWA(instructionArray);
                     _SC += 1;
             }
-    }	
+    }   
     public static int GetInstructionCode(String instruction){
-		switch(instruction){
-		case "HALT":
-			return 0;
-		case "READI":
+        switch(instruction){
+        case "HALT":
+            return 0;
+        case "READI":
             return 1;
         case "READD":
             return 2;
@@ -1808,33 +1826,33 @@ public static boolean Variable() throws IOException{
             return 64;
         default:
             return -1;
-		}
-	}
+        }
+    }
     public static void AddTag(Tag tag) throws IOException {
-		if (_stackIsCondition.isEmpty()) {
-			byte[] variableBytes = new byte[2];
-			tag.referencedDir = _SC;
-			variableBytes[1] = (byte) (tag.dir & 0xFF);
-			variableBytes[0] = (byte) ((tag.dir >> 8) & 0xFF);
-			AddToKWA(variableBytes);
-			_SC += 2;
-		}
-	}
+        if (_stackIsCondition.isEmpty()) {
+            byte[] variableBytes = new byte[2];
+            tag.referencedDir = _SC;
+            variableBytes[1] = (byte) (tag.dir & 0xFF);
+            variableBytes[0] = (byte) ((tag.dir >> 8) & 0xFF);
+            AddToKWA(variableBytes);
+            _SC += 2;
+        }
+    }
     public static void UpdateTagInKWA(Tag tagToUpdate, boolean isTagAlreadyInCode) {
-		if (_stackIsCondition.isEmpty()) {
-			
-			tagToUpdate.dir = _SC;
-			
-			if(isTagAlreadyInCode){
-				byte[] tagBytes = new byte[2];
-				tagBytes[1] = (byte) (tagToUpdate.dir & 0xFF);
-				tagBytes[0] = (byte) ((tagToUpdate.dir >> 8) & 0xFF);
-				_KWA[tagToUpdate.referencedDir] = tagBytes[0];
-				_KWA[tagToUpdate.referencedDir + 1] = tagBytes[1];
-			}
-		}
-	}
-    public static void AddVariable(String variable) throws IOException{		
+        if (_stackIsCondition.isEmpty()) {
+            
+            tagToUpdate.dir = _SC;
+            
+            if(isTagAlreadyInCode){
+                byte[] tagBytes = new byte[2];
+                tagBytes[1] = (byte) (tagToUpdate.dir & 0xFF);
+                tagBytes[0] = (byte) ((tagToUpdate.dir >> 8) & 0xFF);
+                _KWA[tagToUpdate.referencedDir] = tagBytes[0];
+                _KWA[tagToUpdate.referencedDir + 1] = tagBytes[1];
+            }
+        }
+    }
+    public static void AddVariable(String variable) throws IOException{     
             if(_stackIsCondition.isEmpty()){
                     int variableDir = GetVariableDir(variable);
                     byte[] variableBytes=new byte[2];
@@ -1863,7 +1881,7 @@ public static boolean Variable() throws IOException{
                             break;
                     case "Char":
                             AddInstruction("PUSHKC");
-                            AddChar(tokenToAdd.description.charAt(0));
+                            AddChar(tokenToAdd.description.charAt(1));
                             break;
             }
             }
@@ -1878,8 +1896,8 @@ public static boolean Variable() throws IOException{
                             AddInstruction("PUSHD");
                             break;
                     case "Float":
-                        	AddInstruction("PUSHF");
-                        	break;
+                            AddInstruction("PUSHF");
+                            break;
                     case "String":
                             AddInstruction("PUSHS");
                             break;
@@ -1956,22 +1974,22 @@ public static boolean Variable() throws IOException{
             }
 }
     public static void AddString(String variable) throws IOException {
-		if (_stackIsCondition.isEmpty()) {
-			
-			int size = variable.length() - 2;
-			
-			byte[] instructionArray = new byte[1];
-			instructionArray[0] = (byte) size;
-			AddToKWA(instructionArray);
-			_SC += 1;
-			
-			for (int i = 1; i < variable.length() - 1; i++) {
-				instructionArray[0] = (byte) variable.charAt(i);
-				AddToKWA(instructionArray);
-				_SC += 1;
-			}
-		}
-	}
+        if (_stackIsCondition.isEmpty()) {
+            
+            int size = variable.length() - 2;
+            
+            byte[] instructionArray = new byte[1];
+            instructionArray[0] = (byte) size;
+            AddToKWA(instructionArray);
+            _SC += 1;
+            
+            for (int i = 1; i < variable.length() - 1; i++) {
+                instructionArray[0] = (byte) variable.charAt(i);
+                AddToKWA(instructionArray);
+                _SC += 1;
+            }
+        }
+    }
     public static void AddToKWA(byte[] bytesToAdd){
     byte[] newKWA = new byte[_KWA.length + bytesToAdd.length];
 
@@ -2024,7 +2042,7 @@ public static boolean Variable() throws IOException{
         return size;
     }
     public static void getHeader(){
-    	byte[] KWAWithHeader=new byte[_KWA.length+14]; 
+        byte[] KWAWithHeader=new byte[_KWA.length+14]; 
         KWAWithHeader[0]=(byte)'(';
         KWAWithHeader[1]=(byte)'C';
         KWAWithHeader[2]=(byte)')';
@@ -2042,14 +2060,14 @@ public static boolean Variable() throws IOException{
         KWAWithHeader[13]=(byte)(variableSize & 0xFF);
         
         for(int i=0;i<_KWA.length;i++)
-        	KWAWithHeader[i+14]=_KWA[i];
+            KWAWithHeader[i+14]=_KWA[i];
         _KWA=KWAWithHeader;
     }
     public static void WriteAssemblyFile() throws NumberFormatException, IOException{
-		BufferedOutputStream bufferedOut = new BufferedOutputStream(new FileOutputStream(_filename+".KWA")); 
-		getHeader();
-		bufferedOut.write(_KWA);
-		bufferedOut.close();
+        BufferedOutputStream bufferedOut = new BufferedOutputStream(new FileOutputStream(_filename+".KWA")); 
+        getHeader();
+        bufferedOut.write(_KWA);
+        bufferedOut.close();
     }
     public static void cleanLastBytesInFile(){
         
