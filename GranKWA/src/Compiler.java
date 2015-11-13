@@ -114,23 +114,25 @@ public class Compiler {
         return Expect(";");
 }
     public static boolean ListaVariables() throws IOException {
-            // <Variables> {,<ListaVariables>}
-            String currentNameVariable = GetCurrentToken().description;
-            if (!Variable())
-                    return false;
-            if(_stackIsCondition.isEmpty())
-                AddToVariableTable(currentNameVariable,_currentTypeVariable);
+        // <Variables> {,<ListaVariables>}
+        String currentNameVariable = GetCurrentToken().description;
+        if (!Variable())
+                return false;
+        if(_stackIsCondition.isEmpty())
+        	if(!IsArray(currentNameVariable))
+        		AddToVariableTable(currentNameVariable,_currentTypeVariable);
 
-            if (CurrentToken(","))
-                    if(!Expect(","))
-                            return false;
-            while (CurrentTokenInFirst("ListaVariables")) { 
-                    if (!ListaVariables())
-                            return false;
-            }
+        if (CurrentToken(","))
+                if(!Expect(","))
+                        return false;
+        while (CurrentTokenInFirst("ListaVariables")) { 
+                if (!ListaVariables())
+                        return false;
+        }
 
-            return true;
-    }
+        return true;
+}
+
     public static boolean Variable() throws IOException{
     Token variable = GetCurrentToken();
                 if(!CurrentToken(44) && !CurrentToken(45))
@@ -455,7 +457,6 @@ public class Compiler {
         String variableName = "";
         if(CurrentTokenInFirst("Variable"))
         {
-            //AddWrite(0);
             variableName = GetCurrentToken().description;
             if(!Variable())
                 return false;
@@ -469,10 +470,9 @@ public class Compiler {
         }
         if(CurrentTokenInfo("String"))
         {
-            //AddWrite(1);
+            AddWrite(1,"");
             if(!Expect(43))
                 return false;
-            AddWrite(1,"");
             if(CurrentToken("+")){
                 if(!Expect("+"))
                     return false;
@@ -642,13 +642,14 @@ public class Compiler {
             break;
             case "String":
                 if(!IsArray(variable))
-                    AddInstruction("READD");
+                    AddInstruction("READS");
                 else
-                    AddInstruction("READVD");
+                    AddInstruction("READVS");
                 AddVariable(variable);
             break;
         }
     }
+
 
     public static boolean If() throws IOException {
         if (!Expect("if"))
@@ -707,7 +708,6 @@ public class Compiler {
                 JOptionPane.showMessageDialog(null,"Error no identificado, " + messageError,"Alerta", JOptionPane.ERROR_MESSAGE);
             }
 
-            System.exit(0);
     }
     public static Token Tokenizer() throws IOException {
             Token tokenToReturn = new Token();
@@ -1162,13 +1162,17 @@ public class Compiler {
     public static boolean Valor() throws IOException{
         // 43 - Constante, 44 - Variable Declarada
         
-        AddValue(GetCurrentToken());
-        _stackValoresExpresion.push(GetCurrentToken());
+    	 Token tokenValor = GetCurrentToken();
+        _stackValoresExpresion.push(tokenValor);
         if(!_stackTokensInIndex.isEmpty())
             _stackTokensInIndex.push(_stackTokensInIndex.pop()+1);
         
         if(CurrentTokenInFirst("Variable")){
-           return Variable();
+       
+           if(!Variable())
+        	   return false;
+           AddValue(tokenValor);
+           return true;
         }
         
         if(!Expect(43)){
@@ -1177,14 +1181,8 @@ public class Compiler {
             _stackValoresExpresion.pop();
            return false;
         }
-        /*else{
-            Token t = GetCurrentToken();
-            if(GetCurrentToken().info.equals("Char")){
-                if(!(""+GetCurrentToken().description.charAt(2)).equals("'") || !(""+GetCurrentToken().description.charAt(0)).equals("'"))
-                    return false;
-            }
-        }*/
         
+        AddValue(tokenValor);
         return true;
     }
     public static boolean While() throws IOException {
