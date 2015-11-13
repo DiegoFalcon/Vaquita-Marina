@@ -18,7 +18,7 @@ public class assembler {
     static byte[] bytesInFile;
     static String fileName;
     
-    public static void mainAssembler (String[] args) throws Exception{
+    public static void mainAssembler () throws Exception{
         tokens=new String[0];
         KWA=new String[0];
         instructions=new String[75];

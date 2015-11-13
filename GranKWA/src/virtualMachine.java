@@ -7,7 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Scanner;
 
-public class VirtualMachine {
+public class virtualMachine {
     //Contador de la linea actual (PC)  
     static int _currentLine;
     //Direccion de la variable dentro del segmento de datos
@@ -24,7 +24,7 @@ public class VirtualMachine {
     static char _nullValue='\u0000';
     static String _fileName;
     
-    public static void mainVirtualMachine(String[] args) throws IOException {
+    public static void mainVirtualMachine() throws IOException {
         _currentLine = 0;
         _dir = 0;
         _index = 0;

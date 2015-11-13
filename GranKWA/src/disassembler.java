@@ -20,7 +20,7 @@ public class disassembler{
     static byte[] _bytesInFile;
     static String _fileName;
     
-    public static void mainDisassembler(String[] args) throws Exception{
+    public static void mainDisassembler() throws Exception{
         // TODO code application logic here
     	pasarInstruKWAalVector();
     	 fill_KWA();

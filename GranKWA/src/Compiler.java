@@ -1,12 +1,18 @@
 import java.awt.FileDialog;
 import java.awt.Frame;
 import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
+import javax.swing.JOptionPane;
 
 public class Compiler {
 
@@ -29,23 +35,22 @@ public class Compiler {
     static Stack<Token> _stackValoresExpresion = new Stack<Token>();
     static Stack<Integer> _stackTokensInIndex = new Stack<Integer>();
     static boolean _isDeclaration = false;
-    public static void mainCompiler(String[] args) throws IOException {
+    
+    public static void mainCompiler() throws IOException {
             // TODO Auto-generated method stub
             Initialize();
-            openFile();
+            InitializeFile();
             cleanLastBytesInFile();
-            System.out.println("Tokenizer Finished");
-
-            if(Instrucciones()){
-                    AddInstruction("HALT");
-                    System.out.println("Se corrio la semantica correctamente");
-                    WriteAssemblyFile();
-            }
-            
-            else
-                System.out.println("Ocurrio un error en la semantica que no se identifico");
+            //JOptionPane.showMessageDialog(null,"Se corrió el Tokenizer exitosamente.","Finalizado", JOptionPane.INFORMATION_MESSAGE);            
+                    
+        if(Instrucciones()){
+            AddInstruction("HALT");
+            JOptionPane.showMessageDialog(null,"Se corrió la semántica correctamente.","Finalizado", JOptionPane.INFORMATION_MESSAGE);
+            WriteAssemblyFile();            
+        }
+        else
+            JOptionPane.showMessageDialog(null,"Ocurrió un error en la semántica que no se identificó.","Alerta", JOptionPane.ERROR_MESSAGE);
     }
-    
     public static void Initialize(){
         lastByteRead = 0;
         lastTokenReadOperator = false;
@@ -61,8 +66,9 @@ public class Compiler {
         _stackValoresExpresion = new Stack<Token>();
         _stackTokensInIndex = new Stack<Integer>();
         _isDeclaration = false;
+        NewJFrame.jTextArea2.setText("");
+        
     }
-    
     public static boolean Instrucciones() throws IOException {
             // <Instrucci�n> {<Instrucciones>}
             // _currentToken = Tokenizer();
@@ -107,8 +113,7 @@ public class Compiler {
         _isDeclaration = false;
         return Expect(";");
 }
-
-public static boolean ListaVariables() throws IOException {
+    public static boolean ListaVariables() throws IOException {
             // <Variables> {,<ListaVariables>}
             String currentNameVariable = GetCurrentToken().description;
             if (!Variable())
@@ -126,8 +131,7 @@ public static boolean ListaVariables() throws IOException {
 
             return true;
     }
-
-public static boolean Variable() throws IOException{
+    public static boolean Variable() throws IOException{
     Token variable = GetCurrentToken();
                 if(!CurrentToken(44) && !CurrentToken(45))
                         return false;
@@ -168,7 +172,6 @@ public static boolean Variable() throws IOException{
             //        return false;
             return true;
 }
-    
     public static boolean checkIfIndexArray() throws IOException{
         String variableType;
         Token token;
@@ -220,7 +223,8 @@ public static boolean Variable() throws IOException{
                     //  _stackInsideInstruction.push(false);
                     }
                     if (_stackIsCondition.isEmpty())
-                            System.out.println(_currentToken.description);
+                            //System.out.println(_currentToken.description);
+                        NewJFrame.jTextArea2.append(_currentToken.description + "\n");
 
                     return true;
             }
@@ -240,7 +244,8 @@ public static boolean Variable() throws IOException{
                             //_stackInsideInstruction.push(false);
                     }
                     if (_stackIsCondition.isEmpty()){
-                            System.out.println(instruction);
+                            //System.out.println(instruction);
+                        NewJFrame.jTextArea2.append(instruction + "\n");
 
                     }
                     return true;
@@ -447,11 +452,14 @@ public static boolean Variable() throws IOException{
        return false;
     }
     public static boolean ListaEscritura() throws IOException{
+        String variableName = "";
         if(CurrentTokenInFirst("Variable"))
         {
-            AddWrite(0);
+            //AddWrite(0);
+            variableName = GetCurrentToken().description;
             if(!Variable())
                 return false;
+            AddWrite(0,variableName);
             if(CurrentToken("+")){
                 if(!Expect("+"))
                     return false;
@@ -461,9 +469,10 @@ public static boolean Variable() throws IOException{
         }
         if(CurrentTokenInfo("String"))
         {
-            AddWrite(1);
+            //AddWrite(1);
             if(!Expect(43))
                 return false;
+            AddWrite(1,"");
             if(CurrentToken("+")){
                 if(!Expect("+"))
                     return false;
@@ -473,13 +482,13 @@ public static boolean Variable() throws IOException{
         }
         return false;
     }
-    public static void AddWrite(int variableOption) throws IOException{
+    public static void AddWrite(int variableOption, String variable) throws IOException{
         /*
         variableOption, es para diferenciar entre variables y constantes
         0 - Variables
         1 - Constante
         */
-        String variable = GetCurrentToken().description;
+        //String variable = GetCurrentToken().description;
         String variableType = GetVariableType(variable);
         
         if(variableOption == 0)
@@ -496,28 +505,28 @@ public static boolean Variable() throws IOException{
                             AddInstruction("WRTI");
                         else
                             AddInstruction("WRTVI");
-                        AddVariable(GetCurrentToken().description);
+                        AddVariable(variable);
                     break;
                     case "Double":
                         if(!IsArray(variable))
                             AddInstruction("WRTD");
                         else
                             AddInstruction("WRTVD");
-                        AddVariable(GetCurrentToken().description);
+                        AddVariable(variable);
                     break;
                     case "Char":
                         if(!IsArray(variable))
                             AddInstruction("WRTC");
                         else
                             AddInstruction("WRTVC");
-                        AddVariable(GetCurrentToken().description);
+                        AddVariable(variable);
                     break;
                     case "String":
                         if(!IsArray(variable))
                             AddInstruction("WRTS");
                         else
                             AddInstruction("WRTVS");
-                        AddVariable(GetCurrentToken().description);
+                        AddVariable(variable);
                     break;
                 }
         else{ 
@@ -579,23 +588,27 @@ public static boolean Variable() throws IOException{
         // option es para saber si se mandó desde currentTokenInFirst
         // 0 - no se mandó desde CTIF
         // 1 - Se mandó desde currentTokenInFirst
-            if(option != 1)
-                AddRead();
-            
+        
+    		
+    		String variableName = GetCurrentToken().description;
             if (!Variable())
                 return false;
 
+            if(option != 1)
+                AddRead(variableName);
+            
             if (CurrentToken(","))
                 if(!Expect(","))
                     return false;
+            
             while (CurrentTokenInFirst("ListaLectura")) {   
                 if (!ListaLectura(0))
                     return false;
             }
             return true;
         }
-    public static void AddRead() throws IOException{
-        String variable = GetCurrentToken().description;
+    public static void AddRead(String variable) throws IOException{
+        //String variable = GetCurrentToken().description;
         String variableType = GetVariableType(variable);
         
         switch(variableType){
@@ -636,6 +649,7 @@ public static boolean Variable() throws IOException{
             break;
         }
     }
+
     public static boolean If() throws IOException {
         if (!Expect("if"))
             return false;
@@ -681,13 +695,16 @@ public static boolean Variable() throws IOException{
     public static void MessageError(String error, String messageError) {
             switch (error) {
             case "Expect":
-                    System.out.println("Error en Expect, " + messageError);
+                    //System.out.println("Error en Expect, " + messageError);
+                JOptionPane.showMessageDialog(null,"Error en Expect, " + messageError,"Alerta", JOptionPane.ERROR_MESSAGE);
                     break;
             case "InstruccionInvalida":
-                    System.out.println("Instruccion no identificada, " + messageError);
+                    //System.out.println("Instruccion no identificada, " + messageError);
+                JOptionPane.showMessageDialog(null,"Instruccion no identificada, " + messageError,"Alerta", JOptionPane.ERROR_MESSAGE);
                     break;
             default:
-                    System.out.println("Error no identificado, " + messageError);
+                    //System.out.println("Error no identificado, " + messageError);
+                JOptionPane.showMessageDialog(null,"Error no identificado, " + messageError,"Alerta", JOptionPane.ERROR_MESSAGE);
             }
 
             System.exit(0);
@@ -722,37 +739,65 @@ public static boolean Variable() throws IOException{
             return "Int";
     }
     public static void openFile() throws IOException {
-            Frame f = new Frame();
-            f.setAlwaysOnTop(true);
-            boolean error = false;
-            FileDialog fd = new FileDialog(f, "Choose a file", FileDialog.LOAD);
-            fd.setDirectory("C:\\");
-            fd.setFile("*.KWBG");
-            fd.setVisible(true);
-            String fileName = "";
-            String fileDir = "";
+        boolean error = false;
+        Frame f = new Frame();
+        FileDialog fd = new FileDialog(f, "Choose a file", FileDialog.LOAD);
 
-            try {
-                    fileName = fd.getFile();
-                    fileDir = fd.getDirectory();
-                    if (fileName == null) {
-                            System.out.println("You cancelled the choice");
-                            error = true;
-                    } else {
-                            System.out.println("You chose " + fileName);
+        fd.setDirectory("C:\\");
+        fd.setFile("*.KWBG");
+        fd.isFocusOwner();
+        fd.setVisible(true);
+        
+        String fileName = "";
 
-                    }
-            } catch (Exception e) {
-                    System.out.println(e.getMessage());
-                    error = true;
+        try {
+            fileName = fd.getFile();
+            if(fileName == null){
+                error = true;
             }
-            if (error)
-                    System.exit(0);
-            f.dispose();
-
-            String[] parts = fileName.split(".kwbg");
-            _filename = parts[0];
-            _bytesInFile = Files.readAllBytes(Paths.get(fileDir, fileName));
+        } catch (Exception e) {
+            //System.out.println(e.getMessage());
+            JOptionPane.showMessageDialog(null,e.getMessage(),"Alerta", JOptionPane.ERROR_MESSAGE);
+        }
+        
+        f.dispose();
+        if (!error){
+            FileReader reader = new FileReader(fileName);
+            AppendFile(reader);
+        }
+    }
+    public static boolean InitializeFile() throws IOException{
+        WriteTempFile();
+        File f = new File ("Temp123456789.KWBG");
+        String fileDir = f.getAbsolutePath();
+        fileDir = fileDir.substring(0, fileDir.length()-18);
+        String fileName = "Temp123456789.KWBG";
+        _filename = "Temp123456789";
+        _bytesInFile = Files.readAllBytes(Paths.get(fileDir, fileName));
+        FileReader reader = new FileReader("Temp123456789.KWBG");
+        return true;
+    }
+    public static void AppendFile(FileReader fileName) throws IOException{
+        BufferedReader buff = null;
+        NewJFrame.jTextArea1.setText("");
+        
+        try {
+            buff = new BufferedReader(fileName);
+            String str;
+            while ((str = buff.readLine()) != null) {
+                NewJFrame.jTextArea1.append(str + "\n");
+            }
+        } catch (IOException e) {} 
+        finally {
+            try {buff.close();} 
+            catch (Exception ex) { }
+        }
+    }
+    public static void WriteTempFile() throws IOException{
+        FileWriter writer = new FileWriter("Temp123456789.KWBG");
+        BufferedWriter bw = new BufferedWriter(writer);
+        NewJFrame.jTextArea1.write(bw);
+        bw.close();
     }
     public static boolean Condiciones() throws IOException {
             // <Condición> { <ANDOR> <Condiciones>} | (<Condiciones>)
@@ -1041,38 +1086,7 @@ public static boolean Variable() throws IOException{
             return Expect("-");
         return false;
     }
-    /*public static boolean Expresion() throws IOException{
-        //<Expresi�n> <OperadorAritmetico> <Expresi�n> | <OperadorUnitario> <Expresi�n> | (<Expresi�n>) | <Valor>
-        if(CurrentTokenInFirst("Expresion")){
-            if(!Expresion())
-                return false;
-            if(!Operador())
-                return false;
-            if(!Expresion())
-                return false;
-            return true;
-        }
-        if(CurrentTokenInFirst("OperadorUnitario")){
-            if(!OperadorUnitario())
-                return false;
-            if(!Expresion())
-                return false;
-            return true;
-        }
-        if(CurrentToken("(")){
-            Expect("(");
-            if(!Expresion())
-                return false;
-            return Expect(")");
-        }
-        if(CurrentTokenInFirst("Valor")){
-            if(!Valor())
-                return false;
-            return true;
-        }
-        return false;
-    }
-*/
+    
     public static boolean Expresion() throws IOException{
             //<Termino>|<Termino><OperadorSUma><Expresion>  //
             if(Termino()){
@@ -1455,7 +1469,7 @@ public static boolean Variable() throws IOException{
         }
         return false;
     }
-   public static int GetTokenCode(String token) {
+    public static int GetTokenCode(String token) {
             switch (token) {
 
             case "+":
