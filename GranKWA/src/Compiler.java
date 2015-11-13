@@ -441,6 +441,7 @@ public static boolean Variable() throws IOException{
                     return false;                   
                 if(!Expect(";"))
                     return false;
+                AddInstruction("WRTLN");
                 return true;
            }
        return false;
