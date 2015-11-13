@@ -919,6 +919,8 @@ public static boolean Variable() throws IOException{
         if (!Expect("}"))
             return false;
 
+        UpdateTagInKWA(tag2,true);
+
         return true;
     }
     public static boolean Asignacion(boolean usesSemiColon) throws IOException{
