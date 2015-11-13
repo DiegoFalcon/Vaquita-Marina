@@ -1,0 +1,34 @@
+#string nombres[5];
+#int matriculas[5];
+#int cantidad,i,j;
+#int tmp;
+#int numero1, numero2;
+#string nombre1,nombre2;
+cantidad=3;
+
+for(i=0;i<cantidad;i++){
+write "Nombre["+i+"]:";
+read nombres[i];
+write "Matricula["+i+"]:";
+read matriculas[i];
+writeln "";
+}
+
+for(i=0;i<cantidad;i++){
+for(j=i+1;j<cantidad;j++){
+numero1 = matriculas[i];
+numero2 = matriculas[j];
+nombre1 = nombres[i];
+nombre2 = nombres[j];
+if(numero1>numero2){
+matriculas[i]=numero2;
+matriculas[j]=numero1;
+nombres[i] = nombre2;
+nombres[j] = nombre1;
+}
+}
+}
+for(i=0;i<cantidad;i++){
+writeln matriculas[i];
+writeln nombres[i];
+}

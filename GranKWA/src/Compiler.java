@@ -10,8 +10,11 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 
 public class Compiler {
@@ -35,23 +38,25 @@ public class Compiler {
     static Stack<Token> _stackValoresExpresion = new Stack<Token>();
     static Stack<Integer> _stackTokensInIndex = new Stack<Integer>();
     static boolean _isDeclaration = false;
+    static virtualMachine _callMachine = new virtualMachine();
     
     public static void mainCompiler() throws IOException {
-            // TODO Auto-generated method stub
-            Initialize();
-            InitializeFile();
-            cleanLastBytesInFile();
-            //JOptionPane.showMessageDialog(null,"Se corrió el Tokenizer exitosamente.","Finalizado", JOptionPane.INFORMATION_MESSAGE);            
-                    
+        // TODO Auto-generated method stub
+        Initialize();
+        InitializeFile();
+        cleanLastBytesInFile();
+            
         if(Instrucciones()){
             AddInstruction("HALT");
-            JOptionPane.showMessageDialog(null,"Se corrió la semántica correctamente.","Finalizado", JOptionPane.INFORMATION_MESSAGE);
-            WriteAssemblyFile();            
+            //JOptionPane.showMessageDialog(null,"Se corrió la semántica correctamente.","Finalizado", JOptionPane.INFORMATION_MESSAGE);
+            WriteAssemblyFile();
+            _callMachine.mainVirtualMachine(_filename);
+            _filename = null;
         }
         else
             JOptionPane.showMessageDialog(null,"Ocurrió un error en la semántica que no se identificó.","Alerta", JOptionPane.ERROR_MESSAGE);
     }
-    public static void Initialize(){
+    public static void Initialize() throws IOException{
         lastByteRead = 0;
         lastTokenReadOperator = false;
         lastTokenReadSubstractOperator = false;
@@ -68,11 +73,19 @@ public class Compiler {
         _isDeclaration = false;
         NewJFrame.jTextArea2.setText("");
         
+        /*File f = new File ("Temp123456789.KWBG");
+        String fileDir = f.getAbsolutePath();
+        fileDir = fileDir.substring(0, fileDir.length()-5) + ".KWA";
+
+        try {
+            Files.delete(Paths.get(fileDir));
+        } catch (NoSuchFileException x) {}
+        **/
+                
     }
     public static boolean Instrucciones() throws IOException {
             // <Instrucci�n> {<Instrucciones>}
             // _currentToken = Tokenizer();
-
 
             if(!_stackInsideInstruction.isEmpty()){
                     while(_stackInsideInstruction.peek())
@@ -95,8 +108,6 @@ public class Compiler {
                             return false;
 
             return true;
-
-
             /*while (CurrentTokenInFirst("Instrucciones")) {
                     if (!Instrucciones())
                             return false;
@@ -114,25 +125,24 @@ public class Compiler {
         return Expect(";");
 }
     public static boolean ListaVariables() throws IOException {
-        // <Variables> {,<ListaVariables>}
-        String currentNameVariable = GetCurrentToken().description;
-        if (!Variable())
-                return false;
-        if(_stackIsCondition.isEmpty())
+            // <Variables> {,<ListaVariables>}
+            String currentNameVariable = GetCurrentToken().description;
+            if (!Variable())
+                    return false;
+            if(_stackIsCondition.isEmpty())
         	if(!IsArray(currentNameVariable))
-        		AddToVariableTable(currentNameVariable,_currentTypeVariable);
+                AddToVariableTable(currentNameVariable,_currentTypeVariable);
 
-        if (CurrentToken(","))
-                if(!Expect(","))
-                        return false;
-        while (CurrentTokenInFirst("ListaVariables")) { 
-                if (!ListaVariables())
-                        return false;
-        }
+            if (CurrentToken(","))
+                    if(!Expect(","))
+                            return false;
+            while (CurrentTokenInFirst("ListaVariables")) { 
+                    if (!ListaVariables())
+                            return false;
+            }
 
-        return true;
-}
-
+            return true;
+    }
     public static boolean Variable() throws IOException{
     Token variable = GetCurrentToken();
                 if(!CurrentToken(44) && !CurrentToken(45))
@@ -224,9 +234,9 @@ public class Compiler {
                             _stackInsideInstruction.pop();
                     //  _stackInsideInstruction.push(false);
                     }
-                    if (_stackIsCondition.isEmpty())
+                    //if (_stackIsCondition.isEmpty())
                             //System.out.println(_currentToken.description);
-                        NewJFrame.jTextArea2.append(_currentToken.description + "\n");
+                        //NewJFrame.jTextArea2.append(_currentToken.description + "\n");
 
                     return true;
             }
@@ -245,11 +255,11 @@ public class Compiler {
                             _stackInsideInstruction.pop();
                             //_stackInsideInstruction.push(false);
                     }
-                    if (_stackIsCondition.isEmpty()){
+                    //if (_stackIsCondition.isEmpty()){
                             //System.out.println(instruction);
-                        NewJFrame.jTextArea2.append(instruction + "\n");
+                        //NewJFrame.jTextArea2.append(instruction + "\n");
 
-                    }
+                    //}
                     return true;
             }
             if (_stackIsCondition.isEmpty()) {
@@ -650,7 +660,6 @@ public class Compiler {
         }
     }
 
-
     public static boolean If() throws IOException {
         if (!Expect("if"))
             return false;
@@ -762,19 +771,20 @@ public class Compiler {
         
         f.dispose();
         if (!error){
+            _filename = fileName.substring(0, fileName.length()-5);
             FileReader reader = new FileReader(fileName);
             AppendFile(reader);
         }
     }
     public static boolean InitializeFile() throws IOException{
         WriteTempFile();
-        File f = new File ("Temp123456789.KWBG");
+        String fileName = _filename + ".KWBG";
+        File f = new File (fileName);
         String fileDir = f.getAbsolutePath();
-        fileDir = fileDir.substring(0, fileDir.length()-18);
-        String fileName = "Temp123456789.KWBG";
-        _filename = "Temp123456789";
+        fileDir = fileDir.substring(0, fileDir.length()-(fileName.length()));
+        
         _bytesInFile = Files.readAllBytes(Paths.get(fileDir, fileName));
-        FileReader reader = new FileReader("Temp123456789.KWBG");
+        FileReader reader = new FileReader(fileName);
         return true;
     }
     public static void AppendFile(FileReader fileName) throws IOException{
@@ -794,7 +804,11 @@ public class Compiler {
         }
     }
     public static void WriteTempFile() throws IOException{
-        FileWriter writer = new FileWriter("Temp123456789.KWBG");
+        if (_filename == null){
+            String inputValue = JOptionPane.showInputDialog("Save File As: ");
+            _filename = inputValue;
+        }
+        FileWriter writer = new FileWriter(_filename + ".KWBG");
         BufferedWriter bw = new BufferedWriter(writer);
         NewJFrame.jTextArea1.write(bw);
         bw.close();

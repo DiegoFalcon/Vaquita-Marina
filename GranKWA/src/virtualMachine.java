@@ -1,11 +1,13 @@
 import java.awt.FileDialog;
 import java.awt.Frame;
+import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
 //import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Scanner;
+import javax.swing.JOptionPane;
 
 public class virtualMachine {
     //Contador de la linea actual (PC)  
@@ -24,11 +26,17 @@ public class virtualMachine {
     static char _nullValue='\u0000';
     static String _fileName;
     
-    public static void mainVirtualMachine() throws IOException {
+    public static void mainVirtualMachine(String nameReceived) throws IOException {
         _currentLine = 0;
         _dir = 0;
         _index = 0;
-        GetFileName();
+        if (nameReceived == null){
+            GetFileName();
+        }
+        else{
+            File f = new File (nameReceived + ".KWA");
+            _fileName = f.getAbsolutePath();            
+        }
         GetSC();
         GetSD();
         RunVirtualMachine();
@@ -313,10 +321,10 @@ public class virtualMachine {
         _currentLine++;
         // 0 = int -- 1 = double -- 2 = float -- 3 = char -- 4 = string
         int esInt=0;
-         double esDouble=0;
-         char esChar='0';
-         float esFloat=0f;
-         String esString="0";
+        double esDouble=0;
+        char esChar='0';
+        float esFloat=0f;
+        String esString="0";
          
        /* double a=0;
         char b='0';
@@ -326,19 +334,24 @@ public class virtualMachine {
         switch (x)
         {
             case 0:
-                System.out.print(GetVariableValue(_dir, esInt));
+                //System.out.print(GetVariableValue(_dir, esInt));
+                NewJFrame.jTextArea2.append(GetVariableValue(_dir, esInt) + "\n");
                 break;
             case 1:
-                System.out.print(GetVariableValue(_dir, esDouble));
+                //System.out.print(GetVariableValue(_dir, esDouble));
+                NewJFrame.jTextArea2.append(GetVariableValue(_dir, esDouble) + "\n");
                 break;
             case 2:
-                System.out.print(GetVariableValue(_dir, esFloat));
+                //System.out.print(GetVariableValue(_dir, esFloat));
+                NewJFrame.jTextArea2.append(GetVariableValue(_dir, esFloat) + "\n");
                 break;
             case 3:
-                System.out.print(GetVariableValue(_dir, esChar));
+                //System.out.print(GetVariableValue(_dir, esChar));
+                NewJFrame.jTextArea2.append(GetVariableValue(_dir, esChar) + "\n");
                 break;
             case 4:
-                System.out.print(GetVariableValue(_dir, esString));
+                //System.out.print(GetVariableValue(_dir, esString));
+                NewJFrame.jTextArea2.append(GetVariableValue(_dir, esString) + "\n");
                 break;
         }
         _currentLine += 2;
@@ -347,39 +360,46 @@ public class virtualMachine {
         String x="0";
         _currentLine++;
         x=GetConstantValue(x);
-        System.out.print(x);
+        //System.out.print(x);
+        NewJFrame.jTextArea2.append(x + "\n");
         _currentLine += x.length()+1;
     }
     public static void WRTLN(){
         _currentLine++;
-        System.out.println("");
+        //System.out.println("");
+        NewJFrame.jTextArea2.append("" + "\n");
     }
     public static void WRTVI(){
         _currentLine++;
         int x=0;
         _dir = GetDir();
-        System.out.print(GetVariableValue(_dir+_index*4, x));
+        //System.out.print(GetVariableValue(_dir+_index*4, x));
+        NewJFrame.jTextArea2.append(GetVariableValue(_dir+_index*4, x) + "\n");
         _currentLine += 2;
     }
     public static void WRTVD(){
         _currentLine++;
         double x=0;
         _dir = GetDir();
-        System.out.print(GetVariableValue(_dir+_index*8,x));
+        //System.out.print(GetVariableValue(_dir+_index*8,x));
+        NewJFrame.jTextArea2.append(GetVariableValue(_dir+_index*8,x) + "\n");
+        
         _currentLine += 2;
     }
     public static void WRTVF(){
         _currentLine++;
         float x=0f;
         _dir = GetDir();
-        System.out.print(GetVariableValue(_dir+_index*4, x));
+        //System.out.print(GetVariableValue(_dir+_index*4, x));
+        NewJFrame.jTextArea2.append(GetVariableValue(_dir+_index*4, x) + "\n");
         _currentLine +=2 ;
     }
     public static void WRTVC(){
         _currentLine++;
         char x='0';
         _dir = GetDir();
-        System.out.print(GetVariableValue(_dir+_index, x));
+        //System.out.print(GetVariableValue(_dir+_index, x));
+        NewJFrame.jTextArea2.append(GetVariableValue(_dir+_index, x) + "\n");
         _currentLine+=2;
     }
     public static void WRTVS(){
@@ -387,7 +407,8 @@ public class virtualMachine {
         _currentLine++;
         _dir = GetDir();
         StringValue=GetVariableValue(_dir+(255*_index),StringValue);
-        System.out.print(StringValue);
+        //System.out.print(StringValue);
+        NewJFrame.jTextArea2.append(StringValue + "\n");
         _currentLine += 2;
     }
     public static void ReadI() {
@@ -395,7 +416,8 @@ public class virtualMachine {
         _currentLine++;
         int newValue = 0;
         try{
-            newValue = Integer.parseInt(scan.nextLine());
+            //newValue = Integer.parseInt(scan.nextLine());
+            newValue = Integer.parseInt(JOptionPane.showInputDialog("Enter a number: "));
             _dir=GetDir();
             }
         catch(Exception e){
@@ -409,7 +431,8 @@ public class virtualMachine {
          _currentLine++;
          double newValue = 0;
          try{
-            newValue = Double.parseDouble(scan.nextLine());
+            //newValue = Double.parseDouble(scan.nextLine());
+             newValue = Double.parseDouble(JOptionPane.showInputDialog("Enter a number: "));
              _dir=GetDir();
              }
          catch(Exception e){
@@ -423,11 +446,13 @@ public class virtualMachine {
          _currentLine++;
          float newValue = 0;
          try{
-             newValue = Float.parseFloat(scan.nextLine());
+             //newValue = Float.parseFloat(scan.nextLine());
+             newValue = Float.parseFloat(JOptionPane.showInputDialog("Enter a number: "));
              _dir=GetDir();
              }
          catch(Exception e){
-                 System.out.println(e.getMessage());
+                 //System.out.println(e.getMessage());
+                 JOptionPane.showMessageDialog(null,e.getMessage(),"Alerta", JOptionPane.ERROR_MESSAGE);
          }
          SetVariableValue(_dir,newValue);
          _currentLine+=2;
@@ -437,11 +462,13 @@ public class virtualMachine {
          _currentLine++;
          char newValue = ' ';
          try{
-             newValue = (scan.nextLine()).charAt(0);
+             //newValue = (scan.nextLine()).charAt(0);
+             newValue = JOptionPane.showInputDialog("Enter a char: ").charAt(0);
              _dir=GetDir();
              }
          catch(Exception e){
-                 System.out.println(e.getMessage());
+                 //System.out.println(e.getMessage());
+                 JOptionPane.showMessageDialog(null,e.getMessage(),"Alerta", JOptionPane.ERROR_MESSAGE);
          }
          SetVariableValue(_dir,newValue);
          _currentLine+=2;
@@ -451,11 +478,13 @@ public class virtualMachine {
          _currentLine++;
          String newValue = "";
          try{
-             newValue = scan.nextLine();
+             //newValue = scan.nextLine();
+              newValue = JOptionPane.showInputDialog("Enter a String: ");
              _dir=GetDir();
              }
          catch(Exception e){
-                 System.out.println(e.getMessage());
+                 //System.out.println(e.getMessage());
+                 JOptionPane.showMessageDialog(null,e.getMessage(),"Alerta", JOptionPane.ERROR_MESSAGE);
          }
          SetVariableValue(_dir,newValue);
          _currentLine+=2;
@@ -465,11 +494,13 @@ public class virtualMachine {
         int newValue = 0;
         _currentLine++;
         try{
-             newValue = Integer.parseInt(scan.nextLine());
+             //newValue = Integer.parseInt(scan.nextLine());
+             newValue = Integer.parseInt(JOptionPane.showInputDialog("Enter a number: "));
              _dir=GetDir();
         }
         catch(Exception e){
-            System.out.println(e.getMessage());
+            //System.out.println(e.getMessage());
+            JOptionPane.showMessageDialog(null,e.getMessage(),"Alerta", JOptionPane.ERROR_MESSAGE);
         }
         SetVariableValue(_dir+_index*4,newValue);
         _currentLine+=2;
@@ -479,11 +510,13 @@ public class virtualMachine {
          double newValue = 0;
          _currentLine++;
          try{
-             newValue = Double.parseDouble(scan.nextLine());
+             //newValue = Double.parseDouble(scan.nextLine());
+             newValue = Double.parseDouble(JOptionPane.showInputDialog("Enter a number: "));
              _dir=GetDir();
          }
          catch(Exception e){
-             System.out.println(e.getMessage());
+             //System.out.println(e.getMessage());
+             JOptionPane.showMessageDialog(null,e.getMessage(),"Alerta", JOptionPane.ERROR_MESSAGE);
          }
          SetVariableValue(_dir+_index*8,newValue);
          _currentLine+=2;
@@ -493,11 +526,13 @@ public class virtualMachine {
          float newValue = 0;
          _currentLine++;
          try{
-             newValue = Float.parseFloat(scan.nextLine());
+             //newValue = Float.parseFloat(scan.nextLine());
+             newValue = Float.parseFloat(JOptionPane.showInputDialog("Enter a number: "));
              _dir=GetDir();
          }
          catch(Exception e){
-             System.out.println(e.getMessage());
+             //System.out.println(e.getMessage());
+             JOptionPane.showMessageDialog(null,e.getMessage(),"Alerta", JOptionPane.ERROR_MESSAGE);
          }
          SetVariableValue(_dir+_index*4,newValue);
          _currentLine+=2;
@@ -507,11 +542,13 @@ public class virtualMachine {
          char newValue = ' ';
          _currentLine++;
          try{
-             newValue = scan.nextLine().charAt(0);
+             //newValue = scan.nextLine().charAt(0);
+             newValue = JOptionPane.showInputDialog("Enter a char: ").charAt(0);
              _dir=GetDir();
          }
          catch(Exception e){
-             System.out.println(e.getMessage());
+             //System.out.println(e.getMessage());
+             JOptionPane.showMessageDialog(null,e.getMessage(),"Alerta", JOptionPane.ERROR_MESSAGE);
          }
          SetVariableValue(_dir+_index*1,newValue);
          _currentLine+=2;
@@ -521,11 +558,13 @@ public class virtualMachine {
          String newValue = "";
          _currentLine++;
          try{
-             newValue = scan.nextLine();
+             //newValue = scan.nextLine();
+             newValue = JOptionPane.showInputDialog("Enter a String: ");
              _dir=GetDir();
          }
          catch(Exception e){
-             System.out.println(e.getMessage());
+             //System.out.println(e.getMessage());
+             JOptionPane.showMessageDialog(null,e.getMessage(),"Alerta", JOptionPane.ERROR_MESSAGE);
          }
          SetVariableValue(_dir+_index*255,newValue);
          _currentLine+=2;
@@ -549,7 +588,8 @@ public class virtualMachine {
             _index = _stack.POPI();
         }
         catch(Exception e){
-            System.out.println(e.getMessage());
+            //System.out.println(e.getMessage());
+            JOptionPane.showMessageDialog(null,e.getMessage(),"Alerta", JOptionPane.ERROR_MESSAGE);
         }
         _currentLine ++;
     }
@@ -930,7 +970,8 @@ public class virtualMachine {
             poppedVariable = _stack.POPI();
         }
         catch(Exception e){
-            System.out.println(e.getMessage());
+            //System.out.println(e.getMessage());
+            JOptionPane.showMessageDialog(null,e.getMessage(),"Alerta", JOptionPane.ERROR_MESSAGE);
         }
         _currentLine ++;
         _dir = GetDir();
@@ -943,7 +984,8 @@ public class virtualMachine {
             poppedVariable = _stack.POPF();
         }
         catch(Exception e){
-            System.out.println(e.getMessage());
+            //System.out.println(e.getMessage());
+            JOptionPane.showMessageDialog(null,e.getMessage(),"Alerta", JOptionPane.ERROR_MESSAGE);
         }
         _currentLine ++;
         _dir = GetDir();
@@ -956,7 +998,8 @@ public class virtualMachine {
             poppedVariable = _stack.POPD();
         }
         catch(Exception e){
-            System.out.println(e.getMessage());
+            //System.out.println(e.getMessage());
+            JOptionPane.showMessageDialog(null,e.getMessage(),"Alerta", JOptionPane.ERROR_MESSAGE);
         }
         _currentLine ++;
         _dir = GetDir();
@@ -969,7 +1012,8 @@ public class virtualMachine {
             poppedVariable = (char)_stack.POPC();
         }
         catch(Exception e){
-            System.out.println(e.getMessage());
+            //System.out.println(e.getMessage());
+            JOptionPane.showMessageDialog(null,e.getMessage(),"Alerta", JOptionPane.ERROR_MESSAGE);
         }
         _currentLine ++;
         _dir = GetDir();
@@ -982,7 +1026,8 @@ public class virtualMachine {
             poppedVariable = String.valueOf((_stack.POPS()));
         }
         catch(Exception e){
-            System.out.println(e.getMessage());
+            //System.out.println(e.getMessage());
+            JOptionPane.showMessageDialog(null,e.getMessage(),"Alerta", JOptionPane.ERROR_MESSAGE);
         }
         _currentLine ++;
         _dir = GetDir();
@@ -998,7 +1043,8 @@ public class virtualMachine {
             _currentLine += 2;
         }
         catch(Exception e){
-            System.out.println(e.getMessage());
+            //System.out.println(e.getMessage());
+            JOptionPane.showMessageDialog(null,e.getMessage(),"Alerta", JOptionPane.ERROR_MESSAGE);
         }
       }
     public static void POPVF(){ 
@@ -1010,7 +1056,8 @@ public class virtualMachine {
             _currentLine += 2;
         }
         catch(Exception e){
-            System.out.println(e.getMessage());
+            //System.out.println(e.getMessage());
+            JOptionPane.showMessageDialog(null,e.getMessage(),"Alerta", JOptionPane.ERROR_MESSAGE);
         }
     }
     public static void POPVD(){ 
@@ -1046,7 +1093,8 @@ public class virtualMachine {
             _currentLine += 2;
         }
         catch(Exception e){
-            System.out.println(e.getMessage());
+            //System.out.println(e.getMessage());
+            JOptionPane.showMessageDialog(null,e.getMessage(),"Alerta", JOptionPane.ERROR_MESSAGE);
         }
     }
     

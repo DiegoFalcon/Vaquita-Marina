@@ -19,6 +19,8 @@ public class mainMenu extends javax.swing.JFrame {
      */
     public mainMenu() {
         initComponents();
+        this.getContentPane().setBackground(new java.awt.Color(72,72,72));
+        //jButton1.getContentPane().setBackground(new java.awt.Color(72,72,72));
     }
 
     /**
@@ -37,9 +39,10 @@ public class mainMenu extends javax.swing.JFrame {
         jButton4 = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setLocationByPlatform(true);
 
         jLabel1.setFont(new java.awt.Font("Tahoma", 1, 48)); // NOI18N
-        jLabel1.setForeground(new java.awt.Color(0, 102, 102));
+        jLabel1.setForeground(new java.awt.Color(0, 204, 255));
         jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jLabel1.setText(" K W A");
 
@@ -112,6 +115,7 @@ public class mainMenu extends javax.swing.JFrame {
         );
 
         pack();
+        setLocationRelativeTo(null);
     }// </editor-fold>//GEN-END:initComponents
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
@@ -138,7 +142,7 @@ public class mainMenu extends javax.swing.JFrame {
         // TODO add your handling code here:
          virtualMachine test3 = new virtualMachine();
         try {
-            test3.mainVirtualMachine();
+            test3.mainVirtualMachine(null);
         } catch (IOException ex) {
             Logger.getLogger(NewJFrame.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -158,6 +162,7 @@ public class mainMenu extends javax.swing.JFrame {
         /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
          * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
          */
+        
         try {
             for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
                 if ("Nimbus".equals(info.getName())) {
