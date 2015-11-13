@@ -338,7 +338,7 @@ public static boolean Variable() throws IOException{
                     result = ListaVariables();
                     break;
             case "ListaEscritura":
-                    result = ListaEscritura(-1);
+                    result = ListaEscritura();
                     break;
                 case "ListaLectura":
                         result = ListaLectura(1);
@@ -426,7 +426,7 @@ public static boolean Variable() throws IOException{
         if(CurrentToken("write")){  
             if(!Expect("write"))
                 return false;
-            if(!ListaEscritura(0))
+            if(!ListaEscritura())
                 return false; 
             if(!Expect(";"))
                 return false;
@@ -437,7 +437,7 @@ public static boolean Variable() throws IOException{
            {
                 if(!Expect("writeln"))
                     return false;
-                if(!ListaEscritura(1))
+                if(!ListaEscritura())
                     return false;                   
                 if(!Expect(";"))
                     return false;
@@ -445,165 +445,96 @@ public static boolean Variable() throws IOException{
            }
        return false;
     }
-    public static boolean ListaEscritura(int writeOption) throws IOException{
+    public static boolean ListaEscritura() throws IOException{
         if(CurrentTokenInFirst("Variable"))
         {
-            AddWrite(0,writeOption);
+            AddWrite(0);
             if(!Variable())
                 return false;
             if(CurrentToken("+")){
                 if(!Expect("+"))
                     return false;
-                return ListaEscritura(writeOption);
+                return ListaEscritura();
             }
             return true;    
         }
         if(CurrentTokenInfo("String"))
         {
-            AddWrite(1,writeOption);
+            AddWrite(1);
             if(!Expect(43))
                 return false;
             if(CurrentToken("+")){
                 if(!Expect("+"))
                     return false;
-                return ListaEscritura(writeOption);
+                return ListaEscritura();
             }
             return true;             
         }
         return false;
     }
-    public static void AddWrite(int variableOption, int writeOption) throws IOException{
-    /*
-    variableOption, es para diferenciar entre variables y constantes
-    0 - Variables
-    1 - Constante
-    writeOption, es para diferenciar entre un write y writeln
-    -1 - default
-    0 - write
-    1 - writeln
-    */
-    String variable = GetCurrentToken().description;
-    String variableType = GetVariableType(variable);
-    
-    if(writeOption == 0)
-        if(variableOption == 0)
-            if(variable.contains("[")){
-                switch(variableType){
-                    case "Float":
-                        AddInstruction("WRTVF");
-                        AddVariable(GetCurrentToken().description);
-                    break;
-                    case "Int":
-                        AddInstruction("WRTVI");
-                        AddVariable(GetCurrentToken().description);
-                    break;
-                    case "Double":
-                        AddInstruction("WRTVD");
-                        AddVariable(GetCurrentToken().description);
-                    break;
-                    case "Char":
-                        AddInstruction("WRTVC");
-                        AddVariable(GetCurrentToken().description);
-                    break;
-                    case "String":
-                        AddInstruction("WRTVS");
-                        AddVariable(GetCurrentToken().description);
-                    break;
-                }
-            }
-            else
-                switch(variableType){
-                    case "Float":
-                        AddInstruction("WRTF");
-                        AddVariable(GetCurrentToken().description);
-                    break;
-                    case "Int":
-                        AddInstruction("WRTI");
-                        AddVariable(GetCurrentToken().description);
-                    break;
-                    case "Double":
-                        AddInstruction("WRTD");
-                        AddVariable(GetCurrentToken().description);
-                    break;
-                    case "Char":
-                        AddInstruction("WRTC");
-                        AddVariable(GetCurrentToken().description);
-                    break;
-                    case "String":
-                        AddInstruction("WRTS");
-                        AddVariable(GetCurrentToken().description);
-                    break;
-                }
-        else{ 
-            AddInstruction("WRTM");
-            AddString(GetCurrentToken().description);
-        }
-    else
-        if(variableOption == 0)
-            if(variable.contains("[")){
-                switch(variableType){
-                    case "Float":
-                        AddInstruction("WRTVF");
-                        AddVariable(GetCurrentToken().description);
-                        AddInstruction("WRTLN");
-                    break;
-                    case "Int":
-                        AddInstruction("WRTVI");
-                        AddVariable(GetCurrentToken().description);
-                        AddInstruction("WRTLN");
-                    break;
-                    case "Double":
-                        AddInstruction("WRTVD");
-                        AddVariable(GetCurrentToken().description);
-                        AddInstruction("WRTLN");
-                    break;
-                    case "Char":
-                        AddInstruction("WRTVC");
-                        AddVariable(GetCurrentToken().description);
-                        AddInstruction("WRTLN");
-                    break;
-                    case "String":
-                        AddInstruction("WRTVS");
-                        AddVariable(GetCurrentToken().description);
-                        AddInstruction("WRTLN");
-                    break;
-                }
-            }
-            else
-                switch(variableType){
-                    case "Float":
-                        AddInstruction("WRTF");
-                        AddVariable(GetCurrentToken().description);
-                        AddInstruction("WRTLN");
-                    break;
-                    case "Int":
-                        AddInstruction("WRTI");
-                        AddVariable(GetCurrentToken().description);
-                        AddInstruction("WRTLN");
-                    break;
-                    case "Double":
-                        AddInstruction("WRTD");
-                        AddVariable(GetCurrentToken().description);
-                        AddInstruction("WRTLN");
-                    break;
-                    case "Char":
-                        AddInstruction("WRTC");
-                        AddVariable(GetCurrentToken().description);
-                        AddInstruction("WRTLN");
-                    break;
-                    case "String":
-                        AddInstruction("WRTS");
-                        AddVariable(GetCurrentToken().description);
-                        AddInstruction("WRTLN");
-                    break;
-                }
-        else{ 
-            AddInstruction("WRTM");
-            AddString(GetCurrentToken().description);
-            AddInstruction("WRTLN");
-        }
+    public static void AddWrite(int variableOption) throws IOException{
+        /*
+        variableOption, es para diferenciar entre variables y constantes
+        0 - Variables
+        1 - Constante
+        */
+        String variable = GetCurrentToken().description;
+        String variableType = GetVariableType(variable);
         
-}
+        if(variableOption == 0)
+                switch(variableType){
+                    case "Float":
+                        if(!IsArray(variable))
+                            AddInstruction("WRTF");
+                        else
+                            AddInstruction("WRTVF");
+                        AddVariable(variable);
+                    break;
+                    case "Int":
+                        if(!IsArray(variable))
+                            AddInstruction("WRTI");
+                        else
+                            AddInstruction("WRTVI");
+                        AddVariable(GetCurrentToken().description);
+                    break;
+                    case "Double":
+                        if(!IsArray(variable))
+                            AddInstruction("WRTD");
+                        else
+                            AddInstruction("WRTVD");
+                        AddVariable(GetCurrentToken().description);
+                    break;
+                    case "Char":
+                        if(!IsArray(variable))
+                            AddInstruction("WRTC");
+                        else
+                            AddInstruction("WRTVC");
+                        AddVariable(GetCurrentToken().description);
+                    break;
+                    case "String":
+                        if(!IsArray(variable))
+                            AddInstruction("WRTS");
+                        else
+                            AddInstruction("WRTVS");
+                        AddVariable(GetCurrentToken().description);
+                    break;
+                }
+        else{ 
+            AddInstruction("WRTM");
+            AddString(GetCurrentToken().description);
+        }
+    }
+    private static boolean IsArray(String variable){
+    	int count = 0;
+    	for(int i=0; i<_variablesTable.length ; i++){
+            if(_variablesTable[i].name.equals(variable)){
+                    count++;
+            }
+    	}
+    	if(count>1)
+    		return true;
+    	return false;
+    }
     public static boolean Instruccion() throws IOException {
             // <For> | <While> | <If> | <Asignaci�n> | <Lectura> | <Escritura> |
             // <Declaraci�n>
@@ -666,52 +597,43 @@ public static boolean Variable() throws IOException{
         String variable = GetCurrentToken().description;
         String variableType = GetVariableType(variable);
         
-        if(variable.contains("["))
-            switch(variableType){
-                case "Float":
-                    AddInstruction("READVF");
-                    AddVariable(GetCurrentToken().description);
-                break;
-                case "Int":
-                    AddInstruction("READVI");
-                    AddVariable(GetCurrentToken().description);
-                break;
-                case "Double":
-                    AddInstruction("READVD");
-                    AddVariable(GetCurrentToken().description);
-                break;
-                case "Char":
-                    AddInstruction("READVC");
-                    AddVariable(GetCurrentToken().description);
-                break;
-                case "String":
-                    AddInstruction("READVS");
-                    AddVariable(GetCurrentToken().description);
-                break;
-            }
-        else 
-            switch(variableType){
-                case "Float":
+        switch(variableType){
+            case "Float":
+                if(!IsArray(variable))
                     AddInstruction("READF");
-                    AddVariable(GetCurrentToken().description);
-                break;
-                case "Int":
+                else
+                    AddInstruction("READVF");
+                AddVariable(variable);
+            break;
+            case "Int":
+                if(!IsArray(variable))
                     AddInstruction("READI");
-                    AddVariable(GetCurrentToken().description);
-                break;
-                case "Double":
+                else
+                    AddInstruction("READVI");
+                AddVariable(variable);
+            break;
+            case "Double":
+                if(!IsArray(variable))
                     AddInstruction("READD");
-                    AddVariable(GetCurrentToken().description);
-                break;
-                case "Char":
+                else
+                    AddInstruction("READVD");
+                AddVariable(variable);
+            break;
+            case "Char":
+                if(!IsArray(variable))
                     AddInstruction("READC");
-                    AddVariable(GetCurrentToken().description);
-                break;
-                case "String":
-                    AddInstruction("READS");
-                    AddVariable(GetCurrentToken().description);
-                break;
-            }
+                else
+                    AddInstruction("READVC");
+                AddVariable(variable);
+            break;
+            case "String":
+                if(!IsArray(variable))
+                    AddInstruction("READD");
+                else
+                    AddInstruction("READVD");
+                AddVariable(variable);
+            break;
+        }
     }
     public static boolean If() throws IOException {
         if (!Expect("if"))
@@ -963,106 +885,128 @@ public static boolean Variable() throws IOException{
             return false;
     }
     private static boolean AddAsignment(Token tokenVariable, Token tokenOperator, String tipoDatoExpresion) throws IOException {
-            String operatorAssembly = TranslateToAssembly(tokenOperator.description);
-            String variableType = GetVariableType(tokenVariable.description);
-            // EL TIPO DE DATO DE LA EXPRESION ES DIFERENTE DE LA VARIABLE
-            if(tipoDatoExpresion.equals("DoubleFloat")){
-                    if(!variableType.equals("Double") && !variableType.equals("Float")){
-                            return false;
-                    }
-            }
-            else if (!variableType.equals(tipoDatoExpresion) && (!variableType.equals("Double") && !tipoDatoExpresion.equals("Int"))){
-                    return false;
-            }
-            
-
-            //SI LA PILA EXPRESION AUN TIENE DATOS NO HACE NADA, SIGUE VALIDANDO LOS DATOS DE LA EXPRESION
-            if(!_stackValoresExpresion.isEmpty())
-                return true;
-            switch(variableType){
-                    case "Int":
-                            if(!tokenOperator.description.equals("="))
-                                    AddInstruction(operatorAssembly);
-                            AddInstruction("POPI");
-                            AddVariable(tokenVariable.description);
-                            break;
-                    case "Double":
-                            if(!tokenOperator.description.equals("="))
-                                    AddInstruction(operatorAssembly);
-                            AddInstruction("POPD");
-                            AddVariable(tokenVariable.description);
-                            break;
-                    case "Float":
+        String operatorAssembly = TranslateToAssembly(tokenOperator.description);
+        String variableType = GetVariableType(tokenVariable.description);
+        // EL TIPO DE DATO DE LA EXPRESION ES DIFERENTE DE LA VARIABLE
+        if(tipoDatoExpresion.equals("DoubleFloat")){
+                if(!variableType.equals("Double") && !variableType.equals("Float")){
+                        return false;
+                }
+        }
+        else if (!variableType.equals(tipoDatoExpresion) && (!variableType.equals("Double") && !tipoDatoExpresion.equals("Int"))){
+                return false;
+        }
+        //SI LA PILA EXPRESION AUN TIENE DATOS NO HACE NADA, SIGUE VALIDANDO LOS DATOS DE LA EXPRESION
+        if(!_stackValoresExpresion.isEmpty())
+            return true;
+        switch(variableType){
+                case "Int":
                         if(!tokenOperator.description.equals("="))
                                 AddInstruction(operatorAssembly);
-                        AddInstruction("POPF");
+                        if(!IsArray(tokenVariable.description))
+                            AddInstruction("POPI");
+                        else
+                            AddInstruction("POPVI");
                         AddVariable(tokenVariable.description);
                         break;
-                    case "String":
-
-                            if(operatorAssembly.equals("ADD"))
-                            {
-                                    AddInstruction(operatorAssembly);
-                                    AddInstruction("POPS");
-                                    AddVariable(tokenVariable.description);
-                            }
-                            else if(tokenOperator.description.equals("=")){
-                                    AddInstruction("POPS");
-                                    AddVariable(tokenVariable.description);
-                            }       
-                            else
-                                    return false;
-                            break;
-                    case "Char":
-                            if(!tokenOperator.description.equals("="))
-                                    return false;
-                            AddInstruction("POPC");
-                            AddVariable(tokenVariable.description);
-                            break;      
-            }
-            return true;
-    }
-    public static boolean IncrementoDecremento() throws IOException{
-            Token tokenVariable = GetCurrentToken();
-            AddValue(tokenVariable);
-            String operator = "";
-            if(!Variable())
-                    return false;
-            if(CurrentToken("++")){
-                    if(!Expect("++"))
-                            return false;
-                    operator = "ADD";
-            }
-            else if(CurrentToken("--")){        
-                     if(!Expect("--"))
-                             return false;
-                     operator = "SUB";
-            }
-            else 
-                return false;
-            
-
-            switch(GetVariableType(tokenVariable.description)){
-                    case "Int":
-                            AddInstruction("PUSHKI");
-                            AddInteger(1);
-                            AddInstruction(operator);
-                            AddInstruction("POPI");
-                            AddVariable(tokenVariable.description);
-                            break;
-                    case "DoubleFloat":
-                            AddInstruction("PUSHKD");
-                            AddDouble(1);
-                            AddInstruction(operator);
+                case "Double":
+                        if(!tokenOperator.description.equals("="))
+                                AddInstruction(operatorAssembly);
+                        if(!IsArray(tokenVariable.description))
                             AddInstruction("POPD");
-                            AddVariable(tokenVariable.description);
-                            break;
-                    default:
-                            return false;
-            }
+                        else
+                            AddInstruction("POPVD");
+                        AddVariable(tokenVariable.description);
+                        break;
+                case "Float":
+                    if(!tokenOperator.description.equals("="))
+                            AddInstruction(operatorAssembly);
+                    if(!IsArray(tokenVariable.description))
+                        AddInstruction("POPF");
+                    else
+                        AddInstruction("POPVF");
+                    AddVariable(tokenVariable.description);
+                    break;
+                case "String":
 
-            return true;
-    }
+                        if(operatorAssembly.equals("ADD"))
+                        {
+                                AddInstruction(operatorAssembly);
+                                if(!IsArray(tokenVariable.description))
+                                    AddInstruction("POPS");
+                                else
+                                    AddInstruction("POPVS");
+                                AddVariable(tokenVariable.description);
+                        }
+                        else if(tokenOperator.description.equals("=")){
+                                if(!IsArray(tokenVariable.description))
+                                    AddInstruction("POPS");
+                                else
+                                    AddInstruction("POPVS");
+                                AddVariable(tokenVariable.description);
+                        }       
+                        else
+                                return false;
+                        break;
+                case "Char":
+                        if(!tokenOperator.description.equals("="))
+                                return false;
+                        if(!IsArray(tokenVariable.description))
+                            AddInstruction("POPC");
+                        else
+                            AddInstruction("POPVC");
+                        AddVariable(tokenVariable.description);
+                        break;      
+        }
+        return true;
+}
+    public static boolean IncrementoDecremento() throws IOException{
+        Token tokenVariable = GetCurrentToken();
+        AddValue(tokenVariable);
+        String operator = "";
+        if(!Variable())
+                return false;
+        if(CurrentToken("++")){
+                if(!Expect("++"))
+                        return false;
+                operator = "ADD";
+        }
+        else if(CurrentToken("--")){        
+                 if(!Expect("--"))
+                         return false;
+                 operator = "SUB";
+        }
+        else 
+            return false;
+        
+
+        switch(GetVariableType(tokenVariable.description)){
+                case "Int":
+                        AddInstruction("PUSHKI");
+                        AddInteger(1);
+                        AddInstruction(operator);
+                        if(!IsArray(tokenVariable.description))
+                            AddInstruction("POPI");
+                        else
+                            AddInstruction("POPVI");
+                        AddVariable(tokenVariable.description);
+                        break;
+                case "DoubleFloat":
+                        AddInstruction("PUSHKD");
+                        AddDouble(1);
+                        AddInstruction(operator);
+                        if(!IsArray(tokenVariable.description))
+                            AddInstruction("POPD");
+                        else
+                            AddInstruction("POPVD");
+                        AddVariable(tokenVariable.description);
+                        break;
+                default:
+                        return false;
+        }
+
+        return true;
+}
     public static boolean OperadorAsignacion() throws IOException{
             if(CurrentToken("="))
                     return Expect("=");
@@ -1865,52 +1809,67 @@ public static boolean Variable() throws IOException{
             }
     }
     private static void AddValue(Token tokenToAdd) throws IOException {
-            // ES CONSTANTE
-            if(tokenToAdd.code == 43){
-             switch(tokenToAdd.info)
-            {
-                    case "Int":
-                            AddInstruction("PUSHKI");
-                            AddInteger(Integer.parseInt(tokenToAdd.description));
-                            break;
-                    case "DoubleFloat":
-                            AddInstruction("PUSHKD");
-                            AddDouble(Double.parseDouble(tokenToAdd.description));
-                            break;
-                    case "String":
-                            AddInstruction("PUSHKS");
-                            AddString(tokenToAdd.description);
-                            break;
-                    case "Char":
-                            AddInstruction("PUSHKC");
-                            AddChar(tokenToAdd.description.charAt(1));
-                            break;
-            }
-            }
-            // ES VARIABLE
-            else{
-                    switch(GetVariableType(tokenToAdd.description))
-            {
-                    case "Int":
-                            AddInstruction("PUSHI");
-                            break;
-                    case "Double":
-                            AddInstruction("PUSHD");
-                            break;
-                    case "Float":
-                            AddInstruction("PUSHF");
-                            break;
-                    case "String":
-                            AddInstruction("PUSHS");
-                            break;
-                    case "Char":
-                            AddInstruction("PUSHC");
-                            break;
-            }
+        // ES CONSTANTE
+        if(tokenToAdd.code == 43){
+         switch(tokenToAdd.info)
+        {
+                case "Int":
+                        AddInstruction("PUSHKI");
+                        AddInteger(Integer.parseInt(tokenToAdd.description));
+                        break;
+                case "DoubleFloat":
+                        AddInstruction("PUSHKD");
+                        AddDouble(Double.parseDouble(tokenToAdd.description));
+                        break;
+                case "String":
+                        AddInstruction("PUSHKS");
+                        AddString(tokenToAdd.description);
+                        break;
+                case "Char":
+                        AddInstruction("PUSHKC");
+                        AddChar(tokenToAdd.description.charAt(1));
+                        break;
+        }
+        }
+        // ES VARIABLE
+        else{
+                switch(GetVariableType(tokenToAdd.description))
+        {
+                case "Int":
+                		if(!IsArray(tokenToAdd.description))
+                			AddInstruction("PUSHI");
+                    	else
+                    		AddInstruction("PUSHVI");
+                        break;
+                case "Double":
+                		if(!IsArray(tokenToAdd.description))
+                			AddInstruction("PUSHD");
+                		else
+                			AddInstruction("PUSHVD");                            
+                		break;
+                case "Float":
+                		if(!IsArray(tokenToAdd.description))
+                			AddInstruction("PUSHF");
+                		else
+                			AddInstruction("PUSHVF");
+                    	break;
+                case "String":
+                		if(!IsArray(tokenToAdd.description))
+            				AddInstruction("PUSHS");
+                		else
+                			AddInstruction("PUSHVS");
+                        break;
+                case "Char":
+                		if(!IsArray(tokenToAdd.description))
+                			AddInstruction("PUSHC");
+                		else
+                			AddInstruction("PUSHVC");
+                        break;
+        }
 
-                    AddVariable(tokenToAdd.description);
-            }
-    }
+                AddVariable(tokenToAdd.description);
+        }
+}
     public static int GetVariableDir(String variable){
             int dir=0;
             for(int i=0; i<_variablesTable.length ; i++){
