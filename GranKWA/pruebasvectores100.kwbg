@@ -7,12 +7,15 @@
 cantidad=3;
 
 for(i=0;i<cantidad;i++){
-write "Nombre["+i+"]:";
+write "Nombre["+i+"]: ";
 read nombres[i];
-write "Matricula["+i+"]:";
+writeln "";
+write "Matricula["+i+"]: ";
 read matriculas[i];
 writeln "";
 }
+
+writeln "";
 
 for(i=0;i<cantidad;i++){
 for(j=i+1;j<cantidad;j++){
@@ -29,6 +32,6 @@ nombres[j] = nombre1;
 }
 }
 for(i=0;i<cantidad;i++){
-writeln matriculas[i];
+write matriculas[i] + " ";
 writeln nombres[i];
 }

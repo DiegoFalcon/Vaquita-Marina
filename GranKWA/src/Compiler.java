@@ -43,7 +43,7 @@ public class Compiler {
     public static void mainCompiler() throws IOException {
         // TODO Auto-generated method stub
         Initialize();
-        InitializeFile();
+        InitializeFile();        
         cleanLastBytesInFile();
             
         if(Instrucciones()){
@@ -72,6 +72,7 @@ public class Compiler {
         _stackTokensInIndex = new Stack<Integer>();
         _isDeclaration = false;
         NewJFrame.jTextArea2.setText("");
+        NewJFrame.jTextArea3.setText("");
         
         /*File f = new File ("Temp123456789.KWBG");
         String fileDir = f.getAbsolutePath();
@@ -776,8 +777,9 @@ public class Compiler {
             AppendFile(reader);
         }
     }
-    public static boolean InitializeFile() throws IOException{
+    public static void InitializeFile() throws IOException{
         WriteTempFile();
+
         String fileName = _filename + ".KWBG";
         File f = new File (fileName);
         String fileDir = f.getAbsolutePath();
@@ -785,7 +787,6 @@ public class Compiler {
         
         _bytesInFile = Files.readAllBytes(Paths.get(fileDir, fileName));
         FileReader reader = new FileReader(fileName);
-        return true;
     }
     public static void AppendFile(FileReader fileName) throws IOException{
         BufferedReader buff = null;
@@ -806,6 +807,8 @@ public class Compiler {
     public static void WriteTempFile() throws IOException{
         if (_filename == null){
             String inputValue = JOptionPane.showInputDialog("Save File As: ");
+            if (inputValue == null)
+                _filename = "TempFile";
             _filename = inputValue;
         }
         FileWriter writer = new FileWriter(_filename + ".KWBG");
