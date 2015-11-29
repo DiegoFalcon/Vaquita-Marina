@@ -39,6 +39,9 @@ public class Compiler {
     static Stack<Integer> _stackTokensInIndex = new Stack<Integer>();
     static boolean _isDeclaration = false;
     static virtualMachine _callMachine = new virtualMachine();
+    static byte[] _arrayTmp = new byte[0];
+    static boolean _isArrayAssignment = false;
+    static boolean _isAssigned = false;
     
     public static void mainCompiler() throws IOException {
         // TODO Auto-generated method stub
@@ -156,11 +159,21 @@ public class Compiler {
                         if(!Expect(45))
                                 return false;
         if(CurrentToken("[")){
-          if(!Expect("["))
+        	if(_isAssigned)
+        		_isArrayAssignment = true;
+          if(!Expect("[")){
+        	  _isArrayAssignment = false;
+        	  _arrayTmp = new byte[0];
              return false;
+          }
           _stackTokensInIndex.push(0);
-          if(!IndiceVector(variable))
-             return false;
+          if(!IndiceVector(variable)){
+        	  _isArrayAssignment = false;
+        	  _arrayTmp = new byte[0];
+        	  return false;
+          }
+          //AddInstruction("POPINDEX");
+          _isArrayAssignment = false;
            if(!Expect("]"))
              return false;
         }
@@ -918,8 +931,12 @@ public class Compiler {
             }
             if(CurrentTokenInFirst("Variable")){
                     Token tokenVariable = GetCurrentToken();
-                    if(!Variable())
-                            return false;
+                    _isAssigned = true;
+                    if(!Variable()){
+                      _isAssigned = false;
+                        return false;
+                    }
+                    _isAssigned = false;
                     Token tokenOperator = GetCurrentToken();
                     if(!OperadorAsignacion())
                             return false;
@@ -931,6 +948,7 @@ public class Compiler {
                             return false;
                     while(!_stackValoresExpresion.isEmpty()){
                     Token tokenExpresion = _stackValoresExpresion.pop();
+                    
                     if(tokenExpresion.code == 43){
                     if(!AddAsignment(tokenVariable, tokenOperator,tokenExpresion.info))
                             return false;
@@ -962,6 +980,10 @@ public class Compiler {
         //SI LA PILA EXPRESION AUN TIENE DATOS NO HACE NADA, SIGUE VALIDANDO LOS DATOS DE LA EXPRESION
         if(!_stackValoresExpresion.isEmpty())
             return true;
+        
+        AddToKWA(_arrayTmp);
+        _arrayTmp = new byte[0];
+        
         switch(variableType){
                 case "Int":
                         if(!tokenOperator.description.equals("="))
@@ -1639,10 +1661,13 @@ public class Compiler {
             return false;
     }
     public void AddLength(int length) throws IOException{
-            if(_stackIsCondition.isEmpty()){
+            if(_stackIsCondition.isEmpty() && !_isDeclaration){
                     byte[] instructionArray = new byte[1];
                     instructionArray[0] = (byte)length;
-                    AddToKWA(instructionArray);
+                    if(_isArrayAssignment)
+                        AddToArrayTmp(instructionArray);
+                else
+                  AddToKWA(instructionArray);
                     _SC += 1;
             }
     }
@@ -1653,21 +1678,27 @@ public class Compiler {
     return returnTag;
     }   
     public static void AddInstruction(int instruction) throws IOException{
-            if(_stackIsCondition.isEmpty()){
+            if(_stackIsCondition.isEmpty() && !_isDeclaration){
                     byte[] instructionArray = new byte[1];
                     instructionArray[0] = (byte)instruction;
-                    AddToKWA(instructionArray);
+                    if(_isArrayAssignment)
+                        AddToArrayTmp(instructionArray);
+                else
+                  AddToKWA(instructionArray);
                     _SC += 1;
             }
     }
     public static void AddInstruction(String instruction) throws IOException{
-            if(_stackIsCondition.isEmpty()){
+            if(_stackIsCondition.isEmpty() && !_isDeclaration){
                     byte[] instructionArray = new byte[1];
                     instructionArray[0] = (byte)GetInstructionCode(instruction);
-                    AddToKWA(instructionArray);
+                    if(_isArrayAssignment)
+                        AddToArrayTmp(instructionArray);
+                else
+                  AddToKWA(instructionArray);
                     _SC += 1;
             }
-    }   
+    }    
     public static int GetInstructionCode(String instruction){
         switch(instruction){
         case "HALT":
@@ -1805,12 +1836,15 @@ public class Compiler {
         }
     }
     public static void AddTag(Tag tag) throws IOException {
-        if (_stackIsCondition.isEmpty()) {
+        if (_stackIsCondition.isEmpty() && !_isDeclaration) {
             byte[] variableBytes = new byte[2];
             tag.referencedDir = _SC;
             variableBytes[1] = (byte) (tag.dir & 0xFF);
             variableBytes[0] = (byte) ((tag.dir >> 8) & 0xFF);
-            AddToKWA(variableBytes);
+            if(_isArrayAssignment)
+                AddToArrayTmp(variableBytes);
+        else
+          AddToKWA(variableBytes);
             _SC += 2;
         }
     }
@@ -1829,12 +1863,15 @@ public class Compiler {
         }
     }
     public static void AddVariable(String variable) throws IOException{     
-            if(_stackIsCondition.isEmpty()){
+            if(_stackIsCondition.isEmpty() && !_isDeclaration){
                     int variableDir = GetVariableDir(variable);
                     byte[] variableBytes=new byte[2];
                     variableBytes[1]=(byte)(variableDir & 0xFF);
                     variableBytes[0]=(byte)((variableDir>>8) & 0xFF);
-                    AddToKWA(variableBytes);
+                    if(_isArrayAssignment)
+                        AddToArrayTmp(variableBytes);
+                else
+                  AddToKWA(variableBytes);
                     _SC += 2;
             }
     }
@@ -1939,47 +1976,75 @@ public class Compiler {
             return "";
     }
     public static void AddInteger(int variable) throws IOException{
-            if(_stackIsCondition.isEmpty()){
-                    AddToKWA(ByteBuffer.allocate(4).putInt(variable).array());
-                    _SC += 4;
-            }
-}
+        if(_stackIsCondition.isEmpty() && !_isDeclaration){
+            if(_isArrayAssignment)
+                    AddToArrayTmp(ByteBuffer.allocate(4).putInt(variable).array());
+            else
+              AddToKWA(ByteBuffer.allocate(4).putInt(variable).array());
+                _SC += 4;
+        }
+    }
     public static void AddDouble (double variable) throws IOException{
-            if(_stackIsCondition.isEmpty()){
-                    AddToKWA(ByteBuffer.allocate(8).putDouble(variable).array());
-                    _SC += 8;
-            }
-}
+        if(_stackIsCondition.isEmpty() && !_isDeclaration){
+            if(_isArrayAssignment)
+                AddToArrayTmp(ByteBuffer.allocate(8).putDouble(variable).array());
+        else
+            AddToKWA(ByteBuffer.allocate(8).putDouble(variable).array());
+            _SC += 8;
+        }
+    }
     public static void AddFloat (float variable) throws IOException{
-            if(_stackIsCondition.isEmpty()){
-                    AddToKWA(ByteBuffer.allocate(4).putFloat(variable).array());
-                    _SC += 4;
-            }
-}
+        if(_stackIsCondition.isEmpty() && !_isDeclaration){
+          if(_isArrayAssignment)
+            AddToArrayTmp(ByteBuffer.allocate(4).putFloat(variable).array());
+        else
+            AddToKWA(ByteBuffer.allocate(4).putFloat(variable).array());
+            _SC += 4;
+        }
+    }
     public static void AddChar (char variable) throws IOException{
-            if(_stackIsCondition.isEmpty()){
-                    byte[] instructionArray = new byte[1];
-                    instructionArray[0] = (byte)variable;
-                    AddToKWA(instructionArray);
-                    _SC += 1;
-            }
-}
+        if(_stackIsCondition.isEmpty() && !_isDeclaration){
+            byte[] instructionArray = new byte[1];
+            instructionArray[0] = (byte)variable;
+            if(_isArrayAssignment)
+                AddToArrayTmp(instructionArray);
+            else
+                AddToKWA(instructionArray);
+            _SC += 1;
+        }
+    }   
     public static void AddString(String variable) throws IOException {
-        if (_stackIsCondition.isEmpty()) {
-            
+        if (_stackIsCondition.isEmpty() && !_isDeclaration) {
+
             int size = variable.length() - 2;
-            
+
             byte[] instructionArray = new byte[1];
             instructionArray[0] = (byte) size;
-            AddToKWA(instructionArray);
+            if(_isArrayAssignment)
+                AddToArrayTmp(instructionArray);
+        else
+          AddToKWA(instructionArray);
             _SC += 1;
-            
+
             for (int i = 1; i < variable.length() - 1; i++) {
                 instructionArray[0] = (byte) variable.charAt(i);
-                AddToKWA(instructionArray);
+                if(_isArrayAssignment)
+                    AddToArrayTmp(instructionArray);
+            else
+              AddToKWA(instructionArray);
                 _SC += 1;
             }
         }
+    }
+    public static void AddToArrayTmp(byte[] bytesToAdd){
+        byte[] newKWA = new byte[_arrayTmp.length + bytesToAdd.length];
+
+        for(int i=0; i<_arrayTmp.length; i++)
+                newKWA[i] = _arrayTmp[i];
+
+        for(int i = _arrayTmp.length ; i<newKWA.length ; i++)
+                newKWA[i] = bytesToAdd[i-_arrayTmp.length];
+        _arrayTmp = newKWA;
     }
     public static void AddToKWA(byte[] bytesToAdd){
     byte[] newKWA = new byte[_KWA.length + bytesToAdd.length];
