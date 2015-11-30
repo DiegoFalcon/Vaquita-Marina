@@ -439,8 +439,6 @@ public class virtualMachine {
         try{
             //newValue = Integer.parseInt(scan.nextLine());
             newValue = Integer.parseInt(JOptionPane.showInputDialog("Enter a Integer: "));
-            NewJFrame.jTextArea2.append(newValue + "");
-            NewJFrame.jTextArea2.update(NewJFrame.jTextArea2.getGraphics());
             _dir=GetDir();
             }
         catch(Exception e){
@@ -458,14 +456,11 @@ public class virtualMachine {
          try{
             //newValue = Double.parseDouble(scan.nextLine());
             newValue = Double.parseDouble(JOptionPane.showInputDialog("Enter a Double: "));
-            NewJFrame.jTextArea2.append(newValue + "");
-            NewJFrame.jTextArea2.update(NewJFrame.jTextArea2.getGraphics());
-            
              _dir=GetDir();
              }
          catch(Exception e){
             //System.out.println(e.getMessage());
-             NewJFrame.jTextArea3.append(e.getMessage()+ "\n");
+            NewJFrame.jTextArea3.append(e.getMessage()+ "\n");
             NewJFrame.jTextArea3.update(NewJFrame.jTextArea3.getGraphics());
          }
          SetVariableValue(_dir,newValue);
@@ -477,10 +472,7 @@ public class virtualMachine {
          float newValue = 0;
          try{
             //newValue = Float.parseFloat(scan.nextLine());
-            newValue = Float.parseFloat(JOptionPane.showInputDialog("Enter a number: "));
-            NewJFrame.jTextArea2.append(newValue + "");
-            NewJFrame.jTextArea2.update(NewJFrame.jTextArea2.getGraphics());
-            
+            newValue = Float.parseFloat(JOptionPane.showInputDialog("Enter a number: "));            
              _dir=GetDir();
              }
          catch(Exception e){
@@ -498,8 +490,6 @@ public class virtualMachine {
          try{
             //newValue = (scan.nextLine()).charAt(0);
             newValue = JOptionPane.showInputDialog("Enter a char: ").charAt(0);
-            NewJFrame.jTextArea2.append(newValue + "");
-            NewJFrame.jTextArea2.update(NewJFrame.jTextArea2.getGraphics());
              _dir=GetDir();
              }
          catch(Exception e){
@@ -517,8 +507,6 @@ public class virtualMachine {
          try{
             //newValue = scan.nextLine();
             newValue = JOptionPane.showInputDialog("Enter a String: ");
-            NewJFrame.jTextArea2.append(newValue + "");
-            NewJFrame.jTextArea2.update(NewJFrame.jTextArea2.getGraphics());
              _dir=GetDir();
              }
          catch(Exception e){
@@ -536,8 +524,6 @@ public class virtualMachine {
         try{
             //newValue = Integer.parseInt(scan.nextLine());
             newValue = Integer.parseInt(JOptionPane.showInputDialog("Enter a number: "));
-            NewJFrame.jTextArea2.append(newValue + "");
-            NewJFrame.jTextArea2.update(NewJFrame.jTextArea2.getGraphics());
              _dir=GetDir();
         }
         catch(Exception e){
@@ -555,8 +541,6 @@ public class virtualMachine {
          try{
             //newValue = Double.parseDouble(scan.nextLine());
             newValue = Double.parseDouble(JOptionPane.showInputDialog("Enter a number: "));
-            NewJFrame.jTextArea2.append(newValue + "");
-            NewJFrame.jTextArea2.update(NewJFrame.jTextArea2.getGraphics());
              _dir=GetDir();
          }
          catch(Exception e){
@@ -574,8 +558,6 @@ public class virtualMachine {
          try{
             //newValue = Float.parseFloat(scan.nextLine());
             newValue = Float.parseFloat(JOptionPane.showInputDialog("Enter a number: "));
-            NewJFrame.jTextArea2.append(newValue + "");
-            NewJFrame.jTextArea2.update(NewJFrame.jTextArea2.getGraphics());
              _dir=GetDir();
          }
          catch(Exception e){
@@ -593,8 +575,6 @@ public class virtualMachine {
          try{
             //newValue = scan.nextLine().charAt(0);
             newValue = JOptionPane.showInputDialog("Enter a char: ").charAt(0);
-            NewJFrame.jTextArea2.append(newValue + "");
-            NewJFrame.jTextArea2.update(NewJFrame.jTextArea2.getGraphics());
              _dir=GetDir();
          }
          catch(Exception e){
@@ -612,8 +592,6 @@ public class virtualMachine {
          try{
             //newValue = scan.nextLine();
             newValue = JOptionPane.showInputDialog("Enter a String: ");
-            NewJFrame.jTextArea2.append(newValue + "");
-            NewJFrame.jTextArea2.update(NewJFrame.jTextArea2.getGraphics());
              _dir=GetDir();
          }
          catch(Exception e){
