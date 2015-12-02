@@ -1405,6 +1405,7 @@ public class Compiler {
                         
                         
                     } else {
+                    	tokenWord += (char) _bytesInFile[lastByteRead];
                         increaseByte = true;
                     }
                     
@@ -1499,6 +1500,7 @@ public class Compiler {
         
         return tokenWord;
     }
+    
     public static boolean isOperator(char character){
         if(character == 33 || character == 37 || character == 42 || character == 43 || character == 45 || character == 47
                 || character == 60 || character == 61 || character == 62){
