@@ -136,15 +136,16 @@ public class Compiler {
             if (!Expect(45))
                     return false;
             if(_stackIsCondition.isEmpty())
-        	if(!IsArray(currentNameVariable))
-                AddToVariableTable(currentNameVariable,_currentTypeVariable);
+                if(!IsArray(currentNameVariable))
+                    AddToVariableTable(currentNameVariable,_currentTypeVariable);
 
-            if (CurrentToken(","))
-                    if(!Expect(","))
-                            return false;
-            while (CurrentTokenInFirst("ListaVariables")) { 
+            if (CurrentToken(",")){
+                if(!Expect(","))
+                        return false;
+                while (CurrentTokenInFirst("ListaVariables")) { 
                     if (!ListaVariables())
-                            return false;
+                        return false;
+                }
             }
 
             return true;
