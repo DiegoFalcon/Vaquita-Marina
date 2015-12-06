@@ -15,6 +15,8 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.swing.JOptionPane;
 
 public class Compiler {
@@ -131,7 +133,7 @@ public class Compiler {
     public static boolean ListaVariables() throws IOException {
             // <Variables> {,<ListaVariables>}
             String currentNameVariable = GetCurrentToken().description;
-            if (!Variable())
+            if (!Expect(45))
                     return false;
             if(_stackIsCondition.isEmpty())
         	if(!IsArray(currentNameVariable))
@@ -149,28 +151,33 @@ public class Compiler {
     }
     public static boolean Variable() throws IOException{
     Token variable = GetCurrentToken();
-                if(!CurrentToken(44) && !CurrentToken(45))
-                        return false;
+                //if(!CurrentToken(44) && !CurrentToken(45))
+                //return false;
 
-                if(CurrentToken(44))
-                        if(!Expect(44))
-                                return false;
-                if(CurrentToken(45))
-                        if(!Expect(45))
-                                return false;
+        if(!Expect(44))
+            return false;
+        //if((_isDeclaration && !Expect(45)) || (!_isDeclaration) && !Expect(44))
+        //  return false;
+            
+                //if(CurrentToken(44))
+                //        if(!Expect(44))
+                //                return false;
+                //if(CurrentToken(45))
+                //        if(!Expect(45))
+                //                return false;
         if(CurrentToken("[")){
-        	if(_isAssigned)
-        		_isArrayAssignment = true;
+            if(_isAssigned)
+                _isArrayAssignment = true;
           if(!Expect("[")){
-        	  _isArrayAssignment = false;
-        	  _arrayTmp = new byte[0];
+              _isArrayAssignment = false;
+              _arrayTmp = new byte[0];
              return false;
           }
           _stackTokensInIndex.push(0);
           if(!IndiceVector(variable)){
-        	  _isArrayAssignment = false;
-        	  _arrayTmp = new byte[0];
-        	  return false;
+              _isArrayAssignment = false;
+              _arrayTmp = new byte[0];
+              return false;
           }
           //AddInstruction("POPINDEX");
           _isArrayAssignment = false;
@@ -178,7 +185,7 @@ public class Compiler {
              return false;
         }
         return true;
-}
+    }
     public static boolean IndiceVector(Token variable) throws IOException{
         String size = GetCurrentToken().description;    
             if(CurrentTokenInFirst("Expresion"))
@@ -197,7 +204,7 @@ public class Compiler {
             //    if(!IncrementoDecremento())
             //        return false;
             return true;
-}
+    }
     public static boolean checkIfIndexArray() throws IOException{
         String variableType;
         Token token;
@@ -1129,21 +1136,21 @@ public class Compiler {
     public static boolean Expresion() throws IOException{
             //<Termino>|<Termino><OperadorSUma><Expresion>  //
             if(Termino()){
-                    if(CurrentToken("+") || CurrentToken("-")){
-                            Token tokenOperator = GetCurrentToken();
-                            String assemblyOperator = TranslateToAssembly(tokenOperator.description);
-                            if(CurrentToken("+")){
-                                    Expect("+");
-                            }
-                            else{
-                                    Expect("-");                
-                            }
-                            if(!Expresion())
-                                    return false;
-                            AddInstruction(assemblyOperator);
-                            return true;
+                if(CurrentToken("+") || CurrentToken("-")){
+                    Token tokenOperator = GetCurrentToken();
+                    String assemblyOperator = TranslateToAssembly(tokenOperator.description);
+                    if(CurrentToken("+")){
+                        Expect("+");
                     }
+                    else{
+                        Expect("-");
+                    }
+                    if(!Expresion())
+                        return false;
+                    AddInstruction(assemblyOperator);
                     return true;
+                }
+                return true;
             }
             return false;
     }
@@ -1202,6 +1209,13 @@ public class Compiler {
         // 43 - Constante, 44 - Variable Declarada
         
     	 Token tokenValor = GetCurrentToken();
+         if(tokenValor.code == 43 && tokenValor.info == "Char"){
+             String regex = "[\"\'a-z A-Z]+";
+             if(tokenValor.description.matches(regex) && tokenValor.description.length() > 3){
+                 return false;
+             }
+         }
+         
         _stackValoresExpresion.push(tokenValor);
         if(!_stackTokensInIndex.isEmpty())
             _stackTokensInIndex.push(_stackTokensInIndex.pop()+1);
@@ -1405,7 +1419,6 @@ public class Compiler {
                         
                         
                     } else {
-                    	tokenWord += (char) _bytesInFile[lastByteRead];
                         increaseByte = true;
                     }
                     
@@ -1500,7 +1513,6 @@ public class Compiler {
         
         return tokenWord;
     }
-    
     public static boolean isOperator(char character){
         if(character == 33 || character == 37 || character == 42 || character == 43 || character == 45 || character == 47
                 || character == 60 || character == 61 || character == 62){
@@ -1865,40 +1877,49 @@ public class Compiler {
         }
     }
     public static void AddVariable(String variable) throws IOException{     
-            if(_stackIsCondition.isEmpty() && !_isDeclaration){
-                    int variableDir = GetVariableDir(variable);
-                    byte[] variableBytes=new byte[2];
-                    variableBytes[1]=(byte)(variableDir & 0xFF);
-                    variableBytes[0]=(byte)((variableDir>>8) & 0xFF);
-                    if(_isArrayAssignment)
-                        AddToArrayTmp(variableBytes);
-                else
-                  AddToKWA(variableBytes);
-                    _SC += 2;
-            }
+        if(_stackIsCondition.isEmpty() && !_isDeclaration){
+            int variableDir = GetVariableDir(variable);
+            byte[] variableBytes=new byte[2];
+            variableBytes[1]=(byte)(variableDir & 0xFF);
+            variableBytes[0]=(byte)((variableDir>>8) & 0xFF);
+            if(_isArrayAssignment)
+                AddToArrayTmp(variableBytes);
+            else
+              AddToKWA(variableBytes);
+                _SC += 2;   
+        }
     }
     private static void AddValue(Token tokenToAdd) throws IOException {
         // ES CONSTANTE
         if(tokenToAdd.code == 43){
          switch(tokenToAdd.info)
         {
-                case "Int":
-                        AddInstruction("PUSHKI");
-                        AddInteger(Integer.parseInt(tokenToAdd.description));
-                        break;
-                case "DoubleFloat":
-                        AddInstruction("PUSHKD");
-                        AddDouble(Double.parseDouble(tokenToAdd.description));
-                        break;
-                case "String":
-                        AddInstruction("PUSHKS");
-                        AddString(tokenToAdd.description);
-                        break;
-                case "Char":
-                        AddInstruction("PUSHKC");
-                        AddChar(tokenToAdd.description.charAt(1));
-                        break;
-        }
+            case "Int":
+                AddInstruction("PUSHKI");
+                AddInteger(Integer.parseInt(tokenToAdd.description));
+                break;
+            case "DoubleFloat":
+                AddInstruction("PUSHKD");
+                AddDouble(Double.parseDouble(tokenToAdd.description));
+                break;
+            case "String":
+                AddInstruction("PUSHKS");
+                AddString(tokenToAdd.description);
+                break;
+            case "Char":
+                AddInstruction("PUSHKC");
+                String regex = "[\"\'0-9]+";
+                if(tokenToAdd.description.matches(regex) && tokenToAdd.description.length() > 3){
+                    Pattern p = Pattern.compile("[0-9]+");
+                    Matcher m = p.matcher(tokenToAdd.description);
+                    if (m.find()) {
+                       AddChar(Integer.parseInt(m.group(0)));
+                    }
+                }
+                else
+                    AddChar(tokenToAdd.description.charAt(1));
+                break;
+            }
         }
         // ES VARIABLE
         else{
@@ -2015,6 +2036,17 @@ public class Compiler {
             _SC += 1;
         }
     }   
+    public static void AddChar (int variable) throws IOException{
+        if(_stackIsCondition.isEmpty() && !_isDeclaration){
+            byte[] instructionArray = new byte[1];
+            instructionArray[0] = (byte)variable;
+            if(_isArrayAssignment)
+                AddToArrayTmp(instructionArray);
+            else
+                AddToKWA(instructionArray);
+            _SC += 1;
+        }
+    }  
     public static void AddString(String variable) throws IOException {
         if (_stackIsCondition.isEmpty() && !_isDeclaration) {
 
