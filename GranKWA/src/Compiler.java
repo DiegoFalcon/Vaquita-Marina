@@ -1284,7 +1284,7 @@ public class Compiler {
         
          Token tokenValor = GetCurrentToken();
          if(tokenValor.code == 43 && tokenValor.info == "Char"){
-             String regex = "[\"\'a-z A-Z]+";
+             String regex = "[\"\'a-z A-Z 0-9]+";
              if(tokenValor.description.matches(regex) && tokenValor.description.length() > 3){
                  return false;
              }
