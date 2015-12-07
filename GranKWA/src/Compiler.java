@@ -979,6 +979,8 @@ public class Compiler {
                             return false;
                     }
                     else{
+                    
+                    	
                     if(!AddAsignment(tokenVariable, tokenOperator,GetVariableType(tokenExpresion.description)))
                             return false;
                     }//else        
@@ -1173,6 +1175,7 @@ public class Compiler {
             return false;
     }
     public static boolean Termino() throws IOException{
+
             if(Factor()){
                     if(CurrentToken("*") || CurrentToken("/") || CurrentToken("%")){
                             Token tokenOperator = GetCurrentToken();
@@ -1227,6 +1230,7 @@ public class Compiler {
         // 43 - Constante, 44 - Variable Declarada
         
          Token tokenValor = GetCurrentToken();
+         
          if(tokenValor.code == 43 && tokenValor.info == "Char"){
              String regex = "[\"\'a-z A-Z]+";
              if(tokenValor.description.matches(regex) && tokenValor.description.length() > 3){
@@ -1235,20 +1239,24 @@ public class Compiler {
          }
          
         _stackValoresExpresion.push(tokenValor);
-        if(!_stackTokensInIndex.isEmpty())
-            _stackTokensInIndex.push(_stackTokensInIndex.pop()+1);
+        if(!_stackTokensInIndex.isEmpty()){
+        	_stackTokensInIndex.push(_stackTokensInIndex.pop()+1);
+        }
+            
         
         if(CurrentTokenInFirst("Variable")){
-       
            if(!Variable())
                return false;
            AddValue(tokenValor);
            return true;
         }
         
+        
         if(!Expect(43)){
-            if(!_stackTokensInIndex.isEmpty())
-            _stackTokensInIndex.push(_stackTokensInIndex.pop()-1);
+            if(!_stackTokensInIndex.isEmpty()){
+            	_stackTokensInIndex.push(_stackTokensInIndex.pop()-1);
+            }
+            
             _stackValoresExpresion.pop();
            return false;
         }
@@ -1709,10 +1717,16 @@ public class Compiler {
         return "";
     }
     public static boolean isNumber(String tokenWord) {
+    		
             for (int i = 0; i < tokenWord.length(); i++) {
-                    if ((tokenWord.charAt(i) - 48 < 0 || tokenWord.charAt(i) - 48 > 9) && tokenWord.charAt(i) != 46) {
+            		if(i==0 && tokenWord.charAt(i)==45){
+            			
+            		} else {
+            			if ((tokenWord.charAt(i) - 48 < 0 || tokenWord.charAt(i) - 48 > 9) && tokenWord.charAt(i) != 46) {
                             return false;
                     }
+            		}
+                    
             }
             return true;
     }
