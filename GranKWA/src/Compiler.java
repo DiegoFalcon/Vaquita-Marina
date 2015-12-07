@@ -45,6 +45,9 @@ public class Compiler {
     static boolean _isArrayAssignment = false;
     static boolean _isAssigned = false;
     static int lineReadNumber = 1;
+    static Stack<Token> _stackOperadores = new Stack<Token>();
+    static boolean _IndiceVector;
+    static boolean _Parentesis = false;
     
     public static void mainCompiler() throws IOException {
         // TODO Auto-generated method stub
@@ -176,46 +179,64 @@ public class Compiler {
     }
     public static boolean Variable() throws IOException{
         Token variable = GetCurrentToken();
-        if(!Expect(44))
-            return false;
-        if(CurrentToken("[")){
-            if(_isAssigned)
-                _isArrayAssignment = true;
-          if(!Expect("[")){
+                    if(!CurrentToken(44) && !CurrentToken(45))
+                            return false;
+
+                    if(CurrentToken(44))
+                            if(!Expect(44))
+                                    return false;
+                    if(CurrentToken(45))
+                            if(!Expect(45))
+                                    return false;
+            if(CurrentToken("[")){
+            	if(_isAssigned)
+            		_isArrayAssignment = true;
+              if(!Expect("[")){
+            	  _isArrayAssignment = false;
+            	  _arrayTmp = new byte[0];
+                 return false;
+              }
+              _stackTokensInIndex.push(0);
+              if(!IndiceVector(variable)){
+            	  _isArrayAssignment = false;
+            	  _arrayTmp = new byte[0];
+            	  return false;
+              }
+              //AddInstruction("POPINDEX");
               _isArrayAssignment = false;
-              _arrayTmp = new byte[0];
-             return false;
-          }
-          _stackTokensInIndex.push(0);
-          if(!IndiceVector(variable)){
-              _isArrayAssignment = false;
-              _arrayTmp = new byte[0];
-              return false;
-          }
-          _isArrayAssignment = false;
-           if(!Expect("]"))
-             return false;
-        }
-        return true;
-    }
-    public static boolean IndiceVector(Token variable) throws IOException{
-        String size = GetCurrentToken().description;    
-            if(CurrentTokenInFirst("Expresion"))
-                if(!Expresion())
-                    return false;
-            
-            if(!checkIfIndexArray())
-                return false;
-            
-            if(!_isDeclaration)
-                AddInstruction("POPINDEX");
-            else
-                for(int i=0 ; i<Integer.parseInt(size) ; i++)
-                    AddToVariableTable(variable.description,_currentTypeVariable);
-            //if(CurrentTokenInFirst("IncrementoDecremento"))
-            //    if(!IncrementoDecremento())
-            //        return false;
+               if(!Expect("]"))
+                 return false;
+            }
             return true;
+    }
+        public static boolean IndiceVector(Token variable) throws IOException{
+            String size = GetCurrentToken().description;
+            //if(!_stackOperadores.isEmpty())
+            //	System.out.println("aqui es");
+            _IndiceVector = true;
+                if(CurrentTokenInFirst("Expresion"))
+                    if(!Expresion()){
+                    	_IndiceVector = false;
+                        return false;
+                        
+                    }
+                
+                if(!checkIfIndexArray()){
+                	_IndiceVector = false;
+                    return false;
+                    
+                }
+                
+                if(!_isDeclaration)
+                    AddInstruction("POPINDEX");
+                else
+                    for(int i=0 ; i<Integer.parseInt(size) ; i++)
+                        AddToVariableTable(variable.description,_currentTypeVariable);
+                //if(CurrentTokenInFirst("IncrementoDecremento"))
+                //    if(!IncrementoDecremento())
+                //        return false;
+                _IndiceVector = false;
+                return true;
     }
     public static boolean checkIfIndexArray() throws IOException{
         String variableType;
@@ -992,7 +1013,7 @@ public class Compiler {
             }
             return false;
     }
-    private static boolean AddAsignment(Token tokenVariable, Token tokenOperator, String tipoDatoExpresion) throws IOException {
+    private static boolean AddAsignment(Token tokenVariable, Token tokenOperator, String tipoDatoExpresion, boolean EsConcatenacion) throws IOException {
         String operatorAssembly = TranslateToAssembly(tokenOperator.description);
         String variableType = GetVariableType(tokenVariable.description);
         // EL TIPO DE DATO DE LA EXPRESION ES DIFERENTE DE LA VARIABLE
@@ -1013,6 +1034,8 @@ public class Compiler {
         
         switch(variableType){
                 case "Int":
+                		if(EsConcatenacion)
+                			AddValue(tokenVariable);
                         if(!tokenOperator.description.equals("="))
                                 AddInstruction(operatorAssembly);
                         if(!IsArray(tokenVariable.description))
@@ -1022,6 +1045,8 @@ public class Compiler {
                         AddVariable(tokenVariable.description);
                         break;
                 case "Double":
+                	if(EsConcatenacion)
+            			AddValue(tokenVariable);
                         if(!tokenOperator.description.equals("="))
                                 AddInstruction(operatorAssembly);
                         if(!IsArray(tokenVariable.description))
@@ -1031,6 +1056,8 @@ public class Compiler {
                         AddVariable(tokenVariable.description);
                         break;
                 case "Float":
+                	if(EsConcatenacion)
+            			AddValue(tokenVariable);
                     if(!tokenOperator.description.equals("="))
                             AddInstruction(operatorAssembly);
                     if(!IsArray(tokenVariable.description))
@@ -1040,7 +1067,8 @@ public class Compiler {
                     AddVariable(tokenVariable.description);
                     break;
                 case "String":
-
+                	if(EsConcatenacion)
+            			AddValue(tokenVariable);
                         if(operatorAssembly.equals("ADD"))
                         {
                                 AddInstruction(operatorAssembly);
@@ -1154,62 +1182,92 @@ public class Compiler {
     }
     
     public static boolean Expresion() throws IOException{
-            //<Termino>|<Termino><OperadorSUma><Expresion>  //
-            if(Termino()){
+        //<Termino>|<Termino><OperadorSUma><Expresion>  //
+        if(Termino()){
                 if(CurrentToken("+") || CurrentToken("-")){
-                    Token tokenOperator = GetCurrentToken();
-                    String assemblyOperator = TranslateToAssembly(tokenOperator.description);
-                    if(CurrentToken("+")){
-                        Expect("+");
-                    }
-                    else{
-                        Expect("-");
-                    }
-                    if(!Expresion())
-                        return false;
-                    AddInstruction(assemblyOperator);
-                    return true;
+                        Token tokenOperator = GetCurrentToken();
+                        if(_stackIsCondition.isEmpty()){
+                        _stackOperadores.push(tokenOperator);
+                        }
+                        String assemblyOperator = TranslateToAssembly(tokenOperator.description);
+                       
+                        if(CurrentToken("+")){
+                                Expect("+");           
+                        }
+                        else{
+                                Expect("-");
+                        }
+                       
+                        if(!Expresion())
+                                return false;
+                        
+                        while(!_stackOperadores.isEmpty())
+                        	AddInstruction(TranslateToAssembly(_stackOperadores.pop().description));
+                        return true;
                 }
+               /* if(_stackIsCondition.isEmpty()){
+               
+                String sresultado = solve(_ListaExpresion);
+                System.out.println("Resultado: "+sresultado);
+                }
+                */
+                
                 return true;
-            }
-            return false;
-    }
+        }
+        return false;
+}
     public static boolean Termino() throws IOException{
+        if(Factor()){
+                if(CurrentToken("*") || CurrentToken("/") || CurrentToken("%")){
+                        Token tokenOperator = GetCurrentToken();
+                        if(_stackIsCondition.isEmpty()){
+                        _stackOperadores.push(tokenOperator);
+                        }
+                        String assemblyOperator = TranslateToAssembly(tokenOperator.description);
+                        if(CurrentToken("*"))
+                                Expect("*");
+                        else{
+                                if(CurrentToken("/"))
+                                        Expect("/");
+                                else
+                                        Expect("%");
+                        }
 
-            if(Factor()){
-                    if(CurrentToken("*") || CurrentToken("/") || CurrentToken("%")){
-                            Token tokenOperator = GetCurrentToken();
-                            String assemblyOperator = TranslateToAssembly(tokenOperator.description);
-                            if(CurrentToken("*"))
-                                    Expect("*");
-                            else{
-                                    if(CurrentToken("/"))
-                                            Expect("/");
-                                    else
-                                            Expect("%");
-                            }
-
-                            if(!Termino())
-                                    return false;
-                            AddInstruction(assemblyOperator);
-                            return true;
-                    }
-                    return true;
-            }
-            return false;
-    }
+                        if(!Termino())
+                                return false;
+                        //AddInstruction(assemblyOperator);
+                        if(_stackIsCondition.isEmpty())
+                        	if(!_stackOperadores.isEmpty())
+                        		if(!_IndiceVector)
+                        			AddInstruction(TranslateToAssembly(_stackOperadores.pop().description));
+                        			
+                        return true;
+                }
+                if(_stackIsCondition.isEmpty())
+                	if(!_stackOperadores.isEmpty())
+                		if(!_IndiceVector)
+                			if(!_Parentesis){
+                			AddInstruction(TranslateToAssembly(_stackOperadores.pop().description));
+                		}
+                return true;
+        }
+        return false;
+}
     public static boolean Factor() throws IOException{
-            if(CurrentTokenInFirst("Valor")){
-                    return Valor();
-            }
-            if(CurrentToken("(")){
-                    Expect("(");
-                    if(!Expresion())
-                            return false;
-                    return Expect(")");
-            }
-            return false;
-    }
+        if(CurrentTokenInFirst("Valor")){
+                return Valor();
+        }
+        if(CurrentToken("(")){
+                Expect("(");
+                _Parentesis = true;
+                if(!Expresion())
+                        return false;
+                _Parentesis = false;
+                return Expect(")");
+                
+        }
+        return false;
+}
     public static boolean Operacion() throws IOException {
         if (!Operador())
             return false;
@@ -1229,39 +1287,40 @@ public class Compiler {
     public static boolean Valor() throws IOException{
         // 43 - Constante, 44 - Variable Declarada
         
-         Token tokenValor = GetCurrentToken();
-         
-         if(tokenValor.code == 43 && tokenValor.info == "Char"){
-             String regex = "[\"\'a-z A-Z]+";
-             if(tokenValor.description.matches(regex) && tokenValor.description.length() > 3){
-                 return false;
-             }
-         }
-         
+    	 Token tokenValor = GetCurrentToken();
         _stackValoresExpresion.push(tokenValor);
-        if(!_stackTokensInIndex.isEmpty()){
-        	_stackTokensInIndex.push(_stackTokensInIndex.pop()+1);
-        }
-            
+        if(!_stackTokensInIndex.isEmpty())
+            _stackTokensInIndex.push(_stackTokensInIndex.pop()+1);
         
         if(CurrentTokenInFirst("Variable")){
+       
            if(!Variable())
-               return false;
+        	   return false;       
            AddValue(tokenValor);
+           if(_stackIsCondition.isEmpty()){
+        	   if(_IndiceVector)
+        		   if(!_stackOperadores.isEmpty())
+        			   AddInstruction(TranslateToAssembly(_stackOperadores.pop().description));
+        		
+           //if(!_stackOperadores.isEmpty())
+        //	  AddInstruction(TranslateToAssembly(_stackOperadores.pop().description));
+        	   
+           }
            return true;
         }
         
-        
         if(!Expect(43)){
-            if(!_stackTokensInIndex.isEmpty()){
-            	_stackTokensInIndex.push(_stackTokensInIndex.pop()-1);
-            }
-            
+            if(!_stackTokensInIndex.isEmpty())
+            _stackTokensInIndex.push(_stackTokensInIndex.pop()-1);
             _stackValoresExpresion.pop();
            return false;
         }
         
         AddValue(tokenValor);
+        if(_stackIsCondition.isEmpty()){
+        //	if(!_stackOperadores.isEmpty())
+         // 	  AddInstruction(TranslateToAssembly(_stackOperadores.pop().description));
+        }
         return true;
     }
     public static boolean While() throws IOException {
@@ -1958,66 +2017,57 @@ public class Compiler {
         if(tokenToAdd.code == 43){
          switch(tokenToAdd.info)
         {
-            case "Int":
-                AddInstruction("PUSHKI");
-                AddInteger(Integer.parseInt(tokenToAdd.description));
-                break;
-            case "DoubleFloat":
-                AddInstruction("PUSHKD");
-                AddDouble(Double.parseDouble(tokenToAdd.description));
-                break;
-            case "String":
-                AddInstruction("PUSHKS");
-                AddString(tokenToAdd.description);
-                break;
-            case "Char":
-                AddInstruction("PUSHKC");
-                String regex = "[\"\'0-9]+";
-                if(tokenToAdd.description.matches(regex) && tokenToAdd.description.length() > 3){
-                    Pattern p = Pattern.compile("[0-9]+");
-                    Matcher m = p.matcher(tokenToAdd.description);
-                    if (m.find()) {
-                       AddChar(Integer.parseInt(m.group(0)));
-                    }
-                }
-                else
-                    AddChar(tokenToAdd.description.charAt(1));
-                break;
-            }
+                case "Int":
+                        AddInstruction("PUSHKI");
+                        AddInteger(Integer.parseInt(tokenToAdd.description));
+                        break;
+                case "DoubleFloat":
+                        AddInstruction("PUSHKD");
+                        AddDouble(Double.parseDouble(tokenToAdd.description));
+                        break;
+                case "String":
+                        AddInstruction("PUSHKS");
+                        AddString(tokenToAdd.description);
+                        break;
+                case "Char":
+                        AddInstruction("PUSHKC");
+                        AddChar(tokenToAdd.description.charAt(1));
+                        break;
+        }
         }
         // ES VARIABLE
         else{
                 switch(GetVariableType(tokenToAdd.description))
         {
                 case "Int":
-                        if(!IsArray(tokenToAdd.description))
-                            AddInstruction("PUSHI");
-                        else
-                            AddInstruction("PUSHVI");
+                		if(!IsArray(tokenToAdd.description))
+                			AddInstruction("PUSHI");
+                    	else
+                    		AddInstruction("PUSHVI");
                         break;
                 case "Double":
-                        if(!IsArray(tokenToAdd.description))
-                            AddInstruction("PUSHD");
-                        else
-                            AddInstruction("PUSHVD");                            
-                        break;
+                		if(!IsArray(tokenToAdd.description))
+                			AddInstruction("PUSHD");
+                		else
+                			AddInstruction("PUSHVD");                            
+                		break;
                 case "Float":
-                        if(!IsArray(tokenToAdd.description))
-                            AddInstruction("PUSHF");
-                        else
-                            AddInstruction("PUSHVF");
-                        break;
+                		if(!IsArray(tokenToAdd.description))
+                			AddInstruction("PUSHF");
+                		else
+                			AddInstruction("PUSHVF");
+                    	break;
                 case "String":
-                        if(!IsArray(tokenToAdd.description))
-                            AddInstruction("PUSHS");
-                        else
-                            AddInstruction("PUSHVS");
+                		if(!IsArray(tokenToAdd.description))
+            				AddInstruction("PUSHS");
+                		else
+                			AddInstruction("PUSHVS");
                         break;
                 case "Char":
-                        if(!IsArray(tokenToAdd.description))
-                            AddInstruction("PUSHC");
-                        else
-                            AddInstruction("PUSHVC");
+                		if(!IsArray(tokenToAdd.description))
+                			AddInstruction("PUSHC");
+                		else
+                			AddInstruction("PUSHVC");
                         break;
         }
 
