@@ -734,12 +734,19 @@ public class Compiler {
             return false;
         if (!Expect("}"))
             return false;
+
+        Tag tag2 = newTag();
+        AddInstruction("JMP");
+        AddTag(tag2);
         
         UpdateTagInKWA(tag1,true);
         
         if (CurrentTokenInFirst("Else"))
             if (!Else())
                 return false;
+        
+        UpdateTagInKWA(tag2,true);
+
         return true;
     }
     public static boolean Else() throws IOException{
