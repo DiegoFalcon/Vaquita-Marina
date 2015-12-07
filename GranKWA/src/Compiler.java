@@ -179,65 +179,57 @@ public class Compiler {
     }
     public static boolean Variable() throws IOException{
         Token variable = GetCurrentToken();
-                    if(!CurrentToken(44) && !CurrentToken(45))
-                            return false;
-
-                    if(CurrentToken(44))
-                            if(!Expect(44))
-                                    return false;
-                    if(CurrentToken(45))
-                            if(!Expect(45))
-                                    return false;
-            if(CurrentToken("[")){
-            	if(_isAssigned)
-            		_isArrayAssignment = true;
-              if(!Expect("[")){
-            	  _isArrayAssignment = false;
-            	  _arrayTmp = new byte[0];
-                 return false;
-              }
-              _stackTokensInIndex.push(0);
-              if(!IndiceVector(variable)){
-            	  _isArrayAssignment = false;
-            	  _arrayTmp = new byte[0];
-            	  return false;
-              }
-              //AddInstruction("POPINDEX");
+        if(!Expect(44))
+            return false;
+        if(CurrentToken("[")){
+            if(_isAssigned)
+                _isArrayAssignment = true;
+          if(!Expect("[")){
               _isArrayAssignment = false;
-               if(!Expect("]"))
-                 return false;
-            }
-            return true;
+              _arrayTmp = new byte[0];
+             return false;
+          }
+          _stackTokensInIndex.push(0);
+          if(!IndiceVector(variable)){
+              _isArrayAssignment = false;
+              _arrayTmp = new byte[0];
+              return false;
+          }
+          _isArrayAssignment = false;
+           if(!Expect("]"))
+             return false;
+        }
+        return true;
     }
-        public static boolean IndiceVector(Token variable) throws IOException{
-            String size = GetCurrentToken().description;
-            //if(!_stackOperadores.isEmpty())
-            //	System.out.println("aqui es");
-            _IndiceVector = true;
-                if(CurrentTokenInFirst("Expresion"))
-                    if(!Expresion()){
-                    	_IndiceVector = false;
-                        return false;
-                        
-                    }
-                
-                if(!checkIfIndexArray()){
+    public static boolean IndiceVector(Token variable) throws IOException{
+        String size = GetCurrentToken().description;
+        //if(!_stackOperadores.isEmpty())
+        //	System.out.println("aqui es");
+        _IndiceVector = true;
+            if(CurrentTokenInFirst("Expresion"))
+                if(!Expresion()){
                 	_IndiceVector = false;
                     return false;
                     
                 }
+            
+            if(!checkIfIndexArray()){
+            	_IndiceVector = false;
+                return false;
                 
-                if(!_isDeclaration)
-                    AddInstruction("POPINDEX");
-                else
-                    for(int i=0 ; i<Integer.parseInt(size) ; i++)
-                        AddToVariableTable(variable.description,_currentTypeVariable);
-                //if(CurrentTokenInFirst("IncrementoDecremento"))
-                //    if(!IncrementoDecremento())
-                //        return false;
-                _IndiceVector = false;
-                return true;
-    }
+            }
+            
+            if(!_isDeclaration)
+                AddInstruction("POPINDEX");
+            else
+                for(int i=0 ; i<Integer.parseInt(size) ; i++)
+                    AddToVariableTable(variable.description,_currentTypeVariable);
+            //if(CurrentTokenInFirst("IncrementoDecremento"))
+            //    if(!IncrementoDecremento())
+            //        return false;
+            _IndiceVector = false;
+            return true;
+}
     public static boolean checkIfIndexArray() throws IOException{
         String variableType;
         Token token;
@@ -1287,41 +1279,48 @@ public class Compiler {
     public static boolean Valor() throws IOException{
         // 43 - Constante, 44 - Variable Declarada
         
-    	 Token tokenValor = GetCurrentToken();
+         Token tokenValor = GetCurrentToken();
+         if(tokenValor.code == 43 && tokenValor.info == "Char"){
+             String regex = "[\"\'a-z A-Z]+";
+             if(tokenValor.description.matches(regex) && tokenValor.description.length() > 3){
+                 return false;
+             }
+         }
+         
         _stackValoresExpresion.push(tokenValor);
         if(!_stackTokensInIndex.isEmpty())
             _stackTokensInIndex.push(_stackTokensInIndex.pop()+1);
         
         if(CurrentTokenInFirst("Variable")){
-       
-           if(!Variable())
-        	   return false;       
-           AddValue(tokenValor);
-           if(_stackIsCondition.isEmpty()){
-        	   if(_IndiceVector)
-        		   if(!_stackOperadores.isEmpty())
-        			   AddInstruction(TranslateToAssembly(_stackOperadores.pop().description));
-        		
-           //if(!_stackOperadores.isEmpty())
-        //	  AddInstruction(TranslateToAssembly(_stackOperadores.pop().description));
-        	   
-           }
-           return true;
-        }
-        
-        if(!Expect(43)){
-            if(!_stackTokensInIndex.isEmpty())
-            _stackTokensInIndex.push(_stackTokensInIndex.pop()-1);
-            _stackValoresExpresion.pop();
-           return false;
-        }
-        
-        AddValue(tokenValor);
-        if(_stackIsCondition.isEmpty()){
-        //	if(!_stackOperadores.isEmpty())
-         // 	  AddInstruction(TranslateToAssembly(_stackOperadores.pop().description));
-        }
-        return true;
+            
+            if(!Variable())
+         	   return false;       
+            AddValue(tokenValor);
+            if(_stackIsCondition.isEmpty()){
+         	   if(_IndiceVector)
+         		   if(!_stackOperadores.isEmpty())
+         			   AddInstruction(TranslateToAssembly(_stackOperadores.pop().description));
+         		
+            //if(!_stackOperadores.isEmpty())
+         //	  AddInstruction(TranslateToAssembly(_stackOperadores.pop().description));
+         	   
+            }
+            return true;
+         }
+         
+         if(!Expect(43)){
+             if(!_stackTokensInIndex.isEmpty())
+             _stackTokensInIndex.push(_stackTokensInIndex.pop()-1);
+             _stackValoresExpresion.pop();
+            return false;
+         }
+         
+         AddValue(tokenValor);
+         if(_stackIsCondition.isEmpty()){
+         //	if(!_stackOperadores.isEmpty())
+          // 	  AddInstruction(TranslateToAssembly(_stackOperadores.pop().description));
+         }
+         return true;
     }
     public static boolean While() throws IOException {
         if (!Expect("while"))
@@ -2030,9 +2029,18 @@ public class Compiler {
                         AddString(tokenToAdd.description);
                         break;
                 case "Char":
-                        AddInstruction("PUSHKC");
+                    AddInstruction("PUSHKC");
+                    String regex = "[\"\'0-9]+";
+                    if(tokenToAdd.description.matches(regex) && tokenToAdd.description.length() > 3){
+                        Pattern p = Pattern.compile("[0-9]+");
+                        Matcher m = p.matcher(tokenToAdd.description);
+                        if (m.find()) {
+                           AddChar(Integer.parseInt(m.group(0)));
+                        }
+                    }
+                    else
                         AddChar(tokenToAdd.description.charAt(1));
-                        break;
+                    break;
         }
         }
         // ES VARIABLE
