@@ -960,6 +960,7 @@ public class Compiler {
         return true;
     }
     public static boolean Asignacion(boolean usesSemiColon) throws IOException{
+    		boolean EsConcatenacion = false;
             if(CurrentTokenInFirst("IncrementoDecremento")){
                     if(!IncrementoDecremento())
                             return false;
@@ -978,27 +979,29 @@ public class Compiler {
                     Token tokenOperator = GetCurrentToken();
                     if(!OperadorAsignacion())
                             return false;
+                    
                     if(!tokenOperator.description.equals("="))
-                            AddValue(tokenVariable);
-
+                    	EsConcatenacion = true;
+                    
                     _stackValoresExpresion.clear();
                     if(!Expresion())
                             return false;
+                   
                     while(!_stackValoresExpresion.isEmpty()){
                     Token tokenExpresion = _stackValoresExpresion.pop();
                     
                     if(tokenExpresion.code == 43){
-                    if(!AddAsignment(tokenVariable, tokenOperator,tokenExpresion.info))
+                    if(!AddAsignment(tokenVariable, tokenOperator,tokenExpresion.info,EsConcatenacion))
                             return false;
                     }
                     else{
-                    
-                    	
-                    if(!AddAsignment(tokenVariable, tokenOperator,GetVariableType(tokenExpresion.description)))
+                    if(!AddAsignment(tokenVariable, tokenOperator,GetVariableType(tokenExpresion.description),EsConcatenacion))
                             return false;
                     }//else        
                     }//while(!_stackValoresExpresion.isEmpty()){
-                   
+                    //if(!tokenOperator.description.equals("=")){
+                    //    AddValue(tokenVariable);
+                    //}
                     if(usesSemiColon)
                         return Expect(";");
                     return true;        
