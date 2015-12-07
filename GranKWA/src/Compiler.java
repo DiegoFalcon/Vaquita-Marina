@@ -133,7 +133,7 @@ public class Compiler {
     public static boolean ListaVariables() throws IOException {
             // <Variables> {,<ListaVariables>}
             String currentNameVariable = GetCurrentToken().description;
-            if (!Expect(45))
+            if (!VariableDeclaracion())
                     return false;
             if(_stackIsCondition.isEmpty())
                 if(!IsArray(currentNameVariable))
@@ -150,22 +150,10 @@ public class Compiler {
 
             return true;
     }
-    public static boolean Variable() throws IOException{
-    Token variable = GetCurrentToken();
-                //if(!CurrentToken(44) && !CurrentToken(45))
-                //return false;
-
-        if(!Expect(44))
+    public static boolean VariableDeclaracion() throws IOException{
+        Token variable = GetCurrentToken();
+        if(!Expect(45))
             return false;
-        //if((_isDeclaration && !Expect(45)) || (!_isDeclaration) && !Expect(44))
-        //  return false;
-            
-                //if(CurrentToken(44))
-                //        if(!Expect(44))
-                //                return false;
-                //if(CurrentToken(45))
-                //        if(!Expect(45))
-                //                return false;
         if(CurrentToken("[")){
             if(_isAssigned)
                 _isArrayAssignment = true;
@@ -180,7 +168,30 @@ public class Compiler {
               _arrayTmp = new byte[0];
               return false;
           }
-          //AddInstruction("POPINDEX");
+          _isArrayAssignment = false;
+           if(!Expect("]"))
+             return false;
+        }
+        return true;
+    }
+    public static boolean Variable() throws IOException{
+        Token variable = GetCurrentToken();
+        if(!Expect(44))
+            return false;
+        if(CurrentToken("[")){
+            if(_isAssigned)
+                _isArrayAssignment = true;
+          if(!Expect("[")){
+              _isArrayAssignment = false;
+              _arrayTmp = new byte[0];
+             return false;
+          }
+          _stackTokensInIndex.push(0);
+          if(!IndiceVector(variable)){
+              _isArrayAssignment = false;
+              _arrayTmp = new byte[0];
+              return false;
+          }
           _isArrayAssignment = false;
            if(!Expect("]"))
              return false;
@@ -567,15 +578,15 @@ public class Compiler {
         }
     }
     private static boolean IsArray(String variable){
-    	int count = 0;
-    	for(int i=0; i<_variablesTable.length ; i++){
+        int count = 0;
+        for(int i=0; i<_variablesTable.length ; i++){
             if(_variablesTable[i].name.equals(variable)){
                     count++;
             }
-    	}
-    	if(count>1)
-    		return true;
-    	return false;
+        }
+        if(count>1)
+            return true;
+        return false;
     }
     public static boolean Instruccion() throws IOException {
             // <For> | <While> | <If> | <Asignaci�n> | <Lectura> | <Escritura> |
@@ -621,8 +632,8 @@ public class Compiler {
         // 0 - no se mandó desde CTIF
         // 1 - Se mandó desde currentTokenInFirst
         
-    		
-    		String variableName = GetCurrentToken().description;
+            
+            String variableName = GetCurrentToken().description;
             if (!Variable())
                 return false;
 
@@ -1212,7 +1223,7 @@ public class Compiler {
     public static boolean Valor() throws IOException{
         // 43 - Constante, 44 - Variable Declarada
         
-    	 Token tokenValor = GetCurrentToken();
+         Token tokenValor = GetCurrentToken();
          if(tokenValor.code == 43 && tokenValor.info == "Char"){
              String regex = "[\"\'a-z A-Z]+";
              if(tokenValor.description.matches(regex) && tokenValor.description.length() > 3){
@@ -1227,7 +1238,7 @@ public class Compiler {
         if(CurrentTokenInFirst("Variable")){
        
            if(!Variable())
-        	   return false;
+               return false;
            AddValue(tokenValor);
            return true;
         }
@@ -1930,34 +1941,34 @@ public class Compiler {
                 switch(GetVariableType(tokenToAdd.description))
         {
                 case "Int":
-                		if(!IsArray(tokenToAdd.description))
-                			AddInstruction("PUSHI");
-                    	else
-                    		AddInstruction("PUSHVI");
+                        if(!IsArray(tokenToAdd.description))
+                            AddInstruction("PUSHI");
+                        else
+                            AddInstruction("PUSHVI");
                         break;
                 case "Double":
-                		if(!IsArray(tokenToAdd.description))
-                			AddInstruction("PUSHD");
-                		else
-                			AddInstruction("PUSHVD");                            
-                		break;
+                        if(!IsArray(tokenToAdd.description))
+                            AddInstruction("PUSHD");
+                        else
+                            AddInstruction("PUSHVD");                            
+                        break;
                 case "Float":
-                		if(!IsArray(tokenToAdd.description))
-                			AddInstruction("PUSHF");
-                		else
-                			AddInstruction("PUSHVF");
-                    	break;
+                        if(!IsArray(tokenToAdd.description))
+                            AddInstruction("PUSHF");
+                        else
+                            AddInstruction("PUSHVF");
+                        break;
                 case "String":
-                		if(!IsArray(tokenToAdd.description))
-            				AddInstruction("PUSHS");
-                		else
-                			AddInstruction("PUSHVS");
+                        if(!IsArray(tokenToAdd.description))
+                            AddInstruction("PUSHS");
+                        else
+                            AddInstruction("PUSHVS");
                         break;
                 case "Char":
-                		if(!IsArray(tokenToAdd.description))
-                			AddInstruction("PUSHC");
-                		else
-                			AddInstruction("PUSHVC");
+                        if(!IsArray(tokenToAdd.description))
+                            AddInstruction("PUSHC");
+                        else
+                            AddInstruction("PUSHVC");
                         break;
         }
 
