@@ -841,24 +841,27 @@ public class Compiler {
             // <Condición> { <ANDOR> <Condiciones>} | (<Condiciones>)
 
             if(CurrentTokenInFirst("Condicion")){
-                    if(!Condicion())
-                            return false;
-                    if(CurrentTokenInFirst("AndOr")){
-                            if(!AndOr())
-                                    return false;
-                            if (!Condiciones())
-                                    return false;           
-                    }
+                if(!Condicion())
+                        return false;
+                if(CurrentTokenInFirst("AndOr")){
+                        if(!AndOr())
+                                return false;
+                        if (!Condiciones())
+                                return false;           
+                }
             }
-
-            if(CurrentToken("(")){
-                    if(!Expect("("))
-                            return false;
-                    if(!Condiciones())
-                            return false;
-                    if(!Expect(")"))
-                            return false;
-            }   
+            else{
+                if(CurrentToken("(")){
+                        if(!Expect("("))
+                                return false;
+                        if(!Condiciones())
+                                return false;
+                        if(!Expect(")"))
+                                return false;
+                }
+                else
+                    return false;
+            }
             return true;
 
     }
