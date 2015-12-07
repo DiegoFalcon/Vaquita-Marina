@@ -1574,7 +1574,9 @@ public class Compiler {
 	                                    
 	                                }
 	                            } else {
-	                                isComplete = true;
+	                            	if(!tokenWord.equals("")){
+        	                    		isComplete = true;
+        	                    	}
 	                            }
 	                            
 	                        } else {
