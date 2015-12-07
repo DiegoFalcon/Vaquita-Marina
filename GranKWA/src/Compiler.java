@@ -48,7 +48,7 @@ public class Compiler {
     static Stack<Token> _stackOperadores = new Stack<Token>();
     static boolean _IndiceVector;
     static boolean _Parentesis = false;
-    
+    static Token _variableAsignacion = null;
     public static void mainCompiler() throws IOException {
         // TODO Auto-generated method stub
         Initialize();
@@ -970,6 +970,7 @@ public class Compiler {
             }
             if(CurrentTokenInFirst("Variable")){
                     Token tokenVariable = GetCurrentToken();
+                    _variableAsignacion = tokenVariable;
                     _isAssigned = true;
                     if(!Variable()){
                       _isAssigned = false;
@@ -977,6 +978,7 @@ public class Compiler {
                     }
                     _isAssigned = false;
                     Token tokenOperator = GetCurrentToken();
+                    
                     if(!OperadorAsignacion())
                             return false;
                     
@@ -1002,6 +1004,7 @@ public class Compiler {
                     //if(!tokenOperator.description.equals("=")){
                     //    AddValue(tokenVariable);
                     //}
+                    _variableAsignacion = null;
                     if(usesSemiColon)
                         return Expect(";");
                     return true;        
@@ -2018,17 +2021,30 @@ public class Compiler {
     }
     private static void AddValue(Token tokenToAdd) throws IOException {
         // ES CONSTANTE
+    	String info = "";
+    	
         if(tokenToAdd.code == 43){
-         switch(tokenToAdd.info)
+        	if(_variableAsignacion!=null)
+        		info = GetVariableType(_variableAsignacion.description);
+        	else
+        		info = tokenToAdd.info;
+         switch(info)
         {
                 case "Int":
                         AddInstruction("PUSHKI");
-                        AddInteger(Integer.parseInt(tokenToAdd.description));
+                       // System.out.println(Integer.parseInt(tokenToAdd.description));
+                        double doubleTemporal = Double.parseDouble(tokenToAdd.description);
+                        int integerReal = (int) doubleTemporal;
+                        AddInteger(integerReal);
                         break;
                 case "DoubleFloat":
                         AddInstruction("PUSHKD");
                         AddDouble(Double.parseDouble(tokenToAdd.description));
                         break;
+                case "Double":
+                		AddInstruction("PUSHKD");
+                		AddDouble(Double.parseDouble(tokenToAdd.description));
+                	break;
                 case "String":
                         AddInstruction("PUSHKS");
                         AddString(tokenToAdd.description);
