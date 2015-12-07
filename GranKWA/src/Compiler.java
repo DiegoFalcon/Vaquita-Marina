@@ -59,14 +59,14 @@ public class Compiler {
             _callMachine.mainVirtualMachine(_filename);
             _filename = null;
         }
-        else
-            JOptionPane.showMessageDialog(null,"Ocurrió un error en la semántica que no se identificó.","Alerta", JOptionPane.ERROR_MESSAGE);
+            //JOptionPane.showMessageDialog(null,"Ocurrió un error en la semántica que no se identificó.","Alerta", JOptionPane.ERROR_MESSAGE);
     }
     public static void Initialize() throws IOException{
         lastByteRead = 0;
         lastTokenReadOperator = false;
         lastTokenReadSubstractOperator = false;
         isFileFinished = false;
+        lineReadNumber = 1;
         _tagNumber = 0;
         _SC = 0;
         _variablesTable = new Variable[0];
@@ -274,7 +274,7 @@ public class Compiler {
                     return true;
             }
             if (_stackIsCondition.isEmpty()) {
-                    MessageError("Expect", "Token no identificado: " + tokenCode + ", se esperaba un: "+_currentToken.description);
+                    MessageError("Expect", "Token no identificado: " + tokenCode + ", se esperaba un: "+_currentToken.description+". En la linea "+lineReadNumber);
             }
             return false;
     }
@@ -296,7 +296,7 @@ public class Compiler {
                     return true;
             }
             if (_stackIsCondition.isEmpty()) {
-                    MessageError("Expect", "Codigo de Token no identificado: " + instruction + ", se esperaba un: "+_currentToken.code);
+                    MessageError("Expect", "Codigo de Token no identificado: " + instruction + ", se esperaba un: "+_currentToken.code +". En la linea "+lineReadNumber);
             }
             return false;
     }
@@ -426,7 +426,7 @@ public class Compiler {
     }
     public static void GuardarDatosRecursividad(){
         
-        DatosRecursividad dr = new DatosRecursividad(lastByteRead, lastTokenReadSubstractOperator, lastTokenReadOperator, _stackValoresExpresion, _stackTokensInIndex);
+        DatosRecursividad dr = new DatosRecursividad(lastByteRead, lastTokenReadSubstractOperator, lastTokenReadOperator, _stackValoresExpresion, _stackTokensInIndex,lineReadNumber);
         _stackIsCondition.push(dr);
     }
     public static void RestaurarDatosRecursividad(){
@@ -434,6 +434,7 @@ public class Compiler {
         lastByteRead = dr.lastByteRead;
         lastTokenReadSubstractOperator = dr.lastTokenReadSubstractOperator;
         lastTokenReadOperator = dr.lastTokenReadOperator;
+        lineReadNumber = dr.lineReadNumber;
         
           _stackValoresExpresion.clear();
           while(!dr.stackValoresExpresion.isEmpty())
@@ -613,7 +614,9 @@ public class Compiler {
                     return Lectura();
             }
             _currentToken = Tokenizer();
-            MessageError("InstruccionInvalida","La instruccion "+_currentToken.description+" no es valida.");
+            
+            MessageError("InstruccionInvalida","La instruccion "+_currentToken.description+" no es valida. En la linea "+lineReadNumber);
+            
             return false;
     }
     public static boolean Lectura() throws IOException{
