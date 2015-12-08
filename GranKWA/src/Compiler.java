@@ -1079,7 +1079,7 @@ public class Compiler {
         }
         //else if (!variableType.equals(tipoDatoExpresion) && (!variableType.equals("Double") && !tipoDatoExpresion.equals("Int"))){
         else if(!variableType.equals(tipoDatoExpresion)){
-            if(!variableType.equals("Double") || !tipoDatoExpresion.equals("Int"))
+            if((!variableType.equals("Double") && !variableType.equals("Float")) || !tipoDatoExpresion.equals("Int"))
                 return false;
         }
         
