@@ -1,7 +1,7 @@
 #int numero;
 #int entero;
-#int entero2;
+#int enteroo;
 entero = 40000;
-entero2 = 20000;
+enteroo = 20000;
 numero =  40000 / 5 + 600 - (12 * 4 - 11);
 write numero;

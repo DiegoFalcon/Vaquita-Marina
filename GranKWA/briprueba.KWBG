@@ -1,0 +1,24 @@
+#int vectores[10];
+#int i;
+#int variable;
+#int temp;
+variable=0;
+
+vectores[1] = 0;
+vectores[0] = 133;
+vectores[2] = 32;
+vectores[3] = 76;
+vectores[4] = 89;
+
+for(i=0;i<4;i++)
+{
+write "VALOR:" + vectores[i+2/2-1] + "  ";
+temp = i+2/2-1;
+writeln "         INDICE: " + temp;
+}
+
+i++;
+temp = i+2/2-1;
+writeln "i =  " + i + "   temp: " + temp;
+writeln "No imprimire el vector en la posicion " + temp + " utilizando la formula dentro del vector";
+write vectores[i+2/2-1];

@@ -1,0 +1,66 @@
+#int opcion;
+#double farenheit,celcius,kelvin;
+writeln "Que deseas convertir?";
+writeln "1.-De Farenheit a Celcius";
+writeln "2.-De Farenheit a Kelvin";
+writeln "3.-De Celcius a Kelvin";
+writeln "4.-De Celcius a Farenheit";
+writeln "5.-De Kelvin a Celcius";
+writeln "6.-De Kelvin a Farenheit";
+
+while(opcion!=7)
+{
+read opcion;
+if(opcion==1)
+{
+	writeln "Ingresa los Farenheit";
+	read farenheit;
+	celcius= farenheit-32;
+	celcius*=59;
+	writeln farenheit + " F= " + celcius + " C ";
+}
+if(opcion==2)
+{
+	writeln "Ingresa los Farenheit";
+	read farenheit;
+	kelvin= farenheit-32;
+	kelvin*=59;
+	kelvin+=273;
+	writeln farenheit + " F= " + kelvin + " K ";
+}
+if(opcion==3)
+{
+	writeln "Ingresa los Celcius";
+	read celcius;
+	kelvin=celcius+273;
+	writeln celcius + " C= " + kelvin + " K ";
+}
+if(opcion==4)
+{
+	writeln "Ingresa los Celcius";
+	read celcius;
+	farenheit=celcius/(5/9);
+	farenheit+=32;
+	writeln celcius + " C= " + farenheit + " F ";
+}
+if(opcion==5)
+{
+	writeln "Ingresa los Kelvin";
+	read kelvin;
+	celcius= kelvin-273;
+	writeln kelvin + " K= " + celcius + " C ";
+}
+if(opcion==6)
+{
+	writeln "Ingresa los Kelvin";
+	read kelvin;
+	celcius= kelvin-273;
+	farenheit=celcius/(5/9);
+	farenheit+=32;
+	writeln kelvin + " K= " + farenheit + " F ";
+}
+if(opcion<1 OR opcion>7)
+{
+	writeln "Favor de Ingresar una opcion valida";
+}
+}
