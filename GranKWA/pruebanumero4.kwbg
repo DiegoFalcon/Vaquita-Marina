@@ -1,0 +1,8 @@
+#int numero;
+#int entero[2];
+entero[0] = 10000;
+entero[1] = 20000;
+numero =  entero[0] + entero[1] - 4000 - 7 * 11;
+writeln numero;
+writeln entero[0];
+writeln entero[1];

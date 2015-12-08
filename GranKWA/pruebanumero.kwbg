@@ -1,0 +1,9 @@
+#int numero;
+#int entero;
+#int entero2;
+entero = 10000;
+entero2 = 20000;
+numero =  entero2 + entero - 4000 - 7 * 11;
+writeln numero;
+numero = (5000 / 1000) * 20;
+writeln numero;

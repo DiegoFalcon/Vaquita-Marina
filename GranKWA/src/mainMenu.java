@@ -142,7 +142,11 @@ public class mainMenu extends javax.swing.JFrame {
         // TODO add your handling code here:
          virtualMachine test3 = new virtualMachine();
         try {
-            test3.mainVirtualMachine(null);
+             try {
+                 test3.mainVirtualMachine(null);
+             } catch (InterruptedException ex) {
+                 Logger.getLogger(mainMenu.class.getName()).log(Level.SEVERE, null, ex);
+             }
         } catch (IOException ex) {
             Logger.getLogger(NewJFrame.class.getName()).log(Level.SEVERE, null, ex);
         }

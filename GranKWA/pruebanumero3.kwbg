@@ -1,0 +1,14 @@
+#int entero[5];
+#int i,j;
+for(i=0;i<5;i++)
+{
+	entero[i]=i*10000;
+}
+entero[2] += entero[1] - 4000 - 7 * 11;
+entero[3] += 1000 + 4 * 20 + 3 * 4;
+entero[4] = entero[4] / 5 + 600 - (12 * 4 - 11);
+
+for(i=0;i<5;i++)
+{
+	writeln entero[i];
+}

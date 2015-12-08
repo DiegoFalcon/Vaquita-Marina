@@ -1,5 +1,7 @@
 import java.awt.FileDialog;
 import java.awt.Frame;
+import java.awt.event.ActionEvent;
+//import java.awt.event.KeyEvent;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -7,10 +9,12 @@ import java.nio.file.Files;
 //import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Scanner;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+//import java.util.logging.Level;
+//import java.util.logging.Logger;
 import javax.swing.JOptionPane;
-import javax.swing.text.BadLocationException;
+//import javax.swing.text.BadLocationException;
 
 public class virtualMachine {
     //Contador de la linea actual (PC)  
@@ -28,8 +32,13 @@ public class virtualMachine {
     //Variable predefinida para comparar con valor NULL
     static char _nullValue='\u0000';
     static String _fileName;
+    static boolean inputReady;
+    //static Thread hilo1=new Thread();
     
-    public static void mainVirtualMachine(String nameReceived) throws IOException {
+    
+    public static synchronized void mainVirtualMachine(String nameReceived) throws IOException, InterruptedException {
+        //hilo1.start();
+        
         _currentLine = 0;
         _dir = 0;
         _index = 0;
@@ -44,7 +53,8 @@ public class virtualMachine {
         GetSD();
         RunVirtualMachine();
     }
-    public static void RunVirtualMachine(){
+    
+    public static void RunVirtualMachine() throws InterruptedException{
         while(_currentLine <= _sc.length && ByteToInstruction(_sc[_currentLine])!=0){
             //System.out.println(ByteToInstruction(_sc[_currentLine]));
 
@@ -432,15 +442,28 @@ public class virtualMachine {
         NewJFrame.jTextArea2.update(NewJFrame.jTextArea2.getGraphics());
         _currentLine += 2;
     }
-    public static void ReadI() {
-        Scanner scan=new Scanner(System.in);
+    public static void ReadI() throws InterruptedException {
         _currentLine++;
         int newValue = 0;
+        //inputReady = false;
+        //boolean estado = hilo1.isAlive();
+        //while(!inputReady)
+            //hilo1.wait();
+        
         try{
             //newValue = Integer.parseInt(scan.nextLine());
-            newValue = Integer.parseInt(JOptionPane.showInputDialog("Enter a Integer: "));
+            //NewJFrame.inputBox.setEnabled(true);
+            //NewJFrame.inputBox.setEditable(true);
+            //NewJFrame.inputBox.setFocusable(true);
+            //NewJFrame.inputBox.update(NewJFrame.inputBox.getGraphics());
+            //virtualMachine.hilo1.notify();
+            //hilo1.resume();
+            //if(inputReady){
+            //newValue=Integer.parseInt(NewJFrame.inputBox.getText());
+            //NewJFrame.inputBox.setEditable(true);
+            newValue = Integer.parseInt(JOptionPane.showInputDialog("Enter an Integer: "));
             _dir=GetDir();
-            }
+        }
         catch(Exception e){
             //System.out.println(e.getMessage());
             NewJFrame.jTextArea3.append(e.getMessage()+ "\n");
@@ -455,6 +478,9 @@ public class virtualMachine {
          double newValue = 0;
          try{
             //newValue = Double.parseDouble(scan.nextLine());
+            //NewJFrame.inputBox.setEnabled(true);
+            //newValue=Integer.parseInt(NewJFrame.inputBox.getText());
+            //NewJFrame.inputBox.setEnabled(false);
             newValue = Double.parseDouble(JOptionPane.showInputDialog("Enter a Double: "));
              _dir=GetDir();
              }
@@ -486,10 +512,13 @@ public class virtualMachine {
     public static void ReadC() {
          Scanner scan=new Scanner(System.in);
          _currentLine++;
-         char newValue = ' ';
+         String newValue = "";
          try{
-            //newValue = (scan.nextLine()).charAt(0);
-            newValue = JOptionPane.showInputDialog("Enter a char: ").charAt(0);
+            newValue = JOptionPane.showInputDialog("Enter a char: ");
+            if(newValue.length() > 2){
+                NewJFrame.jTextArea3.append("Char variable cannot have more than 1 character" + "\n");
+                NewJFrame.jTextArea3.update(NewJFrame.jTextArea3.getGraphics());
+            }
              _dir=GetDir();
              }
          catch(Exception e){
@@ -504,8 +533,12 @@ public class virtualMachine {
          Scanner scan=new Scanner(System.in);
          _currentLine++;
          String newValue = "";
+         
          try{
             //newValue = scan.nextLine();
+            //NewJFrame.inputBox.setEnabled(true);
+            //newValue=NewJFrame.inputBox.getText();
+            //NewJFrame.inputBox.setEnabled(false);
             newValue = JOptionPane.showInputDialog("Enter a String: ");
              _dir=GetDir();
              }
@@ -523,6 +556,10 @@ public class virtualMachine {
         _currentLine++;
         try{
             //newValue = Integer.parseInt(scan.nextLine());
+            //NewJFrame.inputBox.setEnabled(true);
+            //while (!inputReady){}             
+            //newValue=Integer.parseInt(NewJFrame.inputBox.getText());
+            //NewJFrame.inputBox.setEnabled(false);
             newValue = Integer.parseInt(JOptionPane.showInputDialog("Enter a number: "));
              _dir=GetDir();
         }
@@ -570,11 +607,15 @@ public class virtualMachine {
     }
     public static void ReadVC(){
          Scanner scan=new Scanner(System.in);
-         char newValue = ' ';
-         _currentLine++;
+         String newValue = "";
+         _currentLine++; 
          try{
-            //newValue = scan.nextLine().charAt(0);
-            newValue = JOptionPane.showInputDialog("Enter a char: ").charAt(0);
+            newValue = JOptionPane.showInputDialog("Enter a char: ");
+            if(newValue.length() > 2){
+                NewJFrame.jTextArea3.append("Char variable cannot have more than 1 character"+ "\n");
+                NewJFrame.jTextArea3.update(NewJFrame.jTextArea3.getGraphics());
+            }
+            
              _dir=GetDir();
          }
          catch(Exception e){
@@ -591,6 +632,9 @@ public class virtualMachine {
          _currentLine++;
          try{
             //newValue = scan.nextLine();
+            //NewJFrame.inputBox.setEnabled(true);
+            //newValue=NewJFrame.inputBox.getText();
+            //NewJFrame.inputBox.setEnabled(false);
             newValue = JOptionPane.showInputDialog("Enter a String: ");
              _dir=GetDir();
          }
