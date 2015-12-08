@@ -33,12 +33,8 @@ public class virtualMachine {
     static char _nullValue='\u0000';
     static String _fileName;
     static boolean inputReady;
-    //static Thread hilo1=new Thread();
     
-    
-    public static synchronized void mainVirtualMachine(String nameReceived) throws IOException, InterruptedException {
-        //hilo1.start();
-        
+    public static synchronized void mainVirtualMachine(String nameReceived) throws IOException, InterruptedException {      
         _currentLine = 0;
         _dir = 0;
         _index = 0;
@@ -274,16 +270,13 @@ public class virtualMachine {
         if (_fileName == null)
         {
             NewJFrame.jTextArea3.append("You cancelled the choice \n");
-            //System.out.println("You cancelled the choice");
             error=true;
         }
         else
         {
-            //System.out.println("You chose " + _fileName);
             NewJFrame.jTextArea3.append("You chose " + _fileName + "\n");
         }
         }catch(Exception e){
-            //System.out.println(e.getMessage());
             NewJFrame.jTextArea3.append(e.getMessage()+ "\n");
             NewJFrame.jTextArea3.update(NewJFrame.jTextArea3.getGraphics());
             error=true;
@@ -294,7 +287,7 @@ public class virtualMachine {
         
     }
     
-    //Leer Segmento de Cï¿½digo
+    //Leer Segmento de Codigo
     public static void GetSC() throws IOException{
         byte[] bytesInFile=Files.readAllBytes(Paths.get(_fileName));
         byte[] segment=new byte[2];
@@ -354,27 +347,22 @@ public class virtualMachine {
         switch (x)
         {
             case 0:
-                //System.out.print(GetVariableValue(_dir, esInt));
                 NewJFrame.jTextArea2.append(GetVariableValue(_dir, esInt) + "");
                 NewJFrame.jTextArea2.update(NewJFrame.jTextArea2.getGraphics());
                 break;
             case 1:
-                //System.out.print(GetVariableValue(_dir, esDouble));
                 NewJFrame.jTextArea2.append(GetVariableValue(_dir, esDouble) + "");
                 NewJFrame.jTextArea2.update(NewJFrame.jTextArea2.getGraphics());
                 break;
             case 2:
-                //System.out.print(GetVariableValue(_dir, esFloat));
                 NewJFrame.jTextArea2.append(GetVariableValue(_dir, esFloat) + "");
                 NewJFrame.jTextArea2.update(NewJFrame.jTextArea2.getGraphics());
                 break;
             case 3:
-                //System.out.print(GetVariableValue(_dir, esChar));
                 NewJFrame.jTextArea2.append(GetVariableValue(_dir, esChar) + "");
                 NewJFrame.jTextArea2.update(NewJFrame.jTextArea2.getGraphics());
                 break;
             case 4:
-                //System.out.print(GetVariableValue(_dir, esString));
                 NewJFrame.jTextArea2.append(GetVariableValue(_dir, esString) + "");
                 NewJFrame.jTextArea2.update(NewJFrame.jTextArea2.getGraphics());
                 break;
@@ -385,14 +373,12 @@ public class virtualMachine {
         String x="0";
         _currentLine++;
         x=GetConstantValue(x);
-        //System.out.print(x);
         NewJFrame.jTextArea2.append(x + "");
         NewJFrame.jTextArea2.update(NewJFrame.jTextArea2.getGraphics());
         _currentLine += x.length()+1;
     }
     public static void WRTLN(){
         _currentLine++;
-        //System.out.println("");
         NewJFrame.jTextArea2.append("" + "\n");
         NewJFrame.jTextArea2.update(NewJFrame.jTextArea2.getGraphics());
     }
@@ -400,7 +386,6 @@ public class virtualMachine {
         _currentLine++;
         int x=0;
         _dir = GetDir();
-        //System.out.print(GetVariableValue(_dir+_index*4, x));
         NewJFrame.jTextArea2.append(GetVariableValue(_dir+_index*4, x) + "");
         NewJFrame.jTextArea2.update(NewJFrame.jTextArea2.getGraphics());
         _currentLine += 2;
@@ -409,7 +394,6 @@ public class virtualMachine {
         _currentLine++;
         double x=0;
         _dir = GetDir();
-        //System.out.print(GetVariableValue(_dir+_index*8,x));
         NewJFrame.jTextArea2.append(GetVariableValue(_dir+_index*8,x) + "");
         NewJFrame.jTextArea2.update(NewJFrame.jTextArea2.getGraphics());
         
@@ -419,7 +403,6 @@ public class virtualMachine {
         _currentLine++;
         float x=0f;
         _dir = GetDir();
-        //System.out.print(GetVariableValue(_dir+_index*4, x));
         NewJFrame.jTextArea2.append(GetVariableValue(_dir+_index*4, x) + "");
         NewJFrame.jTextArea2.update(NewJFrame.jTextArea2.getGraphics());
         _currentLine +=2 ;
@@ -428,7 +411,6 @@ public class virtualMachine {
         _currentLine++;
         char x='0';
         _dir = GetDir();
-        //System.out.print(GetVariableValue(_dir+_index, x));
         NewJFrame.jTextArea2.append(GetVariableValue(_dir+_index, x) + "");
         NewJFrame.jTextArea2.update(NewJFrame.jTextArea2.getGraphics());
         _currentLine+=2;
@@ -438,7 +420,6 @@ public class virtualMachine {
         _currentLine++;
         _dir = GetDir();
         StringValue=GetVariableValue(_dir+(255*_index),StringValue);
-        //System.out.print(StringValue);
         NewJFrame.jTextArea2.append(StringValue + "");
         NewJFrame.jTextArea2.update(NewJFrame.jTextArea2.getGraphics());
         _currentLine += 2;
@@ -446,27 +427,12 @@ public class virtualMachine {
     public static void ReadI() throws InterruptedException {
         _currentLine++;
         int newValue = 0;
-        //inputReady = false;
-        //boolean estado = hilo1.isAlive();
-        //while(!inputReady)
-            //hilo1.wait();
-        
+       
         try{
-            //newValue = Integer.parseInt(scan.nextLine());
-            //NewJFrame.inputBox.setEnabled(true);
-            //NewJFrame.inputBox.setEditable(true);
-            //NewJFrame.inputBox.setFocusable(true);
-            //NewJFrame.inputBox.update(NewJFrame.inputBox.getGraphics());
-            //virtualMachine.hilo1.notify();
-            //hilo1.resume();
-            //if(inputReady){
-            //newValue=Integer.parseInt(NewJFrame.inputBox.getText());
-            //NewJFrame.inputBox.setEditable(true);
             newValue = Integer.parseInt(JOptionPane.showInputDialog("Enter an Integer: "));
             _dir=GetDir();
         }
         catch(Exception e){
-            //System.out.println(e.getMessage());
             NewJFrame.jTextArea3.append(e.getMessage()+ "\n");
             NewJFrame.jTextArea3.update(NewJFrame.jTextArea3.getGraphics());
         }
@@ -478,15 +444,10 @@ public class virtualMachine {
          _currentLine++;
          double newValue = 0;
          try{
-            //newValue = Double.parseDouble(scan.nextLine());
-            //NewJFrame.inputBox.setEnabled(true);
-            //newValue=Integer.parseInt(NewJFrame.inputBox.getText());
-            //NewJFrame.inputBox.setEnabled(false);
             newValue = Double.parseDouble(JOptionPane.showInputDialog("Enter a Double: "));
              _dir=GetDir();
              }
          catch(Exception e){
-            //System.out.println(e.getMessage());
             NewJFrame.jTextArea3.append(e.getMessage()+ "\n");
             NewJFrame.jTextArea3.update(NewJFrame.jTextArea3.getGraphics());
          }
@@ -498,12 +459,10 @@ public class virtualMachine {
          _currentLine++;
          float newValue = 0;
          try{
-            //newValue = Float.parseFloat(scan.nextLine());
             newValue = Float.parseFloat(JOptionPane.showInputDialog("Enter a number: "));            
              _dir=GetDir();
              }
          catch(Exception e){
-            //System.out.println(e.getMessage());
             NewJFrame.jTextArea3.append(e.getMessage()+ "\n");
             NewJFrame.jTextArea3.update(NewJFrame.jTextArea3.getGraphics());
          }
@@ -526,7 +485,6 @@ public class virtualMachine {
            _currentLine+=2;
        }
        catch(Exception e){
-           //System.out.println(e.getMessage());
            NewJFrame.jTextArea3.append(e.getMessage()+ "\n");
            NewJFrame.jTextArea3.update(NewJFrame.jTextArea3.getGraphics());
        }
@@ -537,15 +495,10 @@ public class virtualMachine {
          String newValue = "";
          
          try{
-            //newValue = scan.nextLine();
-            //NewJFrame.inputBox.setEnabled(true);
-            //newValue=NewJFrame.inputBox.getText();
-            //NewJFrame.inputBox.setEnabled(false);
             newValue = JOptionPane.showInputDialog("Enter a String: ");
              _dir=GetDir();
              }
          catch(Exception e){
-            //System.out.println(e.getMessage());
             NewJFrame.jTextArea3.append(e.getMessage()+ "\n");
             NewJFrame.jTextArea3.update(NewJFrame.jTextArea3.getGraphics());
          }
@@ -557,16 +510,10 @@ public class virtualMachine {
         int newValue = 0;
         _currentLine++;
         try{
-            //newValue = Integer.parseInt(scan.nextLine());
-            //NewJFrame.inputBox.setEnabled(true);
-            //while (!inputReady){}             
-            //newValue=Integer.parseInt(NewJFrame.inputBox.getText());
-            //NewJFrame.inputBox.setEnabled(false);
             newValue = Integer.parseInt(JOptionPane.showInputDialog("Enter a number: "));
              _dir=GetDir();
         }
         catch(Exception e){
-            //System.out.println(e.getMessage());
             NewJFrame.jTextArea3.append(e.getMessage()+ "\n");
             NewJFrame.jTextArea3.update(NewJFrame.jTextArea3.getGraphics());
         }
@@ -578,12 +525,10 @@ public class virtualMachine {
          double newValue = 0;
          _currentLine++;
          try{
-            //newValue = Double.parseDouble(scan.nextLine());
             newValue = Double.parseDouble(JOptionPane.showInputDialog("Enter a number: "));
              _dir=GetDir();
          }
          catch(Exception e){
-             //System.out.println(e.getMessage());
              NewJFrame.jTextArea3.append(e.getMessage()+ "\n");
              NewJFrame.jTextArea3.update(NewJFrame.jTextArea3.getGraphics());
          }
@@ -595,12 +540,10 @@ public class virtualMachine {
          float newValue = 0;
          _currentLine++;
          try{
-            //newValue = Float.parseFloat(scan.nextLine());
             newValue = Float.parseFloat(JOptionPane.showInputDialog("Enter a number: "));
              _dir=GetDir();
          }
          catch(Exception e){
-             //System.out.println(e.getMessage());
              NewJFrame.jTextArea3.append(e.getMessage()+ "\n");
              NewJFrame.jTextArea3.update(NewJFrame.jTextArea3.getGraphics());
          }
@@ -623,7 +566,6 @@ public class virtualMachine {
           _currentLine+=2;
         }
         catch(Exception e){
-            //System.out.println(e.getMessage());
             NewJFrame.jTextArea3.append(e.getMessage()+ "\n");
             NewJFrame.jTextArea3.update(NewJFrame.jTextArea3.getGraphics());
         }
@@ -633,15 +575,10 @@ public class virtualMachine {
          String newValue = "";
          _currentLine++;
          try{
-            //newValue = scan.nextLine();
-            //NewJFrame.inputBox.setEnabled(true);
-            //newValue=NewJFrame.inputBox.getText();
-            //NewJFrame.inputBox.setEnabled(false);
             newValue = JOptionPane.showInputDialog("Enter a String: ");
              _dir=GetDir();
          }
          catch(Exception e){
-             //System.out.println(e.getMessage());
              NewJFrame.jTextArea3.append(e.getMessage()+ "\n");
              NewJFrame.jTextArea3.update(NewJFrame.jTextArea3.getGraphics());
          }
@@ -667,7 +604,6 @@ public class virtualMachine {
             _index = _stack.POPI();
         }
         catch(Exception e){
-            //System.out.println(e.getMessage());
             NewJFrame.jTextArea3.append(e.getMessage()+ "\n");
             NewJFrame.jTextArea3.update(NewJFrame.jTextArea3.getGraphics());
         }
@@ -1065,7 +1001,6 @@ public class virtualMachine {
             poppedVariable = _stack.POPF();
         }
         catch(Exception e){
-            //System.out.println(e.getMessage());
             NewJFrame.jTextArea3.append(e.getMessage()+ "\n");
             NewJFrame.jTextArea3.update(NewJFrame.jTextArea3.getGraphics());
         }
@@ -1080,7 +1015,6 @@ public class virtualMachine {
             poppedVariable = _stack.POPD();
         }
         catch(Exception e){
-            //System.out.println(e.getMessage());
             NewJFrame.jTextArea3.append(e.getMessage()+ "\n");
             NewJFrame.jTextArea3.update(NewJFrame.jTextArea3.getGraphics());
         }
@@ -1095,7 +1029,6 @@ public class virtualMachine {
             poppedVariable = (char)_stack.POPC();
         }
         catch(Exception e){
-            //System.out.println(e.getMessage());
             NewJFrame.jTextArea3.append(e.getMessage()+ "\n");
             NewJFrame.jTextArea3.update(NewJFrame.jTextArea3.getGraphics());
         }
@@ -1110,7 +1043,6 @@ public class virtualMachine {
             poppedVariable = String.valueOf((_stack.POPS()));
         }
         catch(Exception e){
-            //System.out.println(e.getMessage());
             NewJFrame.jTextArea3.append(e.getMessage()+ "\n");
             NewJFrame.jTextArea3.update(NewJFrame.jTextArea3.getGraphics());
         }
@@ -1128,7 +1060,6 @@ public class virtualMachine {
             _currentLine += 2;
         }
         catch(Exception e){
-            //System.out.println(e.getMessage());
             NewJFrame.jTextArea3.append(e.getMessage()+ "\n");
             NewJFrame.jTextArea3.update(NewJFrame.jTextArea3.getGraphics());
         }
@@ -1142,7 +1073,6 @@ public class virtualMachine {
             _currentLine += 2;
         }
         catch(Exception e){
-            //System.out.println(e.getMessage());
             NewJFrame.jTextArea3.append(e.getMessage()+ "\n");
             NewJFrame.jTextArea3.update(NewJFrame.jTextArea3.getGraphics());
         }
@@ -1156,7 +1086,6 @@ public class virtualMachine {
             _currentLine += 2;
         }
         catch(Exception e){
-            //System.out.println(e.getMessage());
             NewJFrame.jTextArea3.append(e.getMessage()+ "\n");
             NewJFrame.jTextArea3.update(NewJFrame.jTextArea3.getGraphics());
         }     
@@ -1170,7 +1099,6 @@ public class virtualMachine {
             _currentLine += 2;
         }
         catch(Exception e){
-            //System.out.println(e.getMessage());
             NewJFrame.jTextArea3.append(e.getMessage()+ "\n");
             NewJFrame.jTextArea3.update(NewJFrame.jTextArea3.getGraphics());
         }
@@ -1184,7 +1112,6 @@ public class virtualMachine {
             _currentLine += 2;
         }
         catch(Exception e){
-            //System.out.println(e.getMessage());
             NewJFrame.jTextArea3.append(e.getMessage()+ "\n");
             NewJFrame.jTextArea3.update(NewJFrame.jTextArea3.getGraphics());
         }

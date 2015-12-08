@@ -32,8 +32,6 @@ public class NewJFrame extends javax.swing.JFrame {
         browseButton = new javax.swing.JButton();
         jScrollPane3 = new javax.swing.JScrollPane();
         jTextArea3 = new javax.swing.JTextArea();
-        inputLabel = new javax.swing.JLabel();
-        inputBox = new javax.swing.JTextField();
         inputLabel1 = new javax.swing.JLabel();
         newFileButton = new javax.swing.JButton();
 
@@ -88,18 +86,6 @@ public class NewJFrame extends javax.swing.JFrame {
         jTextArea3.setRows(5);
         jScrollPane3.setViewportView(jTextArea3);
 
-        inputLabel.setFont(new java.awt.Font("Tahoma", 0, 16)); // NOI18N
-        inputLabel.setText("Input: ");
-        inputLabel.setToolTipText("");
-        inputLabel.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
-
-        inputBox.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
-        inputBox.addKeyListener(new java.awt.event.KeyAdapter() {
-            public void keyPressed(java.awt.event.KeyEvent evt) {
-                inputBoxKeyPressed(evt);
-            }
-        });
-
         inputLabel1.setFont(new java.awt.Font("Tahoma", 0, 16)); // NOI18N
         inputLabel1.setText("Error: ");
         inputLabel1.setToolTipText("");
@@ -138,10 +124,6 @@ public class NewJFrame extends javax.swing.JFrame {
                             .addGroup(layout.createSequentialGroup()
                                 .addComponent(inputLabel1)
                                 .addGap(0, 0, Short.MAX_VALUE))
-                            .addGroup(layout.createSequentialGroup()
-                                .addComponent(inputLabel)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                .addComponent(inputBox))
                             .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 287, Short.MAX_VALUE)
                             .addComponent(jScrollPane3))))
                 .addContainerGap())
@@ -160,11 +142,7 @@ public class NewJFrame extends javax.swing.JFrame {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 358, Short.MAX_VALUE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(inputBox)
-                            .addComponent(inputLabel))
-                        .addGap(18, 18, 18)
+                        .addGap(47, 47, 47)
                         .addComponent(inputLabel1)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jScrollPane3))
@@ -205,16 +183,6 @@ public class NewJFrame extends javax.swing.JFrame {
         Compiler._filename = null;
     }//GEN-LAST:event_newFileButtonActionPerformed
 
-    private void inputBoxKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_inputBoxKeyPressed
-        // TODO add your handling code here:
-        int tp; 
-        tp = evt.getKeyChar(); //catches the enter key value of 10 
-        if (10 == tp) {        
-            virtualMachine.inputReady = true;
-            
-        }
-    }//GEN-LAST:event_inputBoxKeyPressed
-
 
     public static void main(String args[]) {
         /* Set the Nimbus look and feel */
@@ -246,9 +214,6 @@ public class NewJFrame extends javax.swing.JFrame {
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                NewJFrame.inputBox.setEditable(false);
-                NewJFrame.inputBox.setEnabled(false);
-                NewJFrame.inputBox.update(NewJFrame.inputBox.getGraphics());
                 new NewJFrame().setVisible(true);
             }
         });
@@ -257,8 +222,6 @@ public class NewJFrame extends javax.swing.JFrame {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton browseButton;
     private javax.swing.JButton compileButton;
-    public static javax.swing.JTextField inputBox;
-    private javax.swing.JLabel inputLabel;
     private javax.swing.JLabel inputLabel1;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JScrollPane jScrollPane1;

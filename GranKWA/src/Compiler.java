@@ -68,7 +68,7 @@ public class Compiler {
             //_filename = null;
         }
         else{
-            NewJFrame.jTextArea3.append("Ocurrió un error en la semántica que no se identificó.");
+            NewJFrame.jTextArea3.append("Ocurrió un error en la semántica.");
             NewJFrame.jTextArea3.update(NewJFrame.jTextArea3.getGraphics());
         }
     }
@@ -641,7 +641,7 @@ public class Compiler {
             return Lectura();
         }
         _currentToken = Tokenizer();
-        MessageError("InstruccionInvalida","la instrucci�n "+_currentToken.description+" no es v�lida en la l�nea "+lineReadNumber+"\n");
+        MessageError("InstruccionInvalida","la instrucción "+_currentToken.description+" no es válida en la línea "+lineReadNumber+"\n");
         return false;
     }
     public static boolean Lectura() throws IOException{
@@ -772,12 +772,12 @@ public class Compiler {
         switch (error) {
             case "Expect":
                 //System.out.println("Error en Expect, " + messageError);
-                NewJFrame.jTextArea3.append("Error en Expect, " + messageError);
+                NewJFrame.jTextArea3.append("Error, " + messageError);
                 NewJFrame.jTextArea3.update(NewJFrame.jTextArea3.getGraphics());
                 break;
             case "InstruccionInvalida":
                 //System.out.println("Instruccion no identificada, " + messageError);
-                NewJFrame.jTextArea3.append("Instruccion no identificada, " + messageError);
+                NewJFrame.jTextArea3.append("Instrucción no identificada, " + messageError);
                 NewJFrame.jTextArea3.update(NewJFrame.jTextArea3.getGraphics());
                 break;
             default:
@@ -1156,8 +1156,16 @@ public class Compiler {
                 
                 break;
             case "String":
-                if(EsConcatenacion)
-                    AddValue(tokenVariable);
+                if(EsConcatenacion){
+                    if(!IsArray(tokenVariable.description)){
+                        if(EsConcatenacion)
+                            fixAssignment(tokenOperator,tokenVariable,"PUSHS","S");
+                    }
+                    else{
+                        if(EsConcatenacion)
+                            fixAssignment(tokenOperator,tokenVariable,"PUSHVS","S");
+                    }
+                }
                 if(operatorAssembly.equals("ADD"))
                 {
                     AddInstruction(operatorAssembly);
@@ -1302,12 +1310,6 @@ public class Compiler {
                     AddInstruction(TranslateToAssembly(_stackOperadores.pop().description));
                 return true;
             }
-            /* if(_stackIsCondition.isEmpty()){
-               
-                String sresultado = solve(_ListaExpresion);
-                System.out.println("Resultado: "+sresultado);
-                }
-                */
             return true;
         }
         return false;
@@ -1561,6 +1563,7 @@ public class Compiler {
                             tokenWord += (char) _bytesInFile[lastByteRead];
                             increaseByte = true;
                         }else {
+                            //System.out.println("No quotation, comilla simple not found");
                             if(vectorIndexFound){
                                 tokenWord += (char) _bytesInFile[lastByteRead];
                                 increaseByte=true;
@@ -1570,21 +1573,38 @@ public class Compiler {
                                         isComplete = true;
                                     }
                                 } else {
-                                    
+
                                     tokenWord += (char) _bytesInFile[lastByteRead];
                                     increaseByte = true;
                                     
                                     if (_bytesInFile[lastByteRead-1] >= 48 && _bytesInFile[lastByteRead-1] <=57) {
-                                        //System.out.println(tokenWord);
-                                        isComplete = true;
-                                    }   
+                                        //Ultimo token en leer es numero
+                                        
+                                        if((_bytesInFile[lastByteRead]== 33 || _bytesInFile[lastByteRead] == 62 || _bytesInFile[lastByteRead]== 60 || _bytesInFile[lastByteRead]==61)){
+                                            //System.out.println("Operador Logico");
+                                            
+                                            if((tokenWord.equals(">")||tokenWord.equals("<") || tokenWord.equals("=") || tokenWord.equals("!")) && _bytesInFile[lastByteRead] == 61){
+                                                //System.out.println("Operador Logico");
+                                                tokenWord += (char) _bytesInFile[lastByteRead];
+                                                lastByteRead++;
+                                                isComplete = true;
+                                            }
+                                            
+                                        }
+                                    } else {
+                                        /*
+                                        if((tokenWord.equals(">")||tokenWord.equals("<") || tokenWord.equals("=")) && _bytesInFile[lastByteRead] == 61){
+                                            //System.out.println("Operador Logico");
+                                            tokenWord += (char) _bytesInFile[lastByteRead];
+                                            lastByteRead++;
+                                            isComplete = true;
+                                        }*/
+                                    }
                                 }
                                 
                                 lastTokenReadOperator = true;
                             }
                         }
-                        
-                        
                         
                     } else {
                         
@@ -1791,6 +1811,7 @@ public class Compiler {
         
         return tokenWord;
     }
+
  
     public static boolean isOperator(char character){
         if(character == 33 || character == 37 || character == 42 || character == 43 || character == 45 || character == 47
@@ -2179,7 +2200,6 @@ public class Compiler {
         else
             AddToKWA(variableBytes);
             _SC += 2;
-           System.out.println(variableDir);
         }
     }
     private static void AddValue(Token tokenToAdd) throws IOException {
