@@ -1496,27 +1496,27 @@ public class Compiler {
                 // Separadores de palabra que no se convierten a token
                 case 9:
                 case 10:
-                    lineReadNumber++;
+                	lineReadNumber++;
                 case 13:
                 case 32: //Vacio
                     increaseByte = true;
                     if (!quotationFound) {
-                        if(comillaSimpleFound){
-                            tokenWord += (char) _bytesInFile[lastByteRead];
-                        } else {
-                            if(vectorIndexFound){
-                                tokenWord += (char) _bytesInFile[lastByteRead];
-                            } else {
-                                if (!tokenWord.equals("")) {
-                                    isComplete = true;
-                                }
-                            }
-                            
-                        }
-                        
+                    	if(comillaSimpleFound){
+                    		tokenWord += (char) _bytesInFile[lastByteRead];
+                    	} else {
+                    		if(vectorIndexFound){
+	                            tokenWord += (char) _bytesInFile[lastByteRead];
+	                        } else {
+	                            if (!tokenWord.equals("")) {
+	                                isComplete = true;
+	                            }
+	                        }
+	                        
+                    	}
+                    	
                         
                     } else {
-                        
+                    	
                         tokenWord += (char) _bytesInFile[lastByteRead];
                     }
 
@@ -1536,7 +1536,7 @@ public class Compiler {
                         
                     }
                     else{
-                        
+                    	
                         tokenWord += (char) _bytesInFile[lastByteRead];
                     }
                     
@@ -1556,57 +1556,68 @@ public class Compiler {
                 case 61: // =
                 case 62: // >
                     if(!quotationFound){
+                    	
+                    	if(comillaSimpleFound){
+                    		tokenWord += (char) _bytesInFile[lastByteRead];
+	                        increaseByte = true;
+                    	}else {
+                    		//System.out.println("No quotation, comilla simple not found");
+                    		if(vectorIndexFound){
+	                            tokenWord += (char) _bytesInFile[lastByteRead];
+	                            increaseByte=true;
+	                        } else {
+	                            if(!lastTokenReadOperator){
+	                                if (tokenWord.length() != 0) {
+	                                    isComplete = true;
+	                                }
+	                            } else {
+
+	                
+	                            	
+	                                tokenWord += (char) _bytesInFile[lastByteRead];
+	                                increaseByte = true;
+	                                
+	                                if (_bytesInFile[lastByteRead-1] >= 48 && _bytesInFile[lastByteRead-1] <=57) {
+	                                	//Ultimo token en leer es numero
+	                                	
+	                                	if((_bytesInFile[lastByteRead] == 33 || _bytesInFile[lastByteRead] == 62 || _bytesInFile[lastByteRead]== 60 || _bytesInFile[lastByteRead]==61)){
+                     	            		//System.out.println("Operador Logico");
+	                                		
+	                                		if((tokenWord.equals(">")||tokenWord.equals("<") || tokenWord.equals("=") || tokenWord.equals("!")) && _bytesInFile[lastByteRead] == 61){
+	                     	            		//System.out.println("Operador Logico");
+	                     	            		
+	                                			if(_bytesInFile[lastByteRead+1]!=61){
+		                     	            		isComplete = true;
+	                                			} else {
+	                                				tokenWord += (char) _bytesInFile[lastByteRead+1];
+		                     	            		lastByteRead++;
+	                                			}
+	                                			
+	                     	            		
+	                     	            	}
+	                                		
+                     	            	}
+                     	            } else {
+                     	            	/*
+                     	            	if((tokenWord.equals(">")||tokenWord.equals("<") || tokenWord.equals("=")) && _bytesInFile[lastByteRead] == 61){
+                     	            		//System.out.println("Operador Logico");
+                     	            		tokenWord += (char) _bytesInFile[lastByteRead];
+                     	            		lastByteRead++;
+                     	            		isComplete = true;
+                     	            	}*/
+                     	            }
+	                            }
+	                            
+	                            lastTokenReadOperator = true;
+	                        }
+                    	}
                         
-                        if(comillaSimpleFound){
-                            tokenWord += (char) _bytesInFile[lastByteRead];
-                            increaseByte = true;
-                        }else {
-                            if(vectorIndexFound){
-                                tokenWord += (char) _bytesInFile[lastByteRead];
-                                increaseByte=true;
-                            } else {
-                                if(!lastTokenReadOperator){
-                                    if (tokenWord.length() != 0) {
-                                        isComplete = true;
-                                    }
-                                } else {
-                                    
-                                    tokenWord += (char) _bytesInFile[lastByteRead];
-                                    increaseByte = true;
-                                    
-                                    if (_bytesInFile[lastByteRead-1] >= 48 && _bytesInFile[lastByteRead-1] <=57) {
-                                        //Ultimo token en leer es numero
-                                        
-                                        if((_bytesInFile[lastByteRead]== 33 || _bytesInFile[lastByteRead] == 62 || _bytesInFile[lastByteRead]== 60 || _bytesInFile[lastByteRead]==61)){
-                                            //System.out.println("Operador Logico");
-                                            
-                                            if((tokenWord.equals(">")||tokenWord.equals("<") || tokenWord.equals("=") || tokenWord.equals("!")) && _bytesInFile[lastByteRead] == 61){
-                                                //System.out.println("Operador Logico");
-                                                tokenWord += (char) _bytesInFile[lastByteRead];
-                                                lastByteRead++;
-                                        isComplete = true;
-                                    }   
-                                            
-                                }
-                                    } else {
-                                        /*
-                                        if((tokenWord.equals(">")||tokenWord.equals("<") || tokenWord.equals("=")) && _bytesInFile[lastByteRead] == 61){
-                                            //System.out.println("Operador Logico");
-                                            tokenWord += (char) _bytesInFile[lastByteRead];
-                                            lastByteRead++;
-                                            isComplete = true;
-                                        }*/
-                                    }
-                                }
-                                
-                                lastTokenReadOperator = true;
-                            }
-                        }
                     } else {
-                        if(!comillaSimpleFound){
-                            tokenWord += (char) _bytesInFile[lastByteRead];
-                            increaseByte = true;
-                        }
+                    	
+                    	if(!comillaSimpleFound){
+                    		tokenWord += (char) _bytesInFile[lastByteRead];
+	                        increaseByte = true;
+                    	}
                         
                     }
                     
@@ -1615,6 +1626,9 @@ public class Compiler {
                     if (_bytesInFile[lastByteRead] == 45) {
                         lastTokenReadSubstractOperator = true;
                     }
+                    
+                    
+                    
                     break;
                     
                 // Separadores de palabra que se convierten a token
@@ -1627,51 +1641,54 @@ public class Compiler {
                 case 123:
                 case 125:
                     if (!quotationFound) {
-                        
-                        if(comillaSimpleFound){
-                            if( _bytesInFile[lastByteRead] == 59){
-                                if(!tokenWord.equals("'")){
-                                    isComplete = true;
-                                } else {
-                                    tokenWord += (char) _bytesInFile[lastByteRead];
-                                    increaseByte = true;
-                                }
-                            } else {
-                                tokenWord += (char) _bytesInFile[lastByteRead];
-                                increaseByte = true;
-                            }
-                        } else {
-                            if(vectorIndexFound){
-                                tokenWord += (char) _bytesInFile[lastByteRead];
-                            } else {
-                                
-                                if (tokenWord.length() == 0) {
-                                    tokenWord += (char) _bytesInFile[lastByteRead];
-                                    increaseByte = true;
-                                }
-                                
-                                isComplete = true;
-                                
-                            }
-                        }
+                    	
+                    	if(comillaSimpleFound){
+                    		if( _bytesInFile[lastByteRead] == 59){
+	                    		if(!tokenWord.equals("'")){
+		                    		isComplete = true;
+	                    		} else {
+	                    			tokenWord += (char) _bytesInFile[lastByteRead];
+			                        increaseByte = true;
+	                    		}
+	                    	} else {
+	                    		tokenWord += (char) _bytesInFile[lastByteRead];
+		                        increaseByte = true;
+	                    	}
+                    	} else {
+                    		if(vectorIndexFound){
+	                            tokenWord += (char) _bytesInFile[lastByteRead];
+	                        } else {
+	                        	
+	                            if (tokenWord.length() == 0) {
+	                                tokenWord += (char) _bytesInFile[lastByteRead];
+	                                increaseByte = true;
+	                            }
+	                            
+	                            isComplete = true;
+	                            
+	                        }
+                    	}
                         
                     } else {
 
-                        //System.out.println("Aqui: "+_bytesInFile[lastByteRead]);
-                        if( _bytesInFile[lastByteRead] == 59){
-                            if(!tokenWord.equals("")){
-                                //isComplete = true;
-                                tokenWord += (char) _bytesInFile[lastByteRead];
-                                increaseByte = true;
-                            }
-                        } else {
-                            tokenWord += (char) _bytesInFile[lastByteRead];
-                            increaseByte = true;
-                        }   
+                    	//System.out.println("Aqui: "+_bytesInFile[lastByteRead]);
+                    	if( _bytesInFile[lastByteRead] == 59){
+                    		if(!tokenWord.equals("")){
+	                    		//isComplete = true;
+                    			tokenWord += (char) _bytesInFile[lastByteRead];
+		                        increaseByte = true;
+                    		}
+                    	} else {
+                    		tokenWord += (char) _bytesInFile[lastByteRead];
+	                        increaseByte = true;
+                    	}
+	                    
+                    	
                     }
                     
                     lastTokenReadOperator = false;
                     lastTokenReadSubstractOperator = false;
+                    
                     break;
                     
                     // No separadores de palabra
@@ -1680,15 +1697,15 @@ public class Compiler {
                     boolean thisNumber = false;
                     
                     if (_bytesInFile[lastByteRead] == 34) {
-                        if(!comillaSimpleFound){
-                            quotationFound = !quotationFound;
-                        }
+                    	if(!comillaSimpleFound){
+                    		quotationFound = !quotationFound;
+                    	}
                     }
                     
                     if (_bytesInFile[lastByteRead] == 39) {
-                        if(!quotationFound){
-                            comillaSimpleFound = !comillaSimpleFound;
-                        }
+                    	if(!quotationFound){
+	                    	comillaSimpleFound = !comillaSimpleFound;
+                    	}
                     }
                     
                     //if (_bytesInFile[lastByteRead] == 91) {
@@ -1713,39 +1730,39 @@ public class Compiler {
                             if(thisNumber){
                                 if(lastTokenReadSubstractOperator){
                                     if(tokenWord.length()==1){
-                                        if(_bytesInFile[lastByteRead-2]!=61){
-                                            if(tokenWord.equals("-")){
-                                                
-                                                if(_bytesInFile[lastByteRead-2]== 45){
-                                                    increaseByte = true;
-                                                    tokenWord += (char) _bytesInFile[lastByteRead];
-                                                } else {
-                                                    isComplete=true;
-                                                }
-                                                
-                                            } else {
-                                                isComplete = true;
-                                            }
-                                        }
+                                    	if(_bytesInFile[lastByteRead-2]!=61){
+                                    		if(tokenWord.equals("-")){
+                                    			
+                                    			if(_bytesInFile[lastByteRead-2]== 45){
+                                    				increaseByte = true;
+		    	                                    tokenWord += (char) _bytesInFile[lastByteRead];
+                                    			} else {
+                                    				isComplete=true;
+                                    			}
+                                    			
+                                    		} else {
+                                    			isComplete = true;
+                                    		}
+                                    	}
                                         
                                     } else {
-                                        //System.out.println(tokenWord);
-                                        if(!tokenWord.equals("")){
-                                            tokenWord = tokenWord.substring(0, tokenWord.length() - 1);
-                                            lastByteRead--;
-                                        }
+                                    	//System.out.println(tokenWord);
+                                    	if(!tokenWord.equals("")){
+                                    		tokenWord = tokenWord.substring(0, tokenWord.length() - 1);
+	                                        lastByteRead--;
+                                    	}
                                     }
                                     
                                 } else{
-                                    if(!tokenWord.equals("")){
-                                        isComplete = true;
-                                    }
+                                	if(!tokenWord.equals("")){
+        	                    		isComplete = true;
+        	                    	}
                                   
                                 }
                             } else {
-                                if(!tokenWord.equals("")){
-                                    isComplete = true;
-                                }
+                            	if(!tokenWord.equals("")){
+    	                    		isComplete = true;
+    	                    	}
                             }
                             
                         } else {
@@ -1761,6 +1778,8 @@ public class Compiler {
                     }
                     
                     justClosedVector = false;
+                    
+                    
                     lastTokenReadOperator = false;
                     lastTokenReadSubstractOperator = false;
                     
@@ -1783,10 +1802,22 @@ public class Compiler {
                 }
                 lastByteRead++;
             }
+
         }
+        
+     
+        //System.out.println(tokenWord);
+        
+        /*
+        if(tokenWord.charAt(tokenWord.length()-1) == '-'){
+        	pastTokenHasSubstract = true;
+        } else {
+        	pastTokenHasSubstract = false;
+        } */
+        
         return tokenWord;
     }
- 
+
     public static boolean isOperator(char character){
         if(character == 33 || character == 37 || character == 42 || character == 43 || character == 45 || character == 47
                 || character == 60 || character == 61 || character == 62){
@@ -2750,7 +2781,10 @@ public static void addParentesisToDivisionHierarchy(){
     
     int nArrayLength = _bytesInFile.length;
     int newLength = nArrayLength * 2;
-    byte[] _copyBytesInFile = new byte[nArrayLength*2];
+    byte[] _copyBytesInFile = new byte[newLength];
+    byte[] _copyBytesInFile2 = new byte[newLength];
+
+    List<Integer> listAddedParentesis = new ArrayList<Integer>();
     
     boolean bQuotationFound = false;
     
@@ -2764,6 +2798,10 @@ public static void addParentesisToDivisionHierarchy(){
     
     boolean bVieneDeNumero = false;
     boolean bAgregoParentesis = false;
+    int nAdded = 0;
+    int nInitialDir = -1;
+    int nFinalDir = -1;
+    
     
     for(int i = 0; i < nArrayLength; i++){
         
@@ -2773,8 +2811,6 @@ public static void addParentesisToDivisionHierarchy(){
         if(_bytesInFile[i] == 34){
             bQuotationFound = !bQuotationFound;
         }
-        
-        
         
         if((_bytesInFile[i] >= 48 && _bytesInFile[i] <= 57) || _bytesInFile[i] == 46){
             bVieneDeNumero = true;
@@ -2790,35 +2826,33 @@ public static void addParentesisToDivisionHierarchy(){
                     int direccion = 0;
                     int direccionActual = j;
                     
+
                     for(k=j-1 ; k>0 ; k--){
                         if((_bytesInFile[k] < 48 || _bytesInFile[k] > 57) && _bytesInFile[k] != 46){
                             //Aqui acaba 
                             direccion=k;
-                            k=0;
+                            break;
                         }
                     }
                     
+                    nInitialDir = direccion+1;
+                    
                     direccion++;
-                    
-                    _copyBytesInFile[direccion] = 40;
-                    
-                    int diferencia = j-direccion;
-                    direccion++;
-                    
-                    for(k=0;k<diferencia;k++){
-                        _copyBytesInFile[direccion+k] = _bytesInFile[direccion+k-1];
-                    }
-                    
-
-                    j=direccion+k;
                     
                 }
             } else {
                 //No es numero ni division
                 if(bAgregoParentesis && bVieneDeNumero){
-                    _copyBytesInFile[j] = 41;
-                    j++;
+                	nFinalDir = j;
+                	nInitialDir = nInitialDir+(2*nAdded);
+                	nFinalDir = nFinalDir+(2*nAdded)+1;
+                	
+                	listAddedParentesis.add(nInitialDir);
+                	listAddedParentesis.add(nFinalDir);
+                	
+                	
                     bAgregoParentesis = false;
+                    nAdded++;
                 }
             }
             
@@ -2826,13 +2860,37 @@ public static void addParentesisToDivisionHierarchy(){
         }
         
         byte miByte = _bytesInFile[i];
-        //System.out.println("Size copia: "+_copyBytesInFile.length);
         _copyBytesInFile[j] = miByte;
         j++;
         
     }
     
-    //System.out.println("Termino cagadero");
+    int nSize = listAddedParentesis.size();
+    
+    for(int i = 0; i < nSize; i++){
+    	
+    	int n1 = listAddedParentesis.get(i);
+    	i++;
+    	int n2 = listAddedParentesis.get(i);
+    	
+    	int n = 0;
+    	int limite = _copyBytesInFile.length-1;
+   
+    			
+    	for(n = limite; n > n1; n--){
+    		_copyBytesInFile[n] = _copyBytesInFile[n-1];
+    	}
+
+    	_copyBytesInFile[n1]=40;
+    	
+    	for(n = limite; n > n2; n--){
+    		_copyBytesInFile[n] = _copyBytesInFile[n-1];
+    	}
+    	
+
+    	_copyBytesInFile[n2]=41;
+    	
+    }
     
     _bytesInFile = _copyBytesInFile;
     
