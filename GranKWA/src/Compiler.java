@@ -68,7 +68,7 @@ public class Compiler {
             //_filename = null;
         }
         else{
-            NewJFrame.jTextArea3.append("Ocurrio un error en la semantica que no se identifico.");
+            NewJFrame.jTextArea3.append("Ocurrió un error en la semántica.");
             NewJFrame.jTextArea3.update(NewJFrame.jTextArea3.getGraphics());
         }
     }
@@ -641,7 +641,7 @@ public class Compiler {
             return Lectura();
         }
         _currentToken = Tokenizer();
-        MessageError("InstruccionInvalida","la instrucci�n "+_currentToken.description+" no es v�lida en la l�nea "+lineReadNumber+"\n");
+        MessageError("InstruccionInvalida","la instrucción "+_currentToken.description+" no es válida en la línea "+lineReadNumber+"\n");
         return false;
     }
     public static boolean Lectura() throws IOException{
@@ -772,12 +772,12 @@ public class Compiler {
         switch (error) {
             case "Expect":
                 //System.out.println("Error en Expect, " + messageError);
-                NewJFrame.jTextArea3.append("Error en Expect, " + messageError);
+                NewJFrame.jTextArea3.append("Error, " + messageError);
                 NewJFrame.jTextArea3.update(NewJFrame.jTextArea3.getGraphics());
                 break;
             case "InstruccionInvalida":
                 //System.out.println("Instruccion no identificada, " + messageError);
-                NewJFrame.jTextArea3.append("Instruccion no identificada, " + messageError);
+                NewJFrame.jTextArea3.append("Instrucción no identificada, " + messageError);
                 NewJFrame.jTextArea3.update(NewJFrame.jTextArea3.getGraphics());
                 break;
             default:
@@ -1308,12 +1308,6 @@ public class Compiler {
                     AddInstruction(TranslateToAssembly(_stackOperadores.pop().description));
                 return true;
             }
-            /* if(_stackIsCondition.isEmpty()){
-               
-                String sresultado = solve(_ListaExpresion);
-                System.out.println("Resultado: "+sresultado);
-                }
-                */
             return true;
         }
         return false;
