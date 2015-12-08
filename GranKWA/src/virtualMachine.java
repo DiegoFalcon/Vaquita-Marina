@@ -510,25 +510,26 @@ public class virtualMachine {
          _currentLine+=2;
     }
     public static void ReadC() {
-         Scanner scan=new Scanner(System.in);
-         _currentLine++;
-         String newValue = "";
-         try{
-            newValue = JOptionPane.showInputDialog("Enter a char: ");
-            if(newValue.length() > 2){
-                NewJFrame.jTextArea3.append("Char variable cannot have more than 1 character" + "\n");
-                NewJFrame.jTextArea3.update(NewJFrame.jTextArea3.getGraphics());
-            }
-             _dir=GetDir();
-             }
-         catch(Exception e){
-            //System.out.println(e.getMessage());
-            NewJFrame.jTextArea3.append(e.getMessage()+ "\n");
-            NewJFrame.jTextArea3.update(NewJFrame.jTextArea3.getGraphics());
-         }
-         SetVariableValue(_dir,newValue);
-         _currentLine+=2;
-    }
+        Scanner scan=new Scanner(System.in);
+        _currentLine++;
+        String newValue = "";
+        try{
+           newValue = JOptionPane.showInputDialog("Enter a char: ");
+           while(newValue.length() > 1){
+               NewJFrame.jTextArea3.append("Char variable cannot have more than 1 character" + "\n");
+               NewJFrame.jTextArea3.update(NewJFrame.jTextArea3.getGraphics());
+               newValue = JOptionPane.showInputDialog("Enter a char: ");
+           }
+           _dir=GetDir();
+           SetVariableValue(_dir,newValue.charAt(0));
+           _currentLine+=2;
+       }
+       catch(Exception e){
+           //System.out.println(e.getMessage());
+           NewJFrame.jTextArea3.append(e.getMessage()+ "\n");
+           NewJFrame.jTextArea3.update(NewJFrame.jTextArea3.getGraphics());
+       }
+   }
     public static void ReadS(){
          Scanner scan=new Scanner(System.in);
          _currentLine++;
@@ -606,26 +607,26 @@ public class virtualMachine {
          _currentLine+=2;
     }
     public static void ReadVC(){
-         Scanner scan=new Scanner(System.in);
-         String newValue = "";
-         _currentLine++; 
-         try{
-            newValue = JOptionPane.showInputDialog("Enter a char: ");
-            if(newValue.length() > 2){
-                NewJFrame.jTextArea3.append("Char variable cannot have more than 1 character"+ "\n");
-                NewJFrame.jTextArea3.update(NewJFrame.jTextArea3.getGraphics());
-            }
-            
-             _dir=GetDir();
-         }
-         catch(Exception e){
-             //System.out.println(e.getMessage());
-             NewJFrame.jTextArea3.append(e.getMessage()+ "\n");
-             NewJFrame.jTextArea3.update(NewJFrame.jTextArea3.getGraphics());
-         }
-         SetVariableValue(_dir+_index*1,newValue);
-         _currentLine+=2;
-    }
+        Scanner scan=new Scanner(System.in);
+        String newValue = "";
+        _currentLine++; 
+        try{
+           newValue = JOptionPane.showInputDialog("Enter a char: ");
+           while(newValue.length() > 1){
+               NewJFrame.jTextArea3.append("Char variable cannot have more than 1 character"+ "\n");
+               NewJFrame.jTextArea3.update(NewJFrame.jTextArea3.getGraphics());
+               newValue = JOptionPane.showInputDialog("Enter a char: ");
+           }
+           _dir=GetDir();
+          SetVariableValue(_dir+_index*1,newValue.charAt(0));
+          _currentLine+=2;
+        }
+        catch(Exception e){
+            //System.out.println(e.getMessage());
+            NewJFrame.jTextArea3.append(e.getMessage()+ "\n");
+            NewJFrame.jTextArea3.update(NewJFrame.jTextArea3.getGraphics());
+        }
+   }
     public static void ReadVS(){
          Scanner scan=new Scanner(System.in);
          String newValue = "";

@@ -276,6 +276,10 @@ public class Compiler {
         return false;   
     }
     public static boolean Expect(int tokenCode) throws IOException {
+    	if(isFileFinished){
+            MessageError("Expect", "no se encontró punto y coma al final del archivo.");        
+    		return false;
+    	}
         _currentToken = Tokenizer();
         if (_currentToken.code == tokenCode) {
             //abre llave
@@ -299,6 +303,10 @@ public class Compiler {
         return false;
     }
     public static boolean Expect(String instruction) throws IOException {
+    	if(isFileFinished){
+            MessageError("Expect", "no se encontró punto y coma al final del archivo.");        
+    		return false;
+    	}
         _currentToken = Tokenizer();    
         if (_currentToken.description.equals(instruction)) {
             if(instruction.equals("{"))
@@ -633,7 +641,7 @@ public class Compiler {
             return Lectura();
         }
         _currentToken = Tokenizer();
-        MessageError("InstruccionInvalida","La instruccion "+_currentToken.description+" no es valida. En la linea "+lineReadNumber);
+        MessageError("InstruccionInvalida","la instrucción "+_currentToken.description+" no es válida en la línea "+lineReadNumber+"\n");
         return false;
     }
     public static boolean Lectura() throws IOException{
@@ -1026,12 +1034,14 @@ public class Compiler {
                 _isAssigned = false;
                 return false;
             }
+          
             _isAssigned = false;
             Token tokenOperator = GetCurrentToken();
             if(!OperadorAsignacion())
                 return false;
             if(!tokenOperator.description.equals("="))
                 EsConcatenacion = true;
+            
 
             _stackValoresExpresion.clear();
             if(!Expresion())
@@ -1049,9 +1059,7 @@ public class Compiler {
                 }//else        
             }//while(!_stackValoresExpresion.isEmpty()){
             
-            //if(!tokenOperator.description.equals("=")){
-                    //    AddValue(tokenVariable);
-                    //}
+           
             _variableAsignacion = null;
             
             if(usesSemiColon)
@@ -1081,40 +1089,69 @@ public class Compiler {
         
         AddToKWA(_arrayTmp);
         _arrayTmp = new byte[0];
-        
+        String fixPopInstruction="";
+        String fixPushInstruction = "";
         switch(variableType){
             case "Int":
                 if(EsConcatenacion)
                     AddValue(tokenVariable);
                 if(!tokenOperator.description.equals("="))
                     AddInstruction(operatorAssembly);
-                if(!IsArray(tokenVariable.description))
+                if(!IsArray(tokenVariable.description)){
                     AddInstruction("POPI");
-                else
+                    fixPopInstruction = "POPI";
+                    fixPushInstruction = "PUSHI";
+                }
+                else{
                     AddInstruction("POPVI");
+                    fixPopInstruction = "POPVI";
+                    fixPushInstruction = "PUSHVI";
+                }
                 AddVariable(tokenVariable.description);
+               
+                
+                if(EsConcatenacion)
+                	fixAssignment(tokenOperator,tokenVariable,fixPopInstruction,fixPushInstruction);
                 break;
             case "Double":
                 if(EsConcatenacion)
                     AddValue(tokenVariable);
                 if(!tokenOperator.description.equals("="))
                     AddInstruction(operatorAssembly);
-                if(!IsArray(tokenVariable.description))
+                if(!IsArray(tokenVariable.description)){
                     AddInstruction("POPD");
-                else
+                    fixPopInstruction = "POPD";
+                    fixPushInstruction = "PUSHD";
+                }
+                else{
                     AddInstruction("POPVD");
+                    fixPopInstruction = "POPVD";
+                    fixPushInstruction = "PUSHVD";
+                }
                 AddVariable(tokenVariable.description);
+                
+                if(EsConcatenacion)
+                	fixAssignment(tokenOperator,tokenVariable,fixPopInstruction,fixPushInstruction);
                 break;
             case "Float":
                 if(EsConcatenacion)
                     AddValue(tokenVariable);
                 if(!tokenOperator.description.equals("="))
                     AddInstruction(operatorAssembly);
-                if(!IsArray(tokenVariable.description))
+                if(!IsArray(tokenVariable.description)){
                     AddInstruction("POPF");
-                else
+                    fixPopInstruction = "POPF";
+                    fixPushInstruction = "PUSHF";
+                }
+                else{
                     AddInstruction("POPVF");
+                    fixPopInstruction = "POPVF";
+                    fixPushInstruction = "PUSHVF";
+                }
                 AddVariable(tokenVariable.description);
+                
+                if(EsConcatenacion)
+                	fixAssignment(tokenOperator,tokenVariable,fixPopInstruction,fixPushInstruction);
                 break;
             case "String":
                 if(EsConcatenacion)
@@ -1148,8 +1185,35 @@ public class Compiler {
                 AddVariable(tokenVariable.description);
                 break;      
         }
+        
         return true;
 }
+    public static void fixAssignment(Token tokenOperator,Token tokenVariable, String PopInstruction, String PushInstruction) throws IOException{
+    	
+    	switch(tokenOperator.description){
+    	
+    	case "-=":
+    		AddInstruction(PushInstruction);
+    		AddVariable(tokenVariable.description);
+    		AddInstruction("PUSHKI");
+    		AddInteger(-1);
+    		AddInstruction("MUL");
+    		AddInstruction(PopInstruction);
+    		AddVariable(tokenVariable.description);
+    		break;
+    	case "/=":
+    		AddInstruction("PUSHKI");
+    		AddInteger(1);
+    		AddInstruction(PushInstruction);
+    		AddVariable(tokenVariable.description);
+    		AddInstruction("DIV");
+    		AddInstruction(PopInstruction);
+    		AddVariable(tokenVariable.description);
+    		break;
+    	case "%=":
+    		break;
+    	}
+    }
     public static boolean IncrementoDecremento() throws IOException{
         Token tokenVariable = GetCurrentToken();
         AddValue(tokenVariable);
@@ -1583,20 +1647,25 @@ public class Compiler {
                     		if(vectorIndexFound){
 	                            tokenWord += (char) _bytesInFile[lastByteRead];
 	                        } else {
+	                        	
 	                            if (tokenWord.length() == 0) {
 	                                tokenWord += (char) _bytesInFile[lastByteRead];
 	                                increaseByte = true;
 	                            }
+	                            
 	                            isComplete = true;
+	                            
 	                        }
                     	}
                         
                     } else {
-	                    
+
+                    	//System.out.println("Aqui: "+_bytesInFile[lastByteRead]);
                     	if( _bytesInFile[lastByteRead] == 59){
                     		if(!tokenWord.equals("")){
-
-	                    		isComplete = true;
+	                    		//isComplete = true;
+                    			tokenWord += (char) _bytesInFile[lastByteRead];
+		                        increaseByte = true;
                     		}
                     	} else {
                     		tokenWord += (char) _bytesInFile[lastByteRead];
@@ -1617,11 +1686,15 @@ public class Compiler {
                     boolean thisNumber = false;
                     
                     if (_bytesInFile[lastByteRead] == 34) {
-                        quotationFound = !quotationFound;
+                    	if(!comillaSimpleFound){
+                    		quotationFound = !quotationFound;
+                    	}
                     }
                     
                     if (_bytesInFile[lastByteRead] == 39) {
-                    	comillaSimpleFound = !comillaSimpleFound;
+                    	if(!quotationFound){
+	                    	comillaSimpleFound = !comillaSimpleFound;
+                    	}
                     }
                     
                     //if (_bytesInFile[lastByteRead] == 91) {
@@ -1733,6 +1806,7 @@ public class Compiler {
         
         return tokenWord;
     }
+ 
     public static boolean isOperator(char character){
         if(character == 33 || character == 37 || character == 42 || character == 43 || character == 45 || character == 47
                 || character == 60 || character == 61 || character == 62){
@@ -2121,29 +2195,44 @@ public class Compiler {
                 info = GetVariableType(_variableAsignacion.description);
             else
                 info = tokenToAdd.info;
+            
+       
+            
             switch(info)
             {
                 case "Int":
                     AddInstruction("PUSHKI");
-                   // System.out.println(Integer.parseInt(tokenToAdd.description));
-                    if(tokenToAdd.info.equals("Int") || tokenToAdd.info.equals("DoubleFloat") || tokenToAdd.info.equals("Double")){
-                    double doubleTemporal = Double.parseDouble(tokenToAdd.description);
-                    int integerReal = (int) doubleTemporal;
-                    AddInteger(integerReal);
+                    
+                    if(tokenToAdd.info.equals("Int") || tokenToAdd.info.equals("DoubleFloat") || tokenToAdd.info.equals("Double")|| tokenToAdd.info.equals("Float")){
+                    	double doubleTemporal = Double.parseDouble(tokenToAdd.description);
+                    	int integerReal = (int) doubleTemporal;
+                    	AddInteger(integerReal);
                     }
+                    
                     break;
                 case "DoubleFloat":
-                	if(tokenToAdd.info.equals("Int") || tokenToAdd.info.equals("DoubleFloat") || tokenToAdd.info.equals("Double")){
-                    AddInstruction("PUSHKD");
-                    AddDouble(Double.parseDouble(tokenToAdd.description));
+                	System.out.println("Es doblefloat "+tokenToAdd.description);
+                	if(tokenToAdd.info.equals("Int") || tokenToAdd.info.equals("DoubleFloat") || tokenToAdd.info.equals("Double") || tokenToAdd.info.equals("Float") ){
+
+                		AddInstruction("PUSHKD");
+                		AddDouble(Double.parseDouble(tokenToAdd.description));
                 	}
                     break;
                 case "Double":
-                	 if(tokenToAdd.info.equals("Int") || tokenToAdd.info.equals("DoubleFloat") || tokenToAdd.info.equals("Double")){
-                    AddInstruction("PUSHKD");
-                    AddDouble(Double.parseDouble(tokenToAdd.description));
+                	 if(tokenToAdd.info.equals("Int") || tokenToAdd.info.equals("DoubleFloat") || tokenToAdd.info.equals("Double") || tokenToAdd.info.equals("Float")){
+                		 AddInstruction("PUSHKD");
+                		 AddDouble(Double.parseDouble(tokenToAdd.description));
                 	 }
                     break;
+                    
+                case "Float":
+                	 if(tokenToAdd.info.equals("Int") || tokenToAdd.info.equals("DoubleFloat") || tokenToAdd.info.equals("Double") || tokenToAdd.info.equals("Float")){
+                		 AddInstruction("PUSHKF");
+                		 float tempFloat = Float.parseFloat(tokenToAdd.description);
+                		 AddFloat(tempFloat);
+                	 }
+                    break;
+                    
                 case "String":
                     AddInstruction("PUSHKS");
                     AddString(tokenToAdd.description);
@@ -2165,20 +2254,24 @@ public class Compiler {
         }
         // ES VARIABLE
         else{
+        	
             switch(GetVariableType(tokenToAdd.description)){
                 case "Int":
+                	System.out.println("Variable Int");
                     if(!IsArray(tokenToAdd.description))
                         AddInstruction("PUSHI");
                     else
                         AddInstruction("PUSHVI");
                     break;
                 case "Double":
+                	System.out.println("Variable Double");
                     if(!IsArray(tokenToAdd.description))
                         AddInstruction("PUSHD");
                     else
                         AddInstruction("PUSHVD");                            
                     break;
                 case "Float":
+                	System.out.println("Variable Float "+tokenToAdd.description);
                     if(!IsArray(tokenToAdd.description))
                         AddInstruction("PUSHF");
                     else
@@ -2200,6 +2293,7 @@ public class Compiler {
             AddVariable(tokenToAdd.description);
         }
     }
+    
     public static int GetVariableDir(String variable){
         int dir=0;
         for(int i=0; i<_variablesTable.length ; i++){
