@@ -21,7 +21,7 @@ public class virtualMachine {
     static int _currentLine;
     //Direccion de la variable dentro del segmento de datos
     static int _dir;
-    //Arreglo de las instrucciones (Segmento de c�digo)
+    //Arreglo de las instrucciones (Segmento de cï¿½digo)
     static byte[] _sc;
     //Contador para variables que son vectores
     static int _index;
@@ -294,7 +294,7 @@ public class virtualMachine {
         
     }
     
-    //Leer Segmento de C�digo
+    //Leer Segmento de Cï¿½digo
     public static void GetSC() throws IOException{
         byte[] bytesInFile=Files.readAllBytes(Paths.get(_fileName));
         byte[] segment=new byte[2];
@@ -312,7 +312,8 @@ public class virtualMachine {
         byte[] segment=new byte[2];
         segment[0]=bytesInFile[12];
         segment[1]=bytesInFile[13];
-        _sd=new byte[ByteArrayToSegment(segment)];
+        //temporales
+        _sd=new byte[ByteArrayToSegment(segment)+1+4+4+8+255];
     }
     
     //Metodos
